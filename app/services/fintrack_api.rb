@@ -4,10 +4,10 @@ require 'json'
 require 'net/http'
 require 'uri'
 
-module Fintrack
+module FinanceTracker
   module Services
     class FintrackApi
-      def initialize(base_url: ENV.fetch('FINTRACK_API_URL', 'http://localhost:3000'))
+      def initialize(base_url: ENV.fetch('FINTRACK_API_URL', 'http://localhost:9292'))
         @base_url = base_url
       end
 

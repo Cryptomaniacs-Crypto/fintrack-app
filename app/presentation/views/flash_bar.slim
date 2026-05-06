@@ -1,4 +1,8 @@
 - if flash[:error]
-  p.flash.flash--error = flash[:error]
+  div.alert.alert-danger.alert-dismissible.fade.show role="alert"
+    = flash[:error]
+    button.btn-close type="button" data-bs-dismiss="alert" aria-label="Close"
 - if flash[:notice]
-  p.flash.flash--notice = flash[:notice]
+  div.alert.alert-success.alert-dismissible.fade.show role="alert"
+    = flash[:notice]
+    button.btn-close type="button" data-bs-dismiss="alert" aria-label="Close"

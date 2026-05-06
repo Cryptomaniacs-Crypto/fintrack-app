@@ -1,13 +1,16 @@
 # fintrack-app
 
-Server-rendered web client (Roda + Slim) that follows the Tyto app structure.
+Server-rendered web client (Roda + Slim) that follows the FinanceTracker app structure.
 
 ## Pages
 
 - `/` home
 - `/auth/login` login
-- `/account` account overview (requires login)
-- `/auth/logout` logout
+- `/auth/register` register
+- `/account/:username` account overview (requires login)
+- `DELETE /account/:username` logout by clearing the session
+
+This frontend is a session-based client for the API. It does not expose admin/system-role management routes.
 
 ## Run
 

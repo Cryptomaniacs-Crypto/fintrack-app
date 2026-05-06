@@ -1,9 +1,16 @@
-h1 Welcome to Fintrack
-
-- if current_account
-  - handle = current_account['username'] || current_account['email']
-  p You are logged in as #{handle}.
-  p
-    a href="/account" Go to your account overview
-- else
-  p Please log in to view your account.
+.row.align-items-center.g-4
+  .col-lg-7
+    .p-4.p-md-5.mb-4.rounded.text-bg-dark.hero-panel
+      p.text-uppercase.fw-semibold.opacity-75.mb-2 Fintrack
+      h1.display-5.fw-bold.mb-3 Track your transactions
+      p.lead.mb-4 
+      - if current_account
+        - handle = current_account['username'] || current_account['email']
+        p.mb-2 You are signed in as #{handle}.
+        - if current_account['system_roles'] && !current_account['system_roles'].empty?
+          p.mb-3 System roles: #{current_account['system_roles'].join(', ')}
+        a.btn.btn-light.btn-lg href="/account/#{current_account['username']}" View account
+      - else
+        .d-flex.flex-wrap.gap-2
+          a.btn.btn-light.btn-lg href="/auth/login" Log in
+          a.btn.btn-outline-light.btn-lg href="/auth/register" Create account

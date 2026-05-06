@@ -1,12 +1,36 @@
-h1 Account Overview
+.row.g-4
+  .col-lg-7
+    .card.shadow-sm.border-0.mb-4
+      .card-body.p-4.p-md-5
+        p.text-uppercase.text-primary.fw-semibold.mb-2 Account
+        h1.h2.mb-4 Account Overview
 
-- handle = account['username'] || account['email']
-p Logged in as #{handle}.
+        dl.row.mb-0
+          dt.col-sm-4 Username
+          dd.col-sm-8 = account['username'] || account['email']
+          dt.col-sm-4 Email
+          dd.col-sm-8 = account['email']
+          dt.col-sm-4 System roles
+          dd.col-sm-8
+            - if Array(account['system_roles']).empty?
+              span.text-muted None
+            - else
+              - Array(account['system_roles']).each do |role_name|
+                span.badge.text-bg-dark.me-1 = role_name
 
-- if transactions && transactions.any?
-  h2 Transactions
-  ul
-    - transactions.each do |t|
-      li = t.to_s
-- else
-  p No transactions available (or API not running).
+
+  .col-lg-5
+    - if viewer && viewer['system_roles']&.include?('admin') && viewer['username'] != account['username']
+      .card.shadow-sm.border-0
+        .card-body.p-4
+          h2.h5.mb-3 Manage System Roles
+          .d-flex.flex-wrap.gap-2
+            - %w[admin creator member].each do |role_name|
+              - if Array(account['system_roles']).include?(role_name)
+                form method="post" action="/account/#{account['username']}/system_roles/#{role_name}"
+                  input type="hidden" name="_method" value="delete"
+                  button.btn.btn-outline-danger.btn-sm type="submit" Revoke #{role_name}
+              - else
+                form method="post" action="/account/#{account['username']}/system_roles/#{role_name}"
+                  input type="hidden" name="_method" value="put"
+                  button.btn.btn-outline-primary.btn-sm type="submit" Grant #{role_name}

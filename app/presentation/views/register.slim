@@ -1,10 +1,13 @@
-h1 Register
-
-form method="post" action="/auth/register"
-  .form-row
-    label for="email" Email
-    input#email type="email" name="email" required=true
-  .form-row
-    label for="password" Password
-    input#password type="password" name="password" required=true
-  button type="submit" Create account
+.row.justify-content-center
+  .col-md-8.col-lg-5
+    .card.shadow-sm.border-0
+      .card-body.p-4.p-md-5
+        h1.h3.text-center.mb-4 Create account
+        form method="post" action="/auth/register"
+          .mb-3
+            label.form-label for="email" Email
+            input#email.form-control type="email" name="email" required=true autocomplete="email"
+          .mb-4
+            label.form-label for="password" Password
+            input#password.form-control type="password" name="password" required=true autocomplete="new-password"
+          button.btn.btn-primary.w-100 type="submit" Create account

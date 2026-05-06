@@ -5,9 +5,13 @@ require 'roda'
 require 'slim'
 require 'slim/include'
 
-module Tyto
-  # Base class for the Tyto Web App (Fintrack client follows this structure)
+module FinanceTracker
+  # Base class for the FinanceTracker web app.
   class App < Roda
+    session_secret = ENV['SESSION_SECRET'] ||
+                     'development-session-secret-change-me-please-use-at-least-sixty-four-chars'
+    raise Roda::RodaError, 'SESSION_SECRET must be at least 64 characters' if session_secret.length < 64
+
     use Rack::MethodOverride
 
     plugin :render, engine: 'slim', views: 'app/presentation/views'
@@ -16,11 +20,15 @@ module Tyto
     plugin :multi_route
     plugin :flash
     plugin :all_verbs
-    plugin :sessions, secret: (ENV['SESSION_SECRET'] || 'development-session-secret-change-me')
+    plugin :sessions, secret: session_secret
 
     route do |routing|
       response['Content-Type'] = 'text/html; charset=utf-8'
-      @current_account = session[:current_account]
+      @current_account = session['current_account']
+      
+      # Debug logging
+      puts "DEBUG: session keys = #{session.keys.inspect}"
+      puts "DEBUG: @current_account = #{@current_account.inspect}"
 
       routing.public
       routing.assets
@@ -33,6 +41,10 @@ module Tyto
     end
 
     private
+
+    def system_admin?
+      Array(@current_account['system_roles']).include?('admin')
+    end
 
     def require_login!(routing)
       return if @current_account

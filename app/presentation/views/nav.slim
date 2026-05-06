@@ -1,7 +1,24 @@
-nav.nav
-  a href="/" Home
-  - if @current_account
-    a href="/account" Account
-    a href="/auth/logout" Logout
-  - else
-    a href="/auth/login" Login
+nav.navbar.navbar-expand-sm.navbar-dark.bg-primary
+  .container-fluid
+    a.navbar-brand href="/" Fintrack
+    button.navbar-toggler type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation"
+      span.navbar-toggler-icon
+
+    .collapse.navbar-collapse#mainNavbar
+      ul.navbar-nav.me-auto
+        li.nav-item
+          a.nav-link href="/" Home
+        - if @current_account
+          li.nav-item.dropdown
+            a.nav-link.dropdown-toggle href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+              = @current_account['username']
+            ul.dropdown-menu
+              li
+                a.dropdown-item href="/account/#{@current_account['username']}" Account
+              li
+                a.dropdown-item href="/auth/logout" Logout
+        - else
+          li.nav-item
+            a.nav-link href="/auth/login" Login
+          li.nav-item
+            a.nav-link href="/auth/register" Register
