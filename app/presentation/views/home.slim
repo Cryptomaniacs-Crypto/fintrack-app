@@ -1,0 +1,9 @@
+h1 Welcome to Fintrack
+
+- if current_account
+  - handle = current_account['username'] || current_account['email']
+  p You are logged in as #{handle}.
+  p
+    a href="/account" Go to your account overview
+- else
+  p Please log in to view your account.

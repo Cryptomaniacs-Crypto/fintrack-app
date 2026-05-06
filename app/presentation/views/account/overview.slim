@@ -1,0 +1,11 @@
+h1 Account Overview
+
+p Logged in as #{@current_account['email']}.
+
+- if transactions && transactions.any?
+  h2 Transactions
+  ul
+    - transactions.each do |t|
+      li = t.to_s
+- else
+  p No transactions available (or API not running).
