@@ -5,6 +5,7 @@ require_relative '../services/fintrack_api'
 require_relative '../services/get_account'
 require_relative '../services/assign_system_role'
 require_relative '../services/revoke_system_role'
+require_relative '../lib/secure_session'
 
 module FinanceTracker
   class App < Roda
@@ -93,7 +94,7 @@ module FinanceTracker
 
           routing.delete do
             puts "DEBUG ACCOUNT: DELETE logout for #{username}"
-            session.delete('current_account')
+            SecureSession.delete(session, 'current_account')
             flash[:notice] = 'Logged out'
             routing.redirect '/auth/login'
           end
