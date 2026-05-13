@@ -41,8 +41,31 @@ namespace :generate do
 
   desc 'Create message encryption key for MSG_KEY'
   task :msg_key do
-    require_relative './app/lib/secure_message'
+    require_relative 'app/lib/secure_message'
     puts "MSG_KEY: #{FinanceTracker::SecureMessage.generate_key}"
+  end
+end
+
+namespace :session do
+  desc 'Wipe all sessions stored in Redis session store'
+  task :wipe do
+    require 'openssl'
+    require_relative 'app/lib/secure_session'
+
+    redis_url = ENV['REDISCLOUD_URL'] || ENV.fetch('REDIS_URL', nil)
+    raise 'REDISCLOUD_URL or REDIS_URL is required' unless redis_url
+
+    redis_server =
+      if redis_url.start_with?('rediss://')
+        { url: redis_url, ssl_params: { verify_mode: OpenSSL::SSL::VERIFY_NONE } }
+      else
+        redis_url
+      end
+
+    FinanceTracker::SecureSession.setup(redis_server)
+    puts 'Deleting all sessions from Redis session store'
+    wiped_count = FinanceTracker::SecureSession.wipe_redis_sessions
+    puts "#{wiped_count} sessions deleted"
   end
 end
 

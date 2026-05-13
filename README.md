@@ -20,11 +20,15 @@ From WSL in this repo:
 
 	`bundle install`
 
-2. Start the web app:
+2. Generate a session encryption key:
 
-	`SESSION_SECRET=<64+ chars> MSG_KEY=<base64 key> bundle exec rackup -p 9292`
+	`bundle exec rake generate:msg_key`
 
-3. Visit `http://localhost:9292`.
+3. Start the web app:
+
+	`MSG_KEY=<base64 key> bundle exec rackup -p 9292`
+
+4. Visit `http://localhost:9292`.
 
 ### Security/session environment variables
 
@@ -32,8 +36,32 @@ From WSL in this repo:
   When set to `HTTPS`, the app redirects HTTP requests to HTTPS and sets HSTS.
 - `MSG_KEY` (Base64 key)  
   Used by secure session encryption (`rake generate:msg_key`).
-- `REDIS_URL` (required in production)  
+- `REDISCLOUD_URL` or `REDIS_URL` (required in production)  
   Production uses Redis-backed sessions; development/test use pooled in-memory sessions.
+  Both standard Heroku Redis and RedisCloud add-ons are supported.
+
+### Session storage strategy
+
+- Development/Test: `Rack::Session::Pool`
+- Production: `Rack::Session::Redis`
+
+For `rediss://` URLs, the app uses TLS and disables certificate verification
+to match managed Heroku Redis deployment behavior.
+
+### Heroku Redis provisioning
+
+1. Provision Redis add-on on the app.
+2. Ensure one of these config vars exists:
+   - `REDISCLOUD_URL` (RedisCloud)
+   - `REDIS_URL` (Heroku Redis)
+3. Set `SECURE_SCHEME=HTTPS`.
+4. Set `MSG_KEY` using `bundle exec rake generate:msg_key`.
+
+### Redis session maintenance
+
+To wipe all Redis sessions (e.g., forced logout after key rotation):
+
+`bundle exec rake session:wipe`
 
 ## API integration
 

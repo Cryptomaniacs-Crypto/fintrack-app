@@ -17,6 +17,7 @@ gem 'base64'
 
 # Communication
 gem 'http', '~>5.1'
+gem 'redis', '~>5.0'
 
 # Security
 gem 'rbnacl', '~>7.1'
@@ -26,6 +27,7 @@ gem 'pry'
 
 group :production do
   gem 'redis-rack'
+  gem 'redis-store'
 end
 
 group :development do
