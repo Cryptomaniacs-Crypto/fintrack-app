@@ -1,0 +1,9 @@
+div class="text-center"
+  h1 class="display-5 mb-3" FinTrack
+  p class="lead" Personal finance tracking — wallets, categories, transactions.
+  - if current_account
+    p Logged in as
+      strong  #{current_account['username']}
+    a class="btn btn-primary" href="/account" Go to your account
+  - else
+    a class="btn btn-primary" href="/auth/login" Log in

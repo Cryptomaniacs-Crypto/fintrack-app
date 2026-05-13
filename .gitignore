@@ -1,0 +1,17 @@
+.DS_Store
+*.log
+
+# Bundler
+.bundle/
+vendor/bundle
+Gemfile.lock
+
+# Secrets
+config/secrets.yml
+
+# AI tooling
+CLAUDE.local.md
+.claude/
+
+# Local scratch
+_*

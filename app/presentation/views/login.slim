@@ -1,0 +1,14 @@
+div class="row justify-content-center"
+  div class="col-md-6 col-lg-5"
+    div class="card-pastel"
+      h4 class="text-center mb-4" Welcome back
+      p class="text-center text-muted mb-4" Sign in to keep tracking your finances
+      form method='post' action='/auth/login' id='form-login' accept-charset="UTF-8"
+        div class="form-group mb-3"
+          label for='input-username' class="form-label" Username
+          input type='text' name='username' id='input-username' class="form-control" placeholder="your username" required="required" autofocus="autofocus"
+        div class="form-group mb-4"
+          label for='input-password' class="form-label" Password
+          input type='password' name='password' id='input-password' class="form-control" placeholder="your password" required="required"
+
+        button type='submit' id='button-login' class="btn btn-primary w-100" Log in

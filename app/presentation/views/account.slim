@@ -1,0 +1,26 @@
+div class="row justify-content-center"
+  div class="col-md-8"
+    h4 class="mb-3" Account overview
+    div class="card"
+      div class="card-body"
+        dl class="row mb-0"
+          dt class="col-sm-3" Username
+          dd class="col-sm-9"= account['username']
+
+          dt class="col-sm-3" Email
+          dd class="col-sm-9"= account['email']
+
+          dt class="col-sm-3" Account ID
+          dd class="col-sm-9"
+            code= account['id']
+
+          dt class="col-sm-3" Roles
+          dd class="col-sm-9"
+            - roles = account['system_roles'] || []
+            - if roles.empty?
+              span class="text-muted" (none)
+            - else
+              - roles.each do |role|
+                span class="badge bg-secondary me-1"= role
+
+    a class="btn btn-outline-secondary mt-3" href="/auth/logout" Log out
