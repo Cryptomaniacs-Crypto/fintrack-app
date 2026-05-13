@@ -8,4 +8,5 @@ tmp/
 vendor/bundle
 
 .github/*
-
+SERVSEC_WORKPLAN.md
+tyto2026-app-2-secure-session
