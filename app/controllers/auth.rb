@@ -3,6 +3,7 @@
 require_relative 'app'
 require_relative '../services/authenticate_account'
 require_relative '../services/create_account'
+require_relative '../lib/secure_session'
 
 module FinanceTracker
   class App < Roda
@@ -18,9 +19,7 @@ module FinanceTracker
 
           begin
             account = FinanceTracker::Services::AuthenticateAccount.new.call(username:, password:)
-            puts "DEBUG: Authenticated account = #{account.inspect}"
-            session['current_account'] = account
-            puts "DEBUG: Session after login = #{session.inspect}"
+            SecureSession.set(session, 'current_account', account)
             flash[:notice] = "Welcome back #{account['username']}!"
             routing.redirect '/'
           rescue FinanceTracker::Services::AuthenticateAccount::UnauthorizedError
@@ -59,7 +58,7 @@ module FinanceTracker
         end
 
         routing.get 'logout' do
-          session.delete('current_account')
+          SecureSession.delete(session, 'current_account')
           flash[:notice] = 'Logged out'
           routing.redirect '/auth/login'
         end

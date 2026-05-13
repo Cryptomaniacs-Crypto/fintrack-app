@@ -38,6 +38,12 @@ namespace :generate do
     require 'base64'
     puts "New SESSION_SECRET (base64): #{Base64.urlsafe_encode64(RbNaCl::Random.random_bytes(64))}"
   end
+
+  desc 'Create message encryption key for MSG_KEY'
+  task :msg_key do
+    require_relative './app/lib/secure_message'
+    puts "MSG_KEY: #{FinanceTracker::SecureMessage.generate_key}"
+  end
 end
 
 namespace :url do

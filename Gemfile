@@ -24,6 +24,10 @@ gem 'rbnacl', '~>7.1'
 # Debugging
 gem 'pry'
 
+group :production do
+  gem 'redis-rack'
+end
+
 group :development do
   gem 'bundler-audit'
   gem 'rake'

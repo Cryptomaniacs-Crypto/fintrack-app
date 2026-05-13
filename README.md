@@ -22,9 +22,18 @@ From WSL in this repo:
 
 2. Start the web app:
 
-	`SESSION_SECRET=change-me bundle exec rackup -p 9292`
+	`SESSION_SECRET=<64+ chars> MSG_KEY=<base64 key> bundle exec rackup -p 9292`
 
 3. Visit `http://localhost:9292`.
+
+### Security/session environment variables
+
+- `SECURE_SCHEME` (`HTTP` for development/test, `HTTPS` for production)  
+  When set to `HTTPS`, the app redirects HTTP requests to HTTPS and sets HSTS.
+- `MSG_KEY` (Base64 key)  
+  Used by secure session encryption (`rake generate:msg_key`).
+- `REDIS_URL` (required in production)  
+  Production uses Redis-backed sessions; development/test use pooled in-memory sessions.
 
 ## API integration
 
