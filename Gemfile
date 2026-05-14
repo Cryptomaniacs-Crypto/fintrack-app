@@ -40,4 +40,7 @@ end
 group :development, :test do
   gem 'rack-test'
   gem 'rerun'
+  gem 'minitest'
+  gem 'minitest-rg'
+  gem 'webmock'
 end
