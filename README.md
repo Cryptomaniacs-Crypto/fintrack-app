@@ -8,6 +8,8 @@ Server-rendered web client (Roda + Slim) that follows the FinanceTracker app str
 - `/auth/login` login
 - `/auth/register` register
 - `/account/:username` account overview (requires login)
+- `/payment-methods` payment method list (requires login)
+- `/payment-methods/new` create payment method form (requires login)
 - `DELETE /account/:username` logout by clearing the session
 
 This frontend is a session-based client for the API. It does not expose admin/system-role management routes.
