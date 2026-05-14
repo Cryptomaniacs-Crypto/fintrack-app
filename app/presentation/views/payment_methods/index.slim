@@ -1,0 +1,26 @@
+h1 Payment Methods
+
+div class="d-flex justify-content-end mb-3"
+  a class="btn btn-primary" href="/payment-methods/new" Add Payment Method
+
+- if payment_methods.empty?
+  p class="text-muted" No payment methods yet.
+- else
+  div class="table-responsive"
+    table class="table table-striped"
+      thead
+        tr
+          th Name
+          th Type
+          th Account/Card
+          th Opening Balance
+      tbody
+        - payment_methods.each do |entry|
+          - attrs = entry['data'] ? entry['data']['attributes'] : entry['attributes']
+          - account_number = attrs['account_number'].to_s
+          - masked_account = account_number.empty? ? '-' : "••••#{account_number[-4, 4]}"
+          tr
+            td = attrs['name']
+            td = attrs['method_type'].to_s.split('_').map(&:capitalize).join(' ')
+            td = masked_account
+            td = attrs['balance']
