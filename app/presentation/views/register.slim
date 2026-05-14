@@ -5,6 +5,9 @@
         h1.h3.text-center.mb-4 Create account
         form method="post" action="/auth/register"
           .mb-3
+            label.form-label for="username" Username
+            input#username.form-control type="text" name="username" required=true autocomplete="username"
+          .mb-3
             label.form-label for="email" Email
             input#email.form-control type="email" name="email" required=true autocomplete="email"
           .mb-4
