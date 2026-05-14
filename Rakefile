@@ -2,8 +2,16 @@
 
 require './require_app'
 
+require 'rake/testtask'
+
 task :print_env do
   puts "Environment: #{ENV['RACK_ENV'] || 'development'}"
+end
+
+desc 'Run tests'
+Rake::TestTask.new(:spec) do |t|
+  t.pattern = 'spec/**/*_spec.rb'
+  t.warning = false
 end
 
 desc 'Run application console (pry)'

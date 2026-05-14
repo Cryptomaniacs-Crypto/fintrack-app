@@ -53,12 +53,40 @@ Building an authenticated web client for fintrack-api using Roda framework + Sli
 7. CSS file in correct location
 8. Authentication parsing fixed for API response shape
 9. **Session key fix**: Changed from `:current_account` (symbol) to `'current_account'` (string)
+10. **Test refactoring**: Split service tests into separate files (`service_authenticate_spec.rb` and `service_create_account_spec.rb`)
+11. **Minitest spec support**: Added `require 'minitest/spec'` to spec_helper.rb to enable `must_raise` assertions
+12. **Heroku deployment ready**: Created Procfile for Heroku deployment
+13. **Heroku CLI configured**: Installed and authenticated with Heroku
 
 ## Current Issues 🔴
-### Issue: Login redirect flow
-- **Reference pattern**: Successful login redirects to `/`, then the home page uses the session-backed account state
-- **Local fix applied**: Successful login now follows the same flow instead of redirecting straight to `/account/username`
-- **Follow-up**: Keep an eye on direct account-page access, especially for admin views and API calls that still depend on the backend URL
+None - all known issues resolved. Ready for deployment.
+
+## Deployment
+
+### Heroku Setup
+- **Procfile**: Created with `web: bundle exec puma -t 5:5 -p ${PORT:-3000} -e ${RACK_ENV:-development}`
+- **CLI**: Heroku CLI installed and authenticated in WSL
+- **Apps**: Two separate Heroku apps created by team member:
+  - fintrack-api app (backend API)
+  - fintrack-app (web client)
+
+### Deployment Steps
+```bash
+# For API repo
+cd ~/ServiceSecurity/fintrack-api
+heroku git:remote -a <api-app-name>
+git push heroku main
+
+# For web app repo
+cd ~/ServiceSecurity/fintrack-app
+heroku git:remote -a <web-app-name>
+heroku config:set FINTRACK_API_URL=https://<api-app-name>.herokuapp.com
+git push heroku main
+```
+
+### Environment Variables
+- `SESSION_SECRET`: Set to 64+ char secret on Heroku
+- `FINTRACK_API_URL`: Set to deployed API URL
 
 ## Key Fixes Applied
 
@@ -101,6 +129,8 @@ account.merge('system_roles' => system_roles_array.map { |role| role['name'] })
 - Roda 3.0 with plugins: render, assets, multi_route, flash, sessions
 
 ## Testing Checklist
+- [x] Minitest spec assertions (`must_raise`) working after loading minitest/spec
+- [x] Service tests split into separate files for clarity
 - [ ] Login with correct credentials → redirects to account page without needing refresh
 - [ ] Wrong password → shows "Username and password did not match" error
 - [ ] Admin user can view other accounts
@@ -108,9 +138,11 @@ account.merge('system_roles' => system_roles_array.map { |role| role['name'] })
 - [ ] Logout works correctly
 - [ ] Flash messages display correctly
 - [ ] System roles display as badges on account page
+- [ ] Production deployment test on Heroku
 
 ## Next Steps
-1. Debug why redirect after login sometimes fails (investigate transactions list)
-2. Potentially render account page directly instead of redirecting
-3. Test admin role management flows
-4. Verify logout clears session properly
+1. Deploy both repos to Heroku using `git push heroku main`
+2. Set environment variables on Heroku (`SESSION_SECRET`, `FINTRACK_API_URL`)
+3. Test production login flow
+4. Monitor logs for any production issues: `heroku logs --tail -a <app-name>`
+5. Run full test suite before deployment: `bundle exec rake spec`
