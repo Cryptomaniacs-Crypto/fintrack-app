@@ -19,7 +19,7 @@ module FinanceTracker
           password = routing.params['password'].to_s
 
           begin
-            account = FinanceTracker::Services::AuthenticateAccount.new.call(username:, password:)
+            account = FinanceTracker::Services::AuthenticateAccount.new(App.config).call(username:, password:)
             SecureSession.set(session, 'current_account', account)
             flash[:notice] = "Welcome back #{account['username']}!"
             routing.redirect '/'
@@ -44,7 +44,7 @@ module FinanceTracker
           password = routing.params['password'].to_s
 
           begin
-            FinanceTracker::Services::CreateAccount.new(nil).call(email:, username:, password:)
+            FinanceTracker::Services::CreateAccount.new(App.config).call(email:, username:, password:)
             flash[:notice] = 'Account created. Please log in.'
             routing.redirect '/auth/login'
           rescue FinanceTracker::Services::CreateAccount::InvalidAccount => e

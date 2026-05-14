@@ -15,6 +15,7 @@ module FinanceTracker
     plugin :assets, css: 'style.css', path: 'app/presentation/assets'
     plugin :public, root: 'app/presentation/public'
     plugin :multi_route
+    plugin :sessions, secret: (ENV['SESSION_SECRET'] || App.config.SESSION_SECRET)
     plugin :flash
     plugin :all_verbs
 

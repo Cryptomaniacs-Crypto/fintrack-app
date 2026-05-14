@@ -3,6 +3,8 @@
 source 'https://rubygems.org'
 ruby File.read('.ruby-version').strip
 
+gem 'logger'
+
 # Web
 gem 'puma', '~>7.0'
 gem 'rack-session', '~>2.0'

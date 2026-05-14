@@ -62,7 +62,11 @@ module FinanceTracker
       private
 
       def url(path)
-        "#{@base_url}#{path}"
+        path_str = path.to_s
+        if @base_url.end_with?('/api/v1') && path_str.start_with?('/api/v1')
+          path_str = path_str.sub(%r{\A/api/v1}, '')
+        end
+        "#{@base_url}#{path_str}"
       end
 
       def parse(response)
