@@ -12,7 +12,7 @@ module FinanceTracker
       end
 
       def call(email:, username:, password:)
-        @client.post('/accounts', { email: email, username: username, password: password })
+        @client.post('/api/v1/accounts', { email: email, username: username, password: password })
       rescue ApiClient::ApiError => e
         raise InvalidAccount, e.message
       end

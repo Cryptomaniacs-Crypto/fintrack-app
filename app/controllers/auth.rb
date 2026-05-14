@@ -2,6 +2,8 @@
 
 require_relative 'app'
 require_relative '../services/authenticate_account'
+require_relative '../services/create_account'
+require_relative '../lib/secure_session'
 require_relative '../lib/secure_session'
 
 module FinanceTracker
@@ -37,9 +39,23 @@ module FinanceTracker
         end
 
         routing.post 'register' do
-          flash.now[:error] = 'Registration is not available in this client'
-          response.status = 501
-          view :register
+          email = routing.params['email'].to_s.strip
+          username = routing.params['username'].to_s.strip
+          password = routing.params['password'].to_s
+
+          begin
+            FinanceTracker::Services::CreateAccount.new(nil).call(email:, username:, password:)
+            flash[:notice] = 'Account created. Please log in.'
+            routing.redirect '/auth/login'
+          rescue FinanceTracker::Services::CreateAccount::InvalidAccount => e
+            flash.now[:error] = e.message.empty? ? 'Could not create account' : e.message
+            response.status = 400
+            view :register
+          rescue StandardError
+            flash.now[:error] = 'Registration service unavailable'
+            response.status = 502
+            view :register
+          end
         end
 
         routing.get 'logout' do
