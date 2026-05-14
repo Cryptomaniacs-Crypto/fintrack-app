@@ -19,13 +19,12 @@ module FinanceTracker
       end
 
       def initialize(config = nil, base_url: ENV.fetch('FINTRACK_API_URL', 'http://localhost:9292'))
-        @base_url = if config.respond_to?(:API_URL)
-                      config.API_URL
-                    elsif config.is_a?(Hash)
-                      config[:API_URL] || config['API_URL'] || base_url
-                    else
-                      base_url
-                    end
+        configured = if config.respond_to?(:API_URL)
+                       config.API_URL
+                     elsif config.is_a?(Hash)
+                       config[:API_URL] || config['API_URL']
+                     end
+        @base_url = configured.to_s.empty? ? base_url : configured
       end
 
       def get(path, params: {})
