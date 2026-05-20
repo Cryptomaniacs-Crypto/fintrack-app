@@ -17,12 +17,16 @@ module FinanceTracker
 
         response = @client.post('/api/v1/auth/authentication', { username: username, password: password })
 
-        attributes = response.fetch('data', {}).fetch('attributes', {})
+        # API returns: { type: 'authenticated_account',
+        #                attributes: { account: <Account.to_json envelope>, auth_token: '...' } }
+        # where Account.to_json envelope is { data: { type: 'account', attributes: {id, username, email, avatar} } }
+        top_attributes = response.fetch('attributes', {})
+        auth_token = top_attributes['auth_token']
+        account_envelope = top_attributes['account'] || {}
+        account_info = (account_envelope.dig('data', 'attributes') || {}).dup
+
         included = response['included'] || {}
         system_roles_array = included['system_roles'] || []
-
-        account_info = attributes.dup
-        auth_token = account_info.delete('auth_token') || response.dig('meta', 'auth_token') || response['auth_token']
         account_info['system_roles'] = system_roles_array.map { |role| role['name'] }
 
         if @current_session
