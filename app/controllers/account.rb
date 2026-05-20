@@ -54,6 +54,7 @@ module FinanceTracker
         end
 
         require_login!(routing)
+        auth_token = FinanceTracker::CurrentSession.new(session).auth_token
         username = username_or_token
 
         unless username == @current_account['username'] || system_admin?(@current_account)
@@ -72,7 +73,7 @@ module FinanceTracker
 
             routing.put do
               FinanceTracker::Services::AssignSystemRole.new.call(
-                current_account_id: @current_account['id'],
+                auth_token: auth_token,
                 target_username: username,
                 role_name: role_name
               )
@@ -85,7 +86,7 @@ module FinanceTracker
 
             routing.delete do
               FinanceTracker::Services::RevokeSystemRole.new.call(
-                current_account_id: @current_account['id'],
+                auth_token: auth_token,
                 target_username: username,
                 role_name: role_name
               )
@@ -132,7 +133,8 @@ module FinanceTracker
 
       raise StandardError, 'Not authorized' unless system_admin?(@current_account)
 
-      FinanceTracker::Services::GetAccount.new.call(username, current_account_id: @current_account['id'])
+      auth_token = FinanceTracker::CurrentSession.new(session).auth_token
+      FinanceTracker::Services::GetAccount.new.call(username, auth_token: auth_token)
     end
   end
 end

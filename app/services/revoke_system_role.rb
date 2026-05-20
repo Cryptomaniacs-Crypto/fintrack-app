@@ -13,12 +13,13 @@ module FinanceTracker
         @client = ApiClient.new(base_url: base_url)
       end
 
-      def call(current_account_id:, target_username:, role_name:)
+      def call(auth_token:, target_username:, role_name:)
         raise InvalidInput, "Role must be one of: #{VALID_ROLES.join(', ')}" unless VALID_ROLES.include?(role_name)
 
-        @client.authenticated_delete(
+        @client.delete(
           "/api/v1/accounts/#{target_username}/system_roles/#{role_name}",
-          current_account_id: current_account_id
+          nil,
+          auth_token: auth_token
         )
       end
     end

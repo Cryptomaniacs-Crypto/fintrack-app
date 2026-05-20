@@ -27,38 +27,33 @@ module FinanceTracker
         @base_url = configured.to_s.empty? ? base_url : configured
       end
 
-      def get(path, params: {})
+      def get(path, params: {}, auth_token: nil)
         full_path = params.empty? ? path : "#{path}?#{URI.encode_www_form(params)}"
-        parse(HTTP.get(url(full_path)))
+        parse(http(auth_token: auth_token).get(url(full_path)))
       end
 
-      def post(path, body)
-        parse(HTTP.post(url(path), json: body))
+      def post(path, body, auth_token: nil)
+        parse(http(auth_token: auth_token).post(url(path), json: body))
       end
 
-      def put(path, body)
-        parse(HTTP.put(url(path), json: body))
+      def put(path, body, auth_token: nil)
+        parse(http(auth_token: auth_token).put(url(path), json: body))
       end
 
-      def delete(path, body = nil)
-        request = HTTP.headers('Content-Type' => 'application/json')
+      def delete(path, body = nil, auth_token: nil)
+        request = http(auth_token: auth_token).headers('Content-Type' => 'application/json')
         response = body ? request.delete(url(path), body: body.to_json) : request.delete(url(path))
         parse(response)
       end
 
-      def authenticated_post(path, body, current_account_id:)
-        post(path, body.merge(current_account_id: current_account_id))
-      end
-
-      def authenticated_put(path, body, current_account_id:)
-        put(path, body.merge(current_account_id: current_account_id))
-      end
-
-      def authenticated_delete(path, current_account_id:)
-        delete(path, { current_account_id: current_account_id })
-      end
-
       private
+
+      def http(auth_token: nil)
+        token = auth_token.to_s
+        return HTTP if token.empty?
+
+        HTTP.headers('Authorization' => "Bearer #{token}")
+      end
 
       def url(path)
         path_str = path.to_s
