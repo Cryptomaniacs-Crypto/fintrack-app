@@ -19,9 +19,11 @@ module FinanceTracker
           password = routing.params['password'].to_s
 
           begin
-            account = FinanceTracker::Services::AuthenticateAccount.new(App.config).call(username:, password:)
-            SecureSession.set(session, 'current_account', account)
-            flash[:notice] = "Welcome back #{account['username']}!"
+            current_session = FinanceTracker::CurrentSession.new(session)
+            result = FinanceTracker::Services::AuthenticateAccount
+                     .new(App.config, current_session: current_session)
+                     .call(username:, password:)
+            flash[:notice] = "Welcome back #{result[:account]['username']}!"
             routing.redirect '/'
           rescue FinanceTracker::Services::AuthenticateAccount::UnauthorizedError
             flash.now[:error] = 'Username and password did not match our records'
@@ -75,7 +77,7 @@ module FinanceTracker
         end
 
         routing.get 'logout' do
-          SecureSession.delete(session, 'current_account')
+          FinanceTracker::CurrentSession.new(session).delete
           flash[:notice] = 'Logged out'
           routing.redirect '/auth/login'
         end
