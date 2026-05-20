@@ -1,0 +1,18 @@
+h1 Categories
+
+- if categories.empty?
+  p class="text-muted" No categories yet.
+- else
+  div class="table-responsive"
+    table class="table table-striped"
+      thead
+        tr
+          th Name
+          th Description
+      tbody
+        - categories.each do |entry|
+          - attrs = entry['data'] ? entry['data']['attributes'] : entry['attributes']
+          - attrs ||= entry
+          tr
+            td = attrs['name']
+            td = attrs['description']

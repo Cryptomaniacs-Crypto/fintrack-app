@@ -1,0 +1,22 @@
+h1 Transactions
+
+- if transactions.empty?
+  p class="text-muted" No transactions yet.
+- else
+  div class="table-responsive"
+    table class="table table-striped"
+      thead
+        tr
+          th Date
+          th Title
+          th Amount
+          th Note
+      tbody
+        - transactions.each do |entry|
+          - attrs = entry['data'] ? entry['data']['attributes'] : entry['attributes']
+          - attrs ||= entry
+          tr
+            td = attrs['transaction_date']
+            td = attrs['title']
+            td = attrs['amount']
+            td = attrs['note']
