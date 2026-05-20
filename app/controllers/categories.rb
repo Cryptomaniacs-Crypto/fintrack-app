@@ -8,11 +8,12 @@ module FinanceTracker
   class App < Roda
     route('categories') do |routing|
       require_login!(routing)
+      auth_token = FinanceTracker::CurrentSession.new(session).auth_token
 
       routing.is do
         # GET /categories
         routing.get do
-          categories = FinanceTracker::Services::ListCategories.new.call
+          categories = FinanceTracker::Services::ListCategories.new.call(auth_token: auth_token)
           view 'categories/index', locals: { categories: categories }
         rescue StandardError => e
           flash[:error] = "Could not load categories: #{e.message}"

@@ -10,8 +10,8 @@ module FinanceTracker
         @client = ApiClient.new(base_url: base_url)
       end
 
-      def call
-        @client.get('/api/v1/categories').fetch('data', [])
+      def call(auth_token:)
+        @client.get('/api/v1/categories', auth_token: auth_token).fetch('data', [])
       end
     end
   end

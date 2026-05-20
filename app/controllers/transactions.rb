@@ -8,13 +8,13 @@ module FinanceTracker
   class App < Roda
     route('transactions') do |routing|
       require_login!(routing)
-      current_account_id = @current_account['id']
+      auth_token = FinanceTracker::CurrentSession.new(session).auth_token
 
       routing.is do
         # GET /transactions
         routing.get do
           transactions = FinanceTracker::Services::ListTransactions.new.call(
-            current_account_id: current_account_id
+            auth_token: auth_token
           )
           view 'transactions/index', locals: { transactions: transactions }
         rescue StandardError => e
