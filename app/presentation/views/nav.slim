@@ -11,6 +11,10 @@ nav.navbar.navbar-expand-sm.navbar-dark.bg-primary
         - if @current_account
           li.nav-item
             a.nav-link href="/payment-methods" Payment Methods
+          li.nav-item
+            a.nav-link href="/transactions" Transactions
+          li.nav-item
+            a.nav-link href="/categories" Categories
           li.nav-item.dropdown
             a.nav-link.dropdown-toggle href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
               = @current_account['username']
