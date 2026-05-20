@@ -19,7 +19,8 @@ describe 'Test Service Objects' do
       'data' => {
         'attributes' => {
           'username' => 'testuser',
-          'email' => 'test@example.com'
+          'email' => 'test@example.com',
+          'auth_token' => 'test-token-123'
         }
       },
       'included' => {
@@ -41,10 +42,11 @@ describe 'Test Service Objects' do
           headers: { 'content-type' => 'application/json' }
         )
 
-      account = FinanceTracker::Services::AuthenticateAccount.new.call(**@credentials)
-      _(account).wont_be_nil
-      _(account['username']).must_equal 'testuser'
-      _(account['email']).must_equal 'test@example.com'
+      result = FinanceTracker::Services::AuthenticateAccount.new.call(**@credentials)
+      _(result).wont_be_nil
+      _(result[:account]['username']).must_equal 'testuser'
+      _(result[:account]['email']).must_equal 'test@example.com'
+      _(result[:auth_token]).must_equal 'test-token-123'
     end
 
     it 'BAD: should raise error on wrong credentials' do

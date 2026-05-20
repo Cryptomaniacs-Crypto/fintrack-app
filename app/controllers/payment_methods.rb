@@ -9,7 +9,7 @@ module FinanceTracker
   class App < Roda
     route('payment-methods') do |routing|
       require_login!(routing)
-      current_account_id = @current_account['id']
+      auth_token = FinanceTracker::CurrentSession.new(session).auth_token
 
       # GET /payment-methods/new
       routing.is 'new' do
@@ -20,7 +20,7 @@ module FinanceTracker
         # GET /payment-methods
         routing.get do
           payment_methods = FinanceTracker::Services::ListPaymentMethods.new.call(
-            current_account_id: current_account_id
+            auth_token: auth_token
           )
           view 'payment_methods/index', locals: { payment_methods: payment_methods }
         rescue StandardError => e
@@ -31,7 +31,7 @@ module FinanceTracker
         # POST /payment-methods
         routing.post do
           FinanceTracker::Services::CreatePaymentMethod.new.call(
-            current_account_id: current_account_id,
+            auth_token: auth_token,
             name: routing.params['name'],
             method_type: routing.params['method_type'],
             account_number: routing.params['account_number'],

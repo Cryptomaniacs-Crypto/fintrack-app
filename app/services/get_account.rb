@@ -9,8 +9,8 @@ module FinanceTracker
         @client = ApiClient.new(base_url: base_url)
       end
 
-      def call(username, current_account_id:)
-        @client.get("/api/v1/accounts/#{username}", params: { current_account_id: current_account_id })
+      def call(username, auth_token:)
+        @client.get("/api/v1/accounts/#{username}", auth_token: auth_token)
       end
     end
   end

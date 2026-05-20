@@ -45,7 +45,7 @@ Building an authenticated web client for fintrack-api using Roda framework + Sli
 
 ## Completed ✅
 1. Roda session setup with 64+ char secret validation
-2. Login flow wired to API
+2. Login flow wired to API (endpoint still being verified)
 3. Session persistence with system_roles
 4. Account page display
 5. Admin role checking
@@ -55,11 +55,17 @@ Building an authenticated web client for fintrack-api using Roda framework + Sli
 9. **Session key fix**: Changed from `:current_account` (symbol) to `'current_account'` (string)
 10. **Test refactoring**: Split service tests into separate files (`service_authenticate_spec.rb` and `service_create_account_spec.rb`)
 11. **Minitest spec support**: Added `require 'minitest/spec'` to spec_helper.rb to enable `must_raise` assertions
-12. **Heroku deployment ready**: Created Procfile for Heroku deployment
-13. **Heroku CLI configured**: Installed and authenticated with Heroku
+12. **Heroku deployment**: Created Procfile, deployed both repos to Heroku
+13. **Account creation**: Enabled registration flow, fixed endpoint to `/api/v1/accounts` → now working (201 response)
+14. **Heroku CLI configured**: Installed and authenticated with Heroku
 
 ## Current Issues 🔴
-None - all known issues resolved. Ready for deployment.
+### Issue: Login endpoint 404
+- **Status**: Authentication endpoint `/api/v1/auth/authentication` returns 404 on deployed API
+- **Cause**: Endpoint path mismatch between web app and API
+- **Action needed**: Find correct login/authentication endpoint on fintrack-api and update `authenticate_account.rb`
+- **Current call**: `POST /api/v1/auth/authentication`
+- **Account creation fixed**: `POST /api/v1/accounts` → working
 
 ## Deployment
 
@@ -70,7 +76,12 @@ None - all known issues resolved. Ready for deployment.
   - fintrack-api app (backend API)
   - fintrack-app (web client)
 
-### Deployment Steps
+### Deployment Status
+- ✅ Both apps deployed to Heroku
+- ✅ Web app connects to API (FINTRACK_API_URL set)
+- ✅ Account creation endpoint working
+- ❌ Login endpoint not found (404)
+- ❌ Authentication not functional yet
 ```bash
 # For API repo
 cd ~/ServiceSecurity/fintrack-api
@@ -131,6 +142,8 @@ account.merge('system_roles' => system_roles_array.map { |role| role['name'] })
 ## Testing Checklist
 - [x] Minitest spec assertions (`must_raise`) working after loading minitest/spec
 - [x] Service tests split into separate files for clarity
+- [x] Account registration works (POST /api/v1/accounts returns 201)
+- [ ] Login endpoint correct path (currently 404 on /api/v1/auth/authentication)
 - [ ] Login with correct credentials → redirects to account page without needing refresh
 - [ ] Wrong password → shows "Username and password did not match" error
 - [ ] Admin user can view other accounts
@@ -141,8 +154,11 @@ account.merge('system_roles' => system_roles_array.map { |role| role['name'] })
 - [ ] Production deployment test on Heroku
 
 ## Next Steps
-1. Deploy both repos to Heroku using `git push heroku main`
-2. Set environment variables on Heroku (`SESSION_SECRET`, `FINTRACK_API_URL`)
-3. Test production login flow
-4. Monitor logs for any production issues: `heroku logs --tail -a <app-name>`
-5. Run full test suite before deployment: `bundle exec rake spec`
+1. **PRIORITY**: Find correct authentication/login endpoint on fintrack-api
+   - Check fintrack-api routes for auth/authentication endpoints
+   - Update `authenticate_account.rb` to use correct path
+   - Redeploy web app and test login
+2. Test login with newly created account after endpoint is fixed
+3. Test admin role management flows
+4. Verify logout clears session properly
+5. Run full test suite before final deployment: `bundle exec rake spec`
