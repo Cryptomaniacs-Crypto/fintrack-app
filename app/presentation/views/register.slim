@@ -2,7 +2,9 @@
   .col-md-8.col-lg-5
     .card.shadow-sm.border-0
       .card-body.p-4.p-md-5
-        h1.h3.text-center.mb-4 Create account
+        h1.h3.text-center.mb-3 Create account
+        p.text-muted.small.text-center.mb-4
+          | We'll email you a verification link. Click it to set a password and finish creating your account.
         form method="post" action="/auth/register"
           .mb-3
             label.form-label for="username" Username
@@ -10,7 +12,4 @@
           .mb-3
             label.form-label for="email" Email
             input#email.form-control type="email" name="email" required=true autocomplete="email"
-          .mb-4
-            label.form-label for="password" Password
-            input#password.form-control type="password" name="password" required=true autocomplete="new-password"
-          button.btn.btn-primary.w-100 type="submit" Create account
+          button.btn.btn-primary.w-100 type="submit" Send verification email

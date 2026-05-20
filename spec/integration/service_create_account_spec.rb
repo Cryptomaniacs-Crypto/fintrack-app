@@ -17,7 +17,7 @@ describe 'CreateAccount service' do
   end
 
   it 'HAPPY: posts to /accounts and returns on 201' do
-    WebMock.stub_request(:post, "#{API_URL}/accounts")
+    WebMock.stub_request(:post, "#{API_URL}/api/v1/accounts")
            .with(body: @new_account.to_json)
            .to_return(
              status: 201,
@@ -32,7 +32,7 @@ describe 'CreateAccount service' do
   end
 
   it 'BAD: raises InvalidAccount on 400 (mass-assignment)' do
-    WebMock.stub_request(:post, "#{API_URL}/accounts")
+    WebMock.stub_request(:post, "#{API_URL}/api/v1/accounts")
            .with(body: @new_account.to_json)
            .to_return(
              status: 400,
@@ -46,7 +46,7 @@ describe 'CreateAccount service' do
   end
 
   it 'BAD: raises InvalidAccount on 500' do
-    WebMock.stub_request(:post, "#{API_URL}/accounts")
+    WebMock.stub_request(:post, "#{API_URL}/api/v1/accounts")
            .with(body: @new_account.to_json)
            .to_return(
              status: 500,

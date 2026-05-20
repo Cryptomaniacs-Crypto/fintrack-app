@@ -2,8 +2,8 @@
 
 require_relative 'app'
 require_relative '../services/authenticate_account'
-require_relative '../services/create_account'
-require_relative '../lib/secure_session'
+require_relative '../services/verify_registration'
+require_relative '../lib/registration_token'
 require_relative '../lib/secure_session'
 
 module FinanceTracker
@@ -34,27 +34,43 @@ module FinanceTracker
           end
         end
 
-        routing.get 'register' do
-          view :register
-        end
+        routing.on 'register' do
+          routing.is String do |registration_token|
+            token = RegistrationToken.load(registration_token)
+            view :register_confirm, locals: {
+              registration_token: registration_token,
+              email: token.email,
+              username: token.username
+            }
+          rescue RegistrationToken::InvalidTokenError
+            flash[:error] = 'Verification link is invalid or expired'
+            routing.redirect '/auth/register'
+          end
 
-        routing.post 'register' do
-          email = routing.params['email'].to_s.strip
-          username = routing.params['username'].to_s.strip
-          password = routing.params['password'].to_s
+          routing.is do
+            routing.get do
+              view :register
+            end
 
-          begin
-            FinanceTracker::Services::CreateAccount.new(App.config).call(email:, username:, password:)
-            flash[:notice] = 'Account created. Please log in.'
-            routing.redirect '/auth/login'
-          rescue FinanceTracker::Services::CreateAccount::InvalidAccount => e
-            flash.now[:error] = e.message.empty? ? 'Could not create account' : e.message
-            response.status = 400
-            view :register
-          rescue StandardError
-            flash.now[:error] = 'Registration service unavailable'
-            response.status = 502
-            view :register
+            routing.post do
+              FinanceTracker::Services::VerifyRegistration.new(App.config).call(
+                email: routing.params['email'].to_s.strip,
+                username: routing.params['username'].to_s.strip
+              )
+              flash[:notice] = 'Check your email for a verification link'
+              routing.redirect '/'
+            rescue FinanceTracker::Services::VerifyRegistration::VerificationError => e
+              flash[:error] = e.message
+              routing.redirect '/auth/register'
+            rescue FinanceTracker::Services::VerifyRegistration::ApiServerError => e
+              App.logger.warn "API server error: #{e.inspect}"
+              flash[:error] = 'Our servers are not responding -- please try later'
+              routing.redirect '/auth/register'
+            rescue StandardError => e
+              App.logger.error "ERROR REGISTERING: #{e.inspect}"
+              flash[:error] = 'Could not start registration'
+              routing.redirect '/auth/register'
+            end
           end
         end
 

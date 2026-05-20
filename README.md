@@ -34,6 +34,7 @@ From WSL in this repo:
 
 ### Security/session environment variables
 
+- `APP_URL` (Base URL for building registration verification links)
 - `SECURE_SCHEME` (`HTTP` for development/test, `HTTPS` for production)  
   When set to `HTTPS`, the app redirects HTTP requests to HTTPS and sets HSTS.
 - `MSG_KEY` (Base64 key)  

@@ -1,0 +1,21 @@
+.row.justify-content-center
+  .col-md-8.col-lg-5
+    .card.shadow-sm.border-0
+      .card-body.p-4.p-md-5
+        h1.h3.text-center.mb-3 Finish creating your account
+        p.text-muted.small.text-center.mb-4
+          | The link confirmed you control this email address. Set a password to complete registration.
+        form method="post" action="/account/#{registration_token}"
+          .mb-3
+            label.form-label Username
+            input.form-control type="text" value=username disabled=true
+          .mb-3
+            label.form-label Email
+            input.form-control type="email" value=email disabled=true
+          .mb-3
+            label.form-label for="password" Password
+            input#password.form-control type="password" name="password" required=true autocomplete="new-password"
+          .mb-4
+            label.form-label for="password_confirm" Confirm password
+            input#password_confirm.form-control type="password" name="password_confirm" required=true autocomplete="new-password"
+          button.btn.btn-primary.w-100 type="submit" Create account
