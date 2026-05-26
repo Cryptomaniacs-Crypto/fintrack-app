@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'account'
+
 module FinanceTracker
   class CurrentSession
     class SecureSessionAdapter
@@ -25,7 +27,7 @@ module FinanceTracker
     end
 
     def current_account
-      Account.new(@secure_session.get(:current_account), @secure_session.get(:auth_token))
+      Account.from_session(@secure_session.get(:current_account), @secure_session.get(:auth_token))
     end
 
     def auth_token

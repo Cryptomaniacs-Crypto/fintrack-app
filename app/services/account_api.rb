@@ -4,6 +4,8 @@ require 'json'
 require 'net/http'
 require 'uri'
 
+require_relative '../models/account'
+
 module FinanceTracker
   module Services
     class AccountApi
@@ -60,17 +62,8 @@ module FinanceTracker
 
       def parse_account_response(response)
         parsed = parse_api_response(response)
-        body = parsed.is_a?(Hash) ? parsed : {}
-        account = body['data'] || body
-        attrs = account['attributes'] || account
-        include_data = account['include'] || body['include'] || {}
 
-        {
-          'id' => attrs['id'] || attrs[:id],
-          'username' => attrs['username'] || attrs[:username],
-          'email' => attrs['email'] || attrs[:email],
-          'system_roles' => Array(include_data['system_roles'] || include_data[:system_roles]).map(&:to_s)
-        }.compact
+        FinanceTracker::Account.from_api(parsed).account_info
       end
 
       def parse_api_response(response)

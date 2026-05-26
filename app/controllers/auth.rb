@@ -5,6 +5,7 @@ require_relative '../services/authenticate_account'
 require_relative '../services/verify_registration'
 require_relative '../lib/registration_token'
 require_relative '../lib/secure_session'
+require_relative '../models/current_session'
 
 module FinanceTracker
   class App < Roda
@@ -19,9 +20,14 @@ module FinanceTracker
           password = routing.params['password'].to_s
 
           begin
-            account = FinanceTracker::Services::AuthenticateAccount.new(App.config).call(username:, password:)
-            SecureSession.set(session, 'current_account', account)
-            flash[:notice] = "Welcome back #{account['username']}!"
+            result = FinanceTracker::Services::AuthenticateAccount.new(App.config).call(username:, password:)
+            account_info = result.is_a?(Hash) ? (result[:account] || result['account'] || result) : {}
+            auth_token = result.is_a?(Hash) ? (result[:auth_token] || result['auth_token']) : nil
+
+            SecureSession.set(session, 'current_account', account_info)
+            SecureSession.set(session, 'auth_token', auth_token) if auth_token
+
+            flash[:notice] = "Welcome back #{account_info['username']}!"
             routing.redirect '/'
           rescue FinanceTracker::Services::AuthenticateAccount::UnauthorizedError
             flash.now[:error] = 'Username and password did not match our records'
@@ -76,6 +82,7 @@ module FinanceTracker
 
         routing.get 'logout' do
           SecureSession.delete(session, 'current_account')
+          SecureSession.delete(session, 'auth_token')
           flash[:notice] = 'Logged out'
           routing.redirect '/auth/login'
         end

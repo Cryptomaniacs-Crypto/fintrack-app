@@ -1,164 +1,91 @@
-# FinTrack Web App - Project Progress
+# FinTrack Web App — Project Progress
 
-## Project Overview
-Building an authenticated web client for fintrack-api using Roda framework + Slim templates.
-- **Location**: `\\wsl.localhost\Ubuntu\home\charleneshawn\ServiceSecurity\fintrack-app`
-- **API**: fintrack-api running on `http://localhost:9292` (port 9292, NOT 3000)
-- **Web App Port**: 9090
-- **Framework**: Roda 3.0 + Slim templating
-- **Session**: Cookie-based with Roda sessions plugin
+## Snapshot (May 26, 2026)
+Server-rendered web client for the FinTrack API using Roda + Slim.
 
-## Architecture
+## Repo Facts
+- **Web app**: Roda app mounted via [config.ru](config.ru)
+- **Default dev port**: 9292 (see `rake run:dev` in `Rakefile`)
+- **API base URL**: `FINTRACK_API_URL` (defaults to `http://localhost:9292` in service clients)
+
+## Current Architecture
 
 ### Controllers (app/controllers/)
-- **app.rb**: Base Roda class, session setup, global helpers
-  - `system_admin?` helper - checks if user has 'admin' role
-  - `require_login!` helper - redirects to login if not authenticated
-  - Session access: `session['current_account']` (STRING key, not symbol!)
-  
-- **auth.rb**: Login, logout, register routes
-  - POST /auth/login → calls AuthenticateAccount service
-  - Session stores account hash with: id, username, email, avatar, system_roles (array of role names)
-  
-- **account.rb**: Account overview, admin role management
-  - GET /account/:username → displays account details
-  - Admin routes for granting/revoking system roles (PUT/DELETE)
+- `app.rb`
+  - Loads Slim views + assets
+  - Sets `@current_account` from encrypted session via `SecureSession.get(session, 'current_account')`
+  - Helpers:
+    - `require_login!(routing)`
+    - `system_admin?(current_account=nil)`
+- `auth.rb`
+  - `GET /auth/login` (form)
+  - `POST /auth/login` → `Services::AuthenticateAccount` and stores both account + auth token via `CurrentSession`
+  - `GET /auth/register` (start registration)
+  - `GET /auth/register/:token` (confirm)
+  - `POST /auth/register` (initiate verification email)
+  - `GET /auth/logout` (clears session)
+- `account.rb`
+  - `GET /account` redirects to current user’s account page
+  - `GET /account/:username` (requires login; admins can view other users)
+  - `DELETE /account/:username` (clears session)
+  - Admin-only system role management:
+    - `PUT /account/:username/system_roles/:role_name`
+    - `DELETE /account/:username/system_roles/:role_name`
+- `payment_methods.rb`
+  - `GET /payment-methods` (list)
+  - `GET /payment-methods/new` (form)
+  - `POST /payment-methods` (create)
+
+### Models + Session (app/models/, app/lib/)
+- `SecureMessage` (NaCl SimpleBox)
+  - Requires `MSG_KEY` (base64) to encrypt/decrypt payloads
+- `SecureSession`
+  - Stores encrypted JSON blobs inside Rack session keys (`current_account`, `auth_token`)
+  - Includes a Redis-session wipe helper used by `rake session:wipe`
+- `CurrentSession`
+  - High-level accessor around `SecureSession` for `current_account` and `auth_token`
 
 ### Services (app/services/)
-- **api_client.rb**: HTTP wrapper using http gem
-  - Raises ApiClient::ApiError for non-2xx responses
-  - Stores status code + body in error
-  
-- **authenticate_account.rb**: Login service
-  - Calls POST /api/v1/auth/authentication
-  - **CRITICAL FIX**: Response.included is a Hash with 'system_roles' key, NOT an array!
-  - Returns account hash with system_roles as array of role name strings
-  
-- **get_account.rb**: Admin account lookup
-- **assign_system_role.rb**, **revoke_system_role.rb**: Role management
+- `ApiClient`
+  - HTTP wrapper using the `http` gem
+  - Raises `ApiClient::ApiError` on non-2xx and exposes `status` + `body`
+- `AuthenticateAccount`
+  - Calls `POST /api/v1/auth/authentication`
+  - Parses `included['system_roles']` into role name strings
+  - Returns `{ account:, auth_token: }` and (when given `current_session:`) persists both into session
+- `VerifyRegistration` → `POST /api/v1/auth/register`
+- `CreateAccount` → `POST /api/v1/accounts`
+- Payment methods:
+  - `ListPaymentMethods` → `GET /api/v1/wallets`
+  - `CreatePaymentMethod` → `POST /api/v1/wallets`
+- Accounts/roles (admin flows): `GetAccount`, `AssignSystemRole`, `RevokeSystemRole`
+- Transactions (account page for self): `FintrackApi#list_transactions` → `GET /api/v1/transactions`
 
-### Views (app/presentation/views/)
-- **layout.slim**: Base template with Bootstrap 5 Cerulean theme
-- **login.slim**: Login form
-- **account.slim**: Account page with role badges
-- CSS: `app/presentation/assets/css/style.css` (moved from old location)
+## Environment / Security
+- `MSG_KEY` (required): encryption key for `SecureMessage` (`bundle exec rake generate:msg_key`)
+- `FINTRACK_API_URL`: base URL of fintrack-api (defaults to `http://localhost:9292`)
+- `APP_URL`: used to generate verification links in registration flow
+- Production:
+  - `SECURE_SCHEME=HTTPS` (enables HTTPS redirect + HSTS)
+  - `REDISCLOUD_URL` or `REDIS_URL` (Redis-backed sessions)
+  - For `rediss://`, Redis TLS is used with cert verification disabled to match managed Heroku Redis behavior
 
-## Completed ✅
-1. Roda session setup with 64+ char secret validation
-2. Login flow wired to API (endpoint still being verified)
-3. Session persistence with system_roles
-4. Account page display
-5. Admin role checking
-6. Bootstrap UI styling
-7. CSS file in correct location
-8. Authentication parsing fixed for API response shape
-9. **Session key fix**: Changed from `:current_account` (symbol) to `'current_account'` (string)
-10. **Test refactoring**: Split service tests into separate files (`service_authenticate_spec.rb` and `service_create_account_spec.rb`)
-11. **Minitest spec support**: Added `require 'minitest/spec'` to spec_helper.rb to enable `must_raise` assertions
-12. **Heroku deployment**: Created Procfile, deployed both repos to Heroku
-13. **Account creation**: Enabled registration flow, fixed endpoint to `/api/v1/accounts` → now working (201 response)
-14. **Heroku CLI configured**: Installed and authenticated with Heroku
+## Completed ✅ (in this repo)
+- Registration start + verification-link confirmation flow wired to API
+- Account creation flow (`/api/v1/accounts`) wired
+- Login/logout routes implemented and session persistence handled via `CurrentSession`
+- Account page with viewer/target authorization checks
+- Payment method list/create flows implemented
+- Service integration tests exist for auth, registration verification, and account creation
 
-## Current Issues 🔴
-### Issue: Login endpoint 404
-- **Status**: Authentication endpoint `/api/v1/auth/authentication` returns 404 on deployed API
-- **Cause**: Endpoint path mismatch between web app and API
-- **Action needed**: Find correct login/authentication endpoint on fintrack-api and update `authenticate_account.rb`
-- **Current call**: `POST /api/v1/auth/authentication`
-- **Account creation fixed**: `POST /api/v1/accounts` → working
-
-## Deployment
-
-### Heroku Setup
-- **Procfile**: Created with `web: bundle exec puma -t 5:5 -p ${PORT:-3000} -e ${RACK_ENV:-development}`
-- **CLI**: Heroku CLI installed and authenticated in WSL
-- **Apps**: Two separate Heroku apps created by team member:
-  - fintrack-api app (backend API)
-  - fintrack-app (web client)
-
-### Deployment Status
-- ✅ Both apps deployed to Heroku
-- ✅ Web app connects to API (FINTRACK_API_URL set)
-- ✅ Account creation endpoint working
-- ❌ Login endpoint not found (404)
-- ❌ Authentication not functional yet
-```bash
-# For API repo
-cd ~/ServiceSecurity/fintrack-api
-heroku git:remote -a <api-app-name>
-git push heroku main
-
-# For web app repo
-cd ~/ServiceSecurity/fintrack-app
-heroku git:remote -a <web-app-name>
-heroku config:set FINTRACK_API_URL=https://<api-app-name>.herokuapp.com
-git push heroku main
-```
-
-### Environment Variables
-- `SESSION_SECRET`: Set to 64+ char secret on Heroku
-- `FINTRACK_API_URL`: Set to deployed API URL
-
-## Key Fixes Applied
-
-### 1. Session Key Mismatch (MAIN FIX)
-```ruby
-# WRONG (was using symbol):
-@current_account = session[:current_account]
-session[:current_account] = account
-
-# CORRECT (use string):
-@current_account = session['current_account']
-session['current_account'] = account
-```
-Applied to:
-- app/controllers/app.rb (line ~25)
-- app/controllers/auth.rb (login, logout routes)
-- app/controllers/account.rb (logout route)
-
-### 2. API Response Parsing
-```ruby
-# API returns: { "data" => { "attributes" => {...} }, "included" => { "system_roles" => [...] } }
-account = response.fetch('data', {}).fetch('attributes', {})
-included = response['included'] || {}
-system_roles_array = included['system_roles'] || []
-account.merge('system_roles' => system_roles_array.map { |role| role['name'] })
-```
-
-### 3. API Base URL
-- Changed from port 3000 to 9292 in api_client.rb:
-  - `ENV.fetch('FINTRACK_API_URL', 'http://localhost:9292')`
-
-### 4. CSS File Location
-- Moved from: `app/presentation/assets/style.css`
-- Moved to: `app/presentation/assets/css/style.css`
-
-## Environment
-- SESSION_SECRET: Must be 64+ chars (validated at startup)
-- FINTRACK_API_URL: Defaults to http://localhost:9292
-- Ruby 4.0.2
-- Roda 3.0 with plugins: render, assets, multi_route, flash, sessions
-
-## Testing Checklist
-- [x] Minitest spec assertions (`must_raise`) working after loading minitest/spec
-- [x] Service tests split into separate files for clarity
-- [x] Account registration works (POST /api/v1/accounts returns 201)
-- [ ] Login endpoint correct path (currently 404 on /api/v1/auth/authentication)
-- [ ] Login with correct credentials → redirects to account page without needing refresh
-- [ ] Wrong password → shows "Username and password did not match" error
-- [ ] Admin user can view other accounts
-- [ ] Admin can grant/revoke system roles
-- [ ] Logout works correctly
-- [ ] Flash messages display correctly
-- [ ] System roles display as badges on account page
-- [ ] Production deployment test on Heroku
+## Known Gaps / Risks
+- API contract assumptions (auth path and response shape) must match the fintrack-api you’re running/deploying:
+  - Current auth call is `POST /api/v1/auth/authentication`
+  - If your API uses a different login route, update `AuthenticateAccount` (and corresponding spec stubs)
+- Docs previously referenced multiple ports/paths; this file now reflects the code in-repo.
 
 ## Next Steps
-1. **PRIORITY**: Find correct authentication/login endpoint on fintrack-api
-   - Check fintrack-api routes for auth/authentication endpoints
-   - Update `authenticate_account.rb` to use correct path
-   - Redeploy web app and test login
-2. Test login with newly created account after endpoint is fixed
-3. Test admin role management flows
-4. Verify logout clears session properly
-5. Run full test suite before final deployment: `bundle exec rake spec`
+1. Verify fintrack-api supports `POST /api/v1/auth/authentication` in the target environment
+2. Exercise end-to-end flows against a running API:
+   - Register → confirm → create account → login → list/create payment methods
+3. Run tests: `bundle exec rake spec`

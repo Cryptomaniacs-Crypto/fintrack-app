@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'api_client'
+require_relative '../models/payment_method'
 
 module FinanceTracker
   module Services
@@ -11,7 +12,8 @@ module FinanceTracker
       end
 
       def call(auth_token:)
-        @client.get('/api/v1/wallets', auth_token: auth_token).fetch('data', [])
+        data = @client.get('/api/v1/wallets', auth_token: auth_token).fetch('data', [])
+        FinanceTracker::PaymentMethod.list_from_api(data)
       end
     end
   end
