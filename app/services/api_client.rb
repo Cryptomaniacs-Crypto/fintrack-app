@@ -27,38 +27,44 @@ module FinanceTracker
         @base_url = configured.to_s.empty? ? base_url : configured
       end
 
-      def get(path, params: {})
+      def get(path, params: {}, headers: {})
         full_path = params.empty? ? path : "#{path}?#{URI.encode_www_form(params)}"
-        parse(HTTP.get(url(full_path)))
+        parse(HTTP.headers(headers).get(url(full_path)))
       end
 
-      def post(path, body)
-        parse(HTTP.post(url(path), json: body))
+      def post(path, body, headers: {})
+        parse(HTTP.headers(headers).post(url(path), json: body))
       end
 
-      def put(path, body)
-        parse(HTTP.put(url(path), json: body))
+      def put(path, body, headers: {})
+        parse(HTTP.headers(headers).put(url(path), json: body))
       end
 
-      def delete(path, body = nil)
-        request = HTTP.headers('Content-Type' => 'application/json')
+      def delete(path, body = nil, headers: {})
+        request = HTTP.headers(headers)
         response = body ? request.delete(url(path), body: body.to_json) : request.delete(url(path))
         parse(response)
       end
 
-      def authenticated_post(path, body, current_account_id:)
-        post(path, body.merge(current_account_id: current_account_id))
+      def authenticated_post(path, body, auth_token:)
+        post(path, body, headers: auth_headers(auth_token))
       end
 
-      def authenticated_put(path, body, current_account_id:)
-        put(path, body.merge(current_account_id: current_account_id))
+      def authenticated_put(path, body, auth_token:)
+        put(path, body, headers: auth_headers(auth_token))
       end
 
-      def authenticated_delete(path, current_account_id:)
-        delete(path, { current_account_id: current_account_id })
+      def authenticated_delete(path, auth_token:)
+        delete(path, nil, headers: auth_headers(auth_token))
       end
 
       private
+
+      def auth_headers(auth_token)
+        return {} if auth_token.to_s.empty?
+
+        { 'Authorization' => "Bearer #{auth_token}" }
+      end
 
       def url(path)
         path_str = path.to_s

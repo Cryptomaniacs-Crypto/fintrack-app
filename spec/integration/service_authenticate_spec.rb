@@ -24,6 +24,13 @@ describe 'Test Service Objects' do
       },
       'included' => {
         'system_roles' => []
+      },
+      'policies' => {
+        'can_view' => true
+      },
+      'capabilities' => {
+        'is_admin' => false,
+        'can_manage_system_roles' => false
       }
     }
   end
@@ -45,6 +52,7 @@ describe 'Test Service Objects' do
       _(account).wont_be_nil
       _(account['username']).must_equal 'testuser'
       _(account['email']).must_equal 'test@example.com'
+      _(account['capabilities']['is_admin']).must_equal false
     end
 
     it 'BAD: should raise error on wrong credentials' do

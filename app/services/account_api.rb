@@ -13,37 +13,37 @@ module FinanceTracker
         @base_url = base_url
       end
 
-      def fetch_account(username:, current_account_id:)
-        uri = build_uri("/api/v1/accounts/#{username}", current_account_id: current_account_id)
-        response = Net::HTTP.get_response(uri)
+      def fetch_account(username:, auth_token:)
+        uri = build_uri("/api/v1/accounts/#{username}")
+        response = request_with_auth(uri, auth_token)
         parse_account_response(response)
       end
 
-      def grant_system_role(current_account_id:, target_username:, role_name:)
+      def grant_system_role(auth_token:, target_username:, role_name:)
         request_role_change(
           :put,
           target_username: target_username,
           role_name: role_name,
-          current_account_id: current_account_id
+          auth_token: auth_token
         )
       end
 
-      def revoke_system_role(current_account_id:, target_username:, role_name:)
+      def revoke_system_role(auth_token:, target_username:, role_name:)
         request_role_change(
           :delete,
           target_username: target_username,
           role_name: role_name,
-          current_account_id: current_account_id
+          auth_token: auth_token
         )
       end
 
       private
 
-      def request_role_change(method, target_username:, role_name:, current_account_id:)
+      def request_role_change(method, target_username:, role_name:, auth_token:)
         uri = build_uri("/api/v1/accounts/#{target_username}/system_roles/#{role_name}")
         request = Net::HTTP.const_get(method.to_s.capitalize).new(uri)
         request['Content-Type'] = 'application/json'
-        request.body = JSON.generate(current_account_id: current_account_id)
+        request['Authorization'] = "Bearer #{auth_token}"
 
         response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
           http.request(request)
@@ -52,10 +52,16 @@ module FinanceTracker
         parse_api_response(response)
       end
 
-      def build_uri(path, current_account_id: nil)
-        uri = URI.join(@base_url, path)
-        uri.query = URI.encode_www_form(current_account_id: current_account_id) if current_account_id
-        uri
+      def build_uri(path)
+        URI.join(@base_url, path)
+      end
+
+      def request_with_auth(uri, auth_token)
+        request = Net::HTTP::Get.new(uri)
+        request['Authorization'] = "Bearer #{auth_token}"
+        Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
+          http.request(request)
+        end
       end
 
       def parse_account_response(response)
@@ -63,13 +69,19 @@ module FinanceTracker
         body = parsed.is_a?(Hash) ? parsed : {}
         account = body['data'] || body
         attrs = account['attributes'] || account
-        include_data = account['include'] || body['include'] || {}
+        include_data = account['include'] || account['included'] || body['include'] || body['included'] || {}
+        policies = body['policies'] || account['policies'] || {}
+        capabilities = body['capabilities'] || account['capabilities'] || {}
 
         {
           'id' => attrs['id'] || attrs[:id],
           'username' => attrs['username'] || attrs[:username],
           'email' => attrs['email'] || attrs[:email],
-          'system_roles' => Array(include_data['system_roles'] || include_data[:system_roles]).map(&:to_s)
+          'system_roles' => Array(include_data['system_roles'] || include_data[:system_roles]).map do |role|
+            role.is_a?(Hash) ? role['name'] || role[:name] : role.to_s
+          end,
+          'policies' => policies,
+          'capabilities' => capabilities
         }.compact
       end
 

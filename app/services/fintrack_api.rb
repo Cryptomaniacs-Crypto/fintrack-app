@@ -11,17 +11,21 @@ module FinanceTracker
         @base_url = base_url
       end
 
-      def list_transactions
-        get_json('/api/v1/transactions')
+      def list_transactions(auth_token:)
+        get_json('/api/v1/transactions', auth_token: auth_token)
       rescue StandardError
         []
       end
 
       private
 
-      def get_json(path)
+      def get_json(path, auth_token:)
         uri = URI.join(@base_url, path)
-        response = Net::HTTP.get_response(uri)
+        request = Net::HTTP::Get.new(uri)
+        request['Authorization'] = "Bearer #{auth_token}"
+        response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https') do |http|
+          http.request(request)
+        end
 
         unless response.is_a?(Net::HTTPSuccess)
           raise "Fintrack API error: #{response.code}"

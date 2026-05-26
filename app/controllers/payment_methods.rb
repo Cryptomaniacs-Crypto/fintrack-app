@@ -9,29 +9,36 @@ module FinanceTracker
   class App < Roda
     route('payment-methods') do |routing|
       require_login!(routing)
-      current_account_id = @current_account['id']
+      auth_token = @current_account.auth_token
+      can_create_payment_method = @current_account.can_create_wallet?
 
       # GET /payment-methods/new
       routing.is 'new' do
-        view 'payment_methods/new'
+        view 'payment_methods/new', locals: { can_create_payment_method: can_create_payment_method }
       end
 
       routing.is do
         # GET /payment-methods
         routing.get do
           payment_methods = FinanceTracker::Services::ListPaymentMethods.new.call(
-            current_account_id: current_account_id
+            auth_token: auth_token
           )
-          view 'payment_methods/index', locals: { payment_methods: payment_methods }
+          view 'payment_methods/index', locals: {
+            payment_methods: payment_methods,
+            can_create_payment_method: can_create_payment_method
+          }
         rescue StandardError => e
           flash[:error] = "Could not load payment methods: #{e.message}"
-          view 'payment_methods/index', locals: { payment_methods: [] }
+          view 'payment_methods/index', locals: {
+            payment_methods: [],
+            can_create_payment_method: can_create_payment_method
+          }
         end
 
         # POST /payment-methods
         routing.post do
           FinanceTracker::Services::CreatePaymentMethod.new.call(
-            current_account_id: current_account_id,
+            auth_token: auth_token,
             name: routing.params['name'],
             method_type: routing.params['method_type'],
             account_number: routing.params['account_number'],

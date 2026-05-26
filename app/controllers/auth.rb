@@ -20,7 +20,7 @@ module FinanceTracker
 
           begin
             account = FinanceTracker::Services::AuthenticateAccount.new(App.config).call(username:, password:)
-            SecureSession.set(session, 'current_account', account)
+            SecureSession.set(session, 'current_account', account.to_h)
             flash[:notice] = "Welcome back #{account['username']}!"
             routing.redirect '/'
           rescue FinanceTracker::Services::AuthenticateAccount::UnauthorizedError

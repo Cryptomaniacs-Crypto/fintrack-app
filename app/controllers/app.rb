@@ -23,7 +23,7 @@ module FinanceTracker
       routing.redirect_http_to_https if App.environment == :production
 
       response['Content-Type'] = 'text/html; charset=utf-8'
-      @current_account = SecureSession.get(session, 'current_account')
+      @current_account = FinanceTracker::Account.from_api(SecureSession.get(session, 'current_account'))
 
       routing.public
       routing.assets
@@ -39,6 +39,9 @@ module FinanceTracker
 
     def system_admin?(current_account = nil)
       account = current_account || @current_account
+      capabilities = account&.dig('capabilities') || {}
+      return true if capabilities['is_admin']
+
       Array(account&.dig('system_roles')).include?('admin')
     end
 

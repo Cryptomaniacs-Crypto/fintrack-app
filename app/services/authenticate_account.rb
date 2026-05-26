@@ -19,8 +19,15 @@ module FinanceTracker
         account = response.fetch('data', {}).fetch('attributes', {})
         included = response['included'] || {}
         system_roles_array = included['system_roles'] || []
+        policies = response['policies'] || response.fetch('data', {}).fetch('policies', {})
+        capabilities = response['capabilities'] || response.fetch('data', {}).fetch('capabilities', {})
 
-        account.merge('system_roles' => system_roles_array.map { |role| role['name'] })
+        account.merge(
+          'auth_token' => account['id'],
+          'system_roles' => system_roles_array.map { |role| role['name'] },
+          'policies' => policies,
+          'capabilities' => capabilities
+        )
       rescue ApiClient::ApiError => e
         raise UnauthorizedError, "Authentication failed: #{e.message}" if e.status == 403
 
