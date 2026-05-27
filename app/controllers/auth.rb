@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
 require_relative 'app'
+require_relative '../forms/form_base'
+require_relative '../forms/login_credentials'
+require_relative '../forms/registration'
 require_relative '../services/authenticate_account'
 require_relative '../services/create_account'
-require_relative '../lib/secure_session'
 require_relative '../lib/secure_session'
 
 module FinanceTracker
@@ -15,17 +17,23 @@ module FinanceTracker
         end
 
         routing.post 'login' do
-          username = routing.params['username'].to_s.strip
-          password = routing.params['password'].to_s
+          validation = FinanceTracker::Form::LoginCredentials.call(routing.params)
+          if validation.failure?
+            flash.now[:error] = FinanceTracker::Form.validation_errors(validation)
+            response.status = 400
+            next view(:login)
+          end
 
           begin
-            account = FinanceTracker::Services::AuthenticateAccount.new(App.config).call(username:, password:)
-            SecureSession.set(session, 'current_account', account)
+            account = FinanceTracker::Services::AuthenticateAccount.new(App.config).call(
+              username: validation[:username], password: validation[:password]
+            )
+            SecureSession.set(session, 'current_account', account.to_h)
             flash[:notice] = "Welcome back #{account['username']}!"
             routing.redirect '/'
           rescue FinanceTracker::Services::AuthenticateAccount::UnauthorizedError
             flash.now[:error] = 'Username and password did not match our records'
-            response.status = 400
+            response.status = 401
             view :login
           rescue StandardError
             flash.now[:error] = 'Authentication service unavailable'
@@ -39,12 +47,19 @@ module FinanceTracker
         end
 
         routing.post 'register' do
-          email = routing.params['email'].to_s.strip
-          username = routing.params['username'].to_s.strip
-          password = routing.params['password'].to_s
+          validation = FinanceTracker::Form::Registration.call(routing.params)
+          if validation.failure?
+            flash.now[:error] = FinanceTracker::Form.validation_errors(validation)
+            response.status = 400
+            next view(:register)
+          end
 
           begin
-            FinanceTracker::Services::CreateAccount.new(App.config).call(email:, username:, password:)
+            FinanceTracker::Services::CreateAccount.new(App.config).call(
+              email: validation[:email],
+              username: validation[:username],
+              password: validation[:password]
+            )
             flash[:notice] = 'Account created. Please log in.'
             routing.redirect '/auth/login'
           rescue FinanceTracker::Services::CreateAccount::InvalidAccount => e

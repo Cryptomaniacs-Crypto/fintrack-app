@@ -20,7 +20,7 @@ module FinanceTracker
         @client = ApiClient.new(base_url: base_url)
       end
 
-      def call(current_account_id:, name:, method_type:, account_number: nil, balance: nil)
+      def call(auth_token:, name:, method_type:, account_number: nil, balance: nil)
         payload = build_payload(
           name: name,
           method_type: method_type,
@@ -28,7 +28,7 @@ module FinanceTracker
           balance: balance
         )
 
-        @client.authenticated_post('/api/v1/wallets', payload, current_account_id: current_account_id)
+        @client.authenticated_post('/api/v1/wallets', payload, auth_token: auth_token)
       end
 
       private

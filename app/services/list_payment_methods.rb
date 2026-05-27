@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'api_client'
+require_relative '../models/wallet'
 
 module FinanceTracker
   module Services
@@ -10,8 +11,9 @@ module FinanceTracker
         @client = ApiClient.new(base_url: base_url)
       end
 
-      def call(current_account_id:)
-        @client.get('/api/v1/wallets', params: { current_account_id: current_account_id }).fetch('data', [])
+      def call(auth_token:)
+        response = @client.get('/api/v1/wallets', headers: { 'Authorization' => "Bearer #{auth_token}" })
+        FinanceTracker::Wallet.list_from_api(response)
       end
     end
   end
