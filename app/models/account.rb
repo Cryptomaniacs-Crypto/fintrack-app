@@ -3,6 +3,9 @@
 module FinanceTracker
   class Account
     def self.from_api(account_info)
+      return nil if account_info.nil?
+      return nil if account_info.respond_to?(:empty?) && account_info.empty?
+
       new(account_info)
     end
 
@@ -46,7 +49,11 @@ module FinanceTracker
     end
 
     def system_roles
-      Array(dig('included', 'system_roles') || dig(:included, :system_roles)).map do |role|
+      raw = dig('included', 'system_roles') ||
+            dig(:included, :system_roles) ||
+            dig('system_roles') ||
+            dig(:system_roles)
+      Array(raw).map do |role|
         role.is_a?(Hash) ? role['name'] || role[:name] : role.to_s
       end
     end
@@ -82,7 +89,15 @@ module FinanceTracker
     private
 
     def attributes
-      @account_info['data'] ? @account_info['data']['attributes'] : @account_info['attributes']
+      return @account_info unless @account_info.is_a?(Hash)
+
+      if @account_info['data'].is_a?(Hash)
+        @account_info['data']['attributes'] || @account_info['data']
+      elsif @account_info['attributes'].is_a?(Hash)
+        @account_info['attributes']
+      else
+        @account_info
+      end
     end
   end
 end
