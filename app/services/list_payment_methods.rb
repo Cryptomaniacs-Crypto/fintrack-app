@@ -12,9 +12,8 @@ module FinanceTracker
       end
 
       def call(auth_token:)
-        @client.get('/api/v1/wallets', headers: { 'Authorization' => "Bearer #{auth_token}" })
-              .fetch('data', [])
-              .map { |entry| FinanceTracker::Wallet.from_api(entry) }
+        response = @client.get('/api/v1/wallets', headers: { 'Authorization' => "Bearer #{auth_token}" })
+        FinanceTracker::Wallet.list_from_api(response)
       end
     end
   end

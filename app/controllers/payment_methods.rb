@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative 'app'
+require_relative '../forms/form_base'
+require_relative '../forms/create_payment_method'
 require_relative '../services/list_payment_methods'
 require_relative '../services/create_payment_method'
 
@@ -37,12 +39,18 @@ module FinanceTracker
 
         # POST /payment-methods
         routing.post do
+          validation = FinanceTracker::Form::CreatePaymentMethod.call(routing.params)
+          if validation.failure?
+            flash[:error] = FinanceTracker::Form.validation_errors(validation)
+            routing.redirect '/payment-methods/new'
+          end
+
           FinanceTracker::Services::CreatePaymentMethod.new.call(
             auth_token: auth_token,
-            name: routing.params['name'],
-            method_type: routing.params['method_type'],
-            account_number: routing.params['account_number'],
-            balance: routing.params['balance']
+            name: validation[:name],
+            method_type: validation[:method_type],
+            account_number: validation[:account_number],
+            balance: validation[:balance]
           )
           flash[:notice] = 'Payment method created'
           routing.redirect '/payment-methods'

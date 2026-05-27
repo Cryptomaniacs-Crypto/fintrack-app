@@ -29,7 +29,7 @@ module FinanceTracker
           'capabilities' => capabilities
         )
       rescue ApiClient::ApiError => e
-        raise UnauthorizedError, "Authentication failed: #{e.message}" if e.status == 403
+        raise UnauthorizedError, "Authentication failed: #{e.message}" if [401, 403].include?(e.status)
 
         raise
       end
