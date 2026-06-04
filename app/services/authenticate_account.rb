@@ -22,7 +22,11 @@ module FinanceTracker
 
         @current_session.current_account = account if @current_session
 
-        { account: account.account_info, auth_token: account.auth_token }
+        {
+          account: account.account_info,
+          auth_token: account.auth_token,
+          account_api_token: account.account_api_token
+        }
       rescue ApiClient::ApiError => e
         raise UnauthorizedError, "Authentication failed: #{e.message}" if e.status == 403
 

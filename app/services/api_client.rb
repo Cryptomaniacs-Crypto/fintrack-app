@@ -27,32 +27,36 @@ module FinanceTracker
         @base_url = configured.to_s.empty? ? base_url : configured
       end
 
-      def get(path, params: {}, auth_token: nil)
+      def get(path, params: {}, auth_token: nil, account_api_token: nil)
         full_path = params.empty? ? path : "#{path}?#{URI.encode_www_form(params)}"
-        parse(http(auth_token: auth_token).get(url(full_path)))
+        parse(http(auth_token: auth_token, account_api_token: account_api_token).get(url(full_path)))
       end
 
-      def post(path, body, auth_token: nil)
-        parse(http(auth_token: auth_token).post(url(path), json: body))
+      def post(path, body, auth_token: nil, account_api_token: nil)
+        parse(http(auth_token: auth_token, account_api_token: account_api_token).post(url(path), json: body))
       end
 
-      def put(path, body, auth_token: nil)
-        parse(http(auth_token: auth_token).put(url(path), json: body))
+      def put(path, body, auth_token: nil, account_api_token: nil)
+        parse(http(auth_token: auth_token, account_api_token: account_api_token).put(url(path), json: body))
       end
 
-      def delete(path, body = nil, auth_token: nil)
-        request = http(auth_token: auth_token).headers('Content-Type' => 'application/json')
+      def delete(path, body = nil, auth_token: nil, account_api_token: nil)
+        request = http(auth_token: auth_token, account_api_token: account_api_token).headers('Content-Type' => 'application/json')
         response = body ? request.delete(url(path), body: body.to_json) : request.delete(url(path))
         parse(response)
       end
 
       private
 
-      def http(auth_token: nil)
+      def http(auth_token: nil, account_api_token: nil)
+        headers = {}
         token = auth_token.to_s
-        return HTTP if token.empty?
+        headers['Authorization'] = "Bearer #{token}" unless token.empty?
+        acct_token = account_api_token.to_s
+        headers['Account-Api-Token'] = acct_token unless acct_token.empty?
+        return HTTP if headers.empty?
 
-        HTTP.headers('Authorization' => "Bearer #{token}")
+        HTTP.headers(headers)
       end
 
       def url(path)

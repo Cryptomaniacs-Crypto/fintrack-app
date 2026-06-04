@@ -85,3 +85,41 @@ Login attempts to authenticate via the API endpoint:
 - `POST /api/v1/auth/authentication`
 
 If the API is not running (or returns an error), the UI will show an empty list.
+
+## Google SSO (OAuth) setup
+
+This app implements an authorization-code based Google SSO flow. The web app builds a Google
+authorization URL and verifies a per-session CSRF `state` value when Google redirects back to
+`/auth/sso_callback`.
+
+Required environment variables (set in your local shell or CI):
+
+- `GOOGLE_CLIENT_ID` — OAuth client ID from Google Cloud.
+- `GOOGLE_REDIRECT_URI` — The OAuth redirect URI (should point to `/auth/sso_callback`, e.g. `http://localhost:9292/auth/sso_callback`).
+- `GOOGLE_OAUTH_URL` — Google's OAuth authorize endpoint (default: `https://accounts.google.com/o/oauth2/v2/auth`).
+- `GOOGLE_SCOPE` — OAuth scopes to request (e.g. `openid email profile`).
+
+How it works:
+
+- When rendering `/auth/login`, the app generates (once per session) a random `sso_state` value
+  and builds the Google authorize URL with `client_id`, `redirect_uri`, `scope`, `response_type=code`,
+  and the `state` parameter.
+- After the user authenticates with Google, Google redirects back to `/auth/sso_callback?code=...&state=...`.
+- The app verifies the returned `state` matches the session `sso_state`, then POSTs the `code` to
+  the backend API endpoint `/api/v1/auth/sso` via `AuthorizeGoogleAccount` service. The API performs
+  the Google token exchange and returns `auth_token`, `account` and optionally `account_api_token`.
+- The web app persists the returned `auth_token`, `account`, and `account_api_token` into the secure session.
+
+Testing locally (no Google setup required):
+
+- The tests use WebMock to stub `/api/v1/auth/sso` responses. You can run the SSO callback spec directly:
+
+```bash
+export MSG_KEY=$(bundle exec rake generate:msg_key 2>/dev/null | sed -n 's/^MSG_KEY: //p')
+export SESSION_SECRET=$(bundle exec rake generate:session_secret 2>/dev/null | sed -n 's/^New SESSION_SECRET (base64): //p')
+bundle exec rake spec SPEC=spec/integration/auth_sso_callback_spec.rb
+```
+
+If you want to test against real Google OAuth, register an OAuth client at https://console.cloud.google.com/apis/credentials,
+set `GOOGLE_CLIENT_ID` and `GOOGLE_REDIRECT_URI` to match the OAuth credentials, and ensure `GOOGLE_OAUTH_URL` and
+`GOOGLE_SCOPE` are configured as needed.

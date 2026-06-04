@@ -89,3 +89,13 @@ Server-rendered web client for the FinTrack API using Roda + Slim.
 2. Exercise end-to-end flows against a running API:
    - Register → confirm → create account → login → list/create payment methods
 3. Run tests: `bundle exec rake spec`
+
+## Sprint P3 — Account API token integration (Jun 4, 2026)
+- **Goal:** Align with upstream branch `5-account-api-token` (ISS-Security/tyto2026-app) to support account-level API tokens returned by the API and used by service clients.
+- **Status:** In progress (assigned: p3)
+- **Scope:**
+  - Update `ApiClient` and service wrappers to accept and forward the account API token header alongside auth token
+  - Persist `account_api_token` in `SecureSession`/`CurrentSession` when returned by authentication/creation endpoints
+  - Update `Services::AuthenticateAccount`, `CreateAccount`, and `ListPaymentMethods` to handle the new token
+  - Add/adjust integration tests to reflect the API response shape and header usage
+- **Acceptance:** End-to-end flows (register → confirm → login → list payment methods) pass locally against an API that returns `account_api_token` and clients send it on subsequent requests.

@@ -5,7 +5,7 @@ module FinanceTracker
 	# Use Account.from_api(envelope_hash) — `new` is private so the named
 	# factory is the only entry point and the parsing role stays explicit.
 	class Account
-		attr_reader :account_info, :auth_token
+		attr_reader :account_info, :auth_token, :account_api_token
 
 		def self.from_api(envelope)
 			new(envelope)
@@ -54,6 +54,11 @@ module FinanceTracker
 				attrs['auth_token'] || attrs[:auth_token] ||
 				meta['auth_token'] || meta[:auth_token] ||
 				root['auth_token'] || root[:auth_token]
+
+			@account_api_token =
+				attrs['account_api_token'] || attrs[:account_api_token] ||
+				meta['account_api_token'] || meta[:account_api_token] ||
+				root['account_api_token'] || root[:account_api_token]
 
 			@account_info = attrs.dup
 			@account_info.delete('auth_token')

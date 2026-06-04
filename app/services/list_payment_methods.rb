@@ -11,8 +11,8 @@ module FinanceTracker
         @client = ApiClient.new(base_url: base_url)
       end
 
-      def call(auth_token:)
-        data = @client.get('/api/v1/wallets', auth_token: auth_token).fetch('data', [])
+      def call(auth_token:, account_api_token: nil)
+        data = @client.get('/api/v1/wallets', auth_token: auth_token, account_api_token: account_api_token).fetch('data', [])
         FinanceTracker::PaymentMethod.list_from_api(data)
       end
     end

@@ -34,7 +34,8 @@ module FinanceTracker
             routing.redirect "/auth/register/#{username_or_token}"
           end
 
-          FinanceTracker::Services::CreateAccount.new(App.config).call(
+          current_sess = FinanceTracker::CurrentSession.new(session)
+          FinanceTracker::Services::CreateAccount.new(App.config, current_session: current_sess).call(
             email: token.email,
             username: token.username,
             password: password
@@ -54,7 +55,9 @@ module FinanceTracker
         end
 
         require_login!(routing)
-        auth_token = FinanceTracker::CurrentSession.new(session).auth_token
+        current_sess = FinanceTracker::CurrentSession.new(session)
+        auth_token = current_sess.auth_token
+        account_api_token = current_sess.account_api_token
         username = username_or_token
 
         unless username == @current_account['username'] || system_admin?(@current_account)
@@ -73,10 +76,11 @@ module FinanceTracker
 
             routing.put do
               FinanceTracker::Services::AssignSystemRole.new.call(
-                auth_token: auth_token,
-                target_username: username,
-                role_name: role_name
-              )
+                  auth_token: auth_token,
+                  target_username: username,
+                  role_name: role_name,
+                  account_api_token: account_api_token
+                )
               flash[:notice] = "Granted #{role_name} to #{username}"
               routing.redirect "/account/#{username}"
             rescue StandardError => e
@@ -88,7 +92,8 @@ module FinanceTracker
               FinanceTracker::Services::RevokeSystemRole.new.call(
                 auth_token: auth_token,
                 target_username: username,
-                role_name: role_name
+                role_name: role_name,
+                account_api_token: account_api_token
               )
               flash[:notice] = "Revoked #{role_name} from #{username}"
               routing.redirect "/account/#{username}"
@@ -99,17 +104,32 @@ module FinanceTracker
           end
         end
 
+        routing.on 'reset_session' do
+          routing.post do
+            begin
+              # Clear only the account_api_token from the secure session (do not log out)
+              SecureSession.delete(session, 'account_api_token')
+              flash[:notice] = 'Session API key cleared'
+            rescue StandardError => e
+              App.logger.error "ERROR CLEARING API KEY: #{e.inspect}"
+              flash[:error] = 'Could not clear API key from session'
+            end
+
+            routing.redirect "/account/#{username}"
+          end
+        end
+
         routing.is do
           routing.get do
-            target_account = load_account(username)
+            target_account = load_account(username, account_api_token: account_api_token)
             transactions =
               if username == @current_account['username']
-                FinanceTracker::Services::FintrackApi.new.list_transactions
+                FinanceTracker::Services::FintrackApi.new.list_transactions(auth_token: auth_token, account_api_token: account_api_token)
               else
                 []
               end
 
-            view :account, locals: { account: target_account, viewer: @current_account, transactions: transactions }
+            view :account, locals: { account: target_account, viewer: @current_account, transactions: transactions, account_api_token: account_api_token }
           rescue FinanceTracker::Services::ApiClient::ApiError => e
             flash[:error] = "Could not load account: #{e.message}"
             return routing.redirect '/auth/login' unless @current_account && @current_account['username']
@@ -128,13 +148,14 @@ module FinanceTracker
 
     private
 
-    def load_account(username)
+    def load_account(username, account_api_token: nil)
       return @current_account if username == @current_account['username']
 
       raise StandardError, 'Not authorized' unless system_admin?(@current_account)
 
-      auth_token = FinanceTracker::CurrentSession.new(session).auth_token
-      FinanceTracker::Services::GetAccount.new.call(username, auth_token: auth_token)
+      current_sess = FinanceTracker::CurrentSession.new(session)
+      auth_token = current_sess.auth_token
+      FinanceTracker::Services::GetAccount.new.call(username, auth_token: auth_token, account_api_token: account_api_token)
     end
   end
 end

@@ -18,6 +18,15 @@
               - Array(account['system_roles']).each do |role_name|
                 span.badge.text-bg-dark.me-1 = role_name
 
+          dt.col-sm-4 Account API Key
+          dd.col-sm-8
+            - if account_api_token && !account_api_token.to_s.empty?
+              span.d-block.text-monospace= account_api_token
+              form method="post" action="/account/#{account['username']}/reset_session"
+                button.btn.btn-outline-secondary.btn-sm type="submit" Clear API key
+            - else
+              span.text-muted Not available
+
 
   .col-lg-5
     - if viewer && viewer['system_roles']&.include?('admin') && viewer['username'] != account['username']
