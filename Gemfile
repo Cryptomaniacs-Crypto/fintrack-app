@@ -24,6 +24,9 @@ gem 'redis', '~>5.0'
 # Security
 gem 'rbnacl', '~>7.1'
 
+# Form validation
+gem 'dry-validation', '~>1.10'
+
 # Debugging
 gem 'pry'
 
