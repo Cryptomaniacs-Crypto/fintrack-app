@@ -22,6 +22,13 @@ module FinanceTracker
       rule(:email) do
         key.failure('must contain an @ sign') unless EMAIL_REGEX.match?(value)
       end
+
+      rule(:password) do
+        entropy = FinanceTracker::StringSecurity.entropy(value)
+        if entropy < PASSWORD_ENTROPY_MIN
+          key.failure("is too predictable (entropy #{entropy.round(2)} < #{PASSWORD_ENTROPY_MIN})")
+        end
+      end
     end
   end
 end
