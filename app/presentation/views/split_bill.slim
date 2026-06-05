@@ -5,7 +5,7 @@
         p.text-uppercase.text-primary.fw-semibold.mb-2 Calculator
         h1.h3.mb-4 Split Bill
 
-        form method="post" action="/split-bill"
+        form method="post" action="/split-bill" data-split-form=true
           .row.g-3
             .col-md-4
               label.form-label for="tax_percent" Tax (%)
@@ -19,23 +19,36 @@
             .col-12
               label.form-label Participants
               .table-responsive
-                table.table.align-middle
+                table.table.align-middle#split-people-table
                   thead
                     tr
                       th Name
                       th Amount
+                      th
                   tbody
                     - Array(form_values[:participants]).each_with_index do |participant, index|
-                      tr
+                      tr.split-person-row
                         td
                           input.form-control type="text" name="participants[][name]" id="participant_name_#{index}" placeholder="Alice" value=participant['name']
                         td
                           input.form-control type="number" step="0.01" min="0" name="participants[][amount]" id="participant_amount_#{index}" placeholder="100.00" value=participant['amount']
+                        td.text-end
+                          button.btn.btn-outline-danger.btn-sm type="button" data-remove-person=true Remove
               .form-text
                 | Enter each person in its own row. Tax and service charge are applied as percentages to each person's amount.
 
-            .col-12
-              button.btn.btn-primary type="submit" Calculate Split
+              template#split-person-template
+                tr.split-person-row
+                  td
+                    input.form-control type="text" name="participants[][name]" placeholder="Alice"
+                  td
+                    input.form-control type="number" step="0.01" min="0" name="participants[][amount]" placeholder="100.00"
+                  td.text-end
+                    button.btn.btn-outline-danger.btn-sm type="button" data-remove-person=true Remove
+
+              .mt-3.d-flex.gap-2
+                button.btn.btn-outline-primary type="button" data-add-person=true Add person
+                button.btn.btn-primary type="submit" Calculate Split
 
         - if result
           hr.my-4
@@ -68,3 +81,46 @@
                     td.text-end $#{entry[:tax]}
                     td.text-end $#{entry[:service]}
                     td.text-end.fw-semibold $#{entry[:total]}
+
+        javascript:
+          (function() {
+            var form = document.querySelector('[data-split-form]');
+            if (!form) return;
+
+            var tableBody = document.querySelector('#split-people-table tbody');
+            var template = document.querySelector('#split-person-template');
+            var addButton = document.querySelector('[data-add-person]');
+
+            function toggleRemoveButtons() {
+              var rows = tableBody.querySelectorAll('.split-person-row');
+              rows.forEach(function(row) {
+                var button = row.querySelector('[data-remove-person]');
+                if (button) {
+                  button.disabled = rows.length <= 1;
+                }
+              });
+            }
+
+            function bindRow(row) {
+              var removeButton = row.querySelector('[data-remove-person]');
+              if (removeButton) {
+                removeButton.addEventListener('click', function() {
+                  if (tableBody.querySelectorAll('.split-person-row').length > 1) {
+                    row.remove();
+                    toggleRemoveButtons();
+                  }
+                });
+              }
+            }
+
+            addButton.addEventListener('click', function() {
+              var fragment = template.content.cloneNode(true);
+              var row = fragment.querySelector('.split-person-row');
+              tableBody.appendChild(fragment);
+              bindRow(row);
+              toggleRemoveButtons();
+            });
+
+            tableBody.querySelectorAll('.split-person-row').forEach(bindRow);
+            toggleRemoveButtons();
+          })();
