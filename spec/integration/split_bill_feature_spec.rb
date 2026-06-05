@@ -23,29 +23,29 @@ describe 'Split bill feature' do
     rack_mock_session.cookie_jar['current_account'] = session_data
 
     post '/split-bill', {
-      subtotal: '100',
-      tax: '10',
-      tip: '10',
-      participants: "Alice\nBob"
+      tax_percent: '10',
+      service_percent: '5',
+      participants: "Alice:100\nBob:200"
     }
 
     _(last_response.status).must_equal 200
     _(last_response.body).must_include 'Result'
-    _(last_response.body).must_include '$60.0'
+    _(last_response.body).must_include '$115.0'
+    _(last_response.body).must_include '$100.0'
+    _(last_response.body).must_include '$215.0'
   end
 
-  it 'shows validation error for invalid participants' do
+  it 'shows validation error for missing amount' do
     user = { 'username' => 'tester', 'system_roles' => ['member'] }
     session_data = FinanceTracker::SecureSession::Encryptor.new(App.config.MSG_KEY).encrypt(user)
 
     rack_mock_session.cookie_jar['current_account'] = session_data
 
     post '/split-bill', {
-      subtotal: '100',
       participants: 'Alice'
     }
 
     _(last_response.status).must_equal 200
-    _(last_response.body).must_include 'At least two participants are required'
+    _(last_response.body).must_include 'Amount for Alice is required'
   end
 end

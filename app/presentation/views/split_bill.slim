@@ -8,25 +8,26 @@
         form method="post" action="/split-bill"
           .row.g-3
             .col-md-4
-              label.form-label for="subtotal" Subtotal
-              input.form-control type="number" step="0.01" min="0" name="subtotal" id="subtotal" required=true value=form_values[:subtotal]
+              label.form-label for="tax_percent" Tax (%)
+              input.form-control type="number" step="0.01" min="0" name="tax_percent" id="tax_percent" value=form_values[:tax_percent]
             .col-md-4
-              label.form-label for="tax" Tax
-              input.form-control type="number" step="0.01" min="0" name="tax" id="tax" value=form_values[:tax]
+              label.form-label for="service_percent" Service charge (%)
+              input.form-control type="number" step="0.01" min="0" name="service_percent" id="service_percent" value=form_values[:service_percent]
             .col-md-4
-              label.form-label for="tip" Tip
-              input.form-control type="number" step="0.01" min="0" name="tip" id="tip" value=form_values[:tip]
+              .small.text-muted.pt-4
+                | Enter each person as 
+                code Name:amount
 
             .col-12
               label.form-label for="participants" Participants
               textarea.form-control name="participants" id="participants" rows="6" required=true
                 = form_values[:participants]
               .form-text
-                | One per line. Use 
-                code Name
-                |  for equal share, or 
-                code Name:weight
-                |  for weighted share.
+                | One per line. Example: 
+                code Alice:120
+                |  or 
+                code Bob:85.50
+                | . Tax and service charge are applied as percentages to each person's amount.
 
             .col-12
               button.btn.btn-primary type="submit" Calculate Split
@@ -35,29 +36,30 @@
           hr.my-4
           h2.h5.mb-3 Result
           .row.g-2.mb-3
-            .col-sm-3
-              .small.text-muted Subtotal
-              .fw-semibold $#{result[:subtotal]}
-            .col-sm-3
-              .small.text-muted Tax
-              .fw-semibold $#{result[:tax]}
-            .col-sm-3
-              .small.text-muted Tip
-              .fw-semibold $#{result[:tip]}
-            .col-sm-3
-              .small.text-muted Total
-              .fw-semibold $#{result[:total]}
+            .col-sm-4
+              .small.text-muted Tax rate
+              .fw-semibold #{result[:tax_percent]}%
+            .col-sm-4
+              .small.text-muted Service rate
+              .fw-semibold #{result[:service_percent]}%
+            .col-sm-4
+              .small.text-muted Grand total
+              .fw-semibold $#{result[:grand_total]}
 
           .table-responsive
             table.table.table-striped.align-middle
               thead
                 tr
                   th Participant
-                  th.text-end Weight
-                  th.text-end Owes
+                  th.text-end Amount
+                  th.text-end Tax
+                  th.text-end Service
+                  th.text-end Total
               tbody
                 - result[:participants].each do |entry|
                   tr
                     td = entry[:name]
-                    td.text-end = entry[:weight]
-                    td.text-end.fw-semibold $#{entry[:amount]}
+                    td.text-end $#{entry[:amount]}
+                    td.text-end $#{entry[:tax]}
+                    td.text-end $#{entry[:service]}
+                    td.text-end.fw-semibold $#{entry[:total]}
