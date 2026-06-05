@@ -1,0 +1,63 @@
+.row.justify-content-center
+  .col-lg-9
+    .card.shadow-sm.border-0
+      .card-body.p-4.p-md-5
+        p.text-uppercase.text-primary.fw-semibold.mb-2 Calculator
+        h1.h3.mb-4 Split Bill
+
+        form method="post" action="/split-bill"
+          .row.g-3
+            .col-md-4
+              label.form-label for="subtotal" Subtotal
+              input.form-control type="number" step="0.01" min="0" name="subtotal" id="subtotal" required=true value=form_values[:subtotal]
+            .col-md-4
+              label.form-label for="tax" Tax
+              input.form-control type="number" step="0.01" min="0" name="tax" id="tax" value=form_values[:tax]
+            .col-md-4
+              label.form-label for="tip" Tip
+              input.form-control type="number" step="0.01" min="0" name="tip" id="tip" value=form_values[:tip]
+
+            .col-12
+              label.form-label for="participants" Participants
+              textarea.form-control name="participants" id="participants" rows="6" required=true
+                = form_values[:participants]
+              .form-text
+                | One per line. Use 
+                code Name
+                |  for equal share, or 
+                code Name:weight
+                |  for weighted share.
+
+            .col-12
+              button.btn.btn-primary type="submit" Calculate Split
+
+        - if result
+          hr.my-4
+          h2.h5.mb-3 Result
+          .row.g-2.mb-3
+            .col-sm-3
+              .small.text-muted Subtotal
+              .fw-semibold $#{result[:subtotal]}
+            .col-sm-3
+              .small.text-muted Tax
+              .fw-semibold $#{result[:tax]}
+            .col-sm-3
+              .small.text-muted Tip
+              .fw-semibold $#{result[:tip]}
+            .col-sm-3
+              .small.text-muted Total
+              .fw-semibold $#{result[:total]}
+
+          .table-responsive
+            table.table.table-striped.align-middle
+              thead
+                tr
+                  th Participant
+                  th.text-end Weight
+                  th.text-end Owes
+              tbody
+                - result[:participants].each do |entry|
+                  tr
+                    td = entry[:name]
+                    td.text-end = entry[:weight]
+                    td.text-end.fw-semibold $#{entry[:amount]}

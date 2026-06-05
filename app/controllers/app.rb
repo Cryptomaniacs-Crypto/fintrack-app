@@ -5,6 +5,7 @@ require 'roda'
 require 'slim'
 require 'slim/include'
 require_relative '../lib/secure_session'
+require_relative '../services/split_bill_calculator'
 
 module FinanceTracker
   # Base class for the FinanceTracker web app.
@@ -32,6 +33,41 @@ module FinanceTracker
       # GET /
       routing.root do
         view 'home', locals: { current_account: @current_account }
+      end
+
+      routing.on 'split-bill' do
+        require_login!(routing)
+
+        routing.get do
+          defaults = {
+            subtotal: '',
+            tax: '',
+            tip: '',
+            participants: "Alice\nBob"
+          }
+          view 'split_bill', locals: { result: nil, form_values: defaults }
+        end
+
+        routing.post do
+          form_values = {
+            subtotal: routing.params['subtotal'].to_s,
+            tax: routing.params['tax'].to_s,
+            tip: routing.params['tip'].to_s,
+            participants: routing.params['participants'].to_s
+          }
+
+          result = FinanceTracker::Services::SplitBillCalculator.new.call(
+            subtotal: form_values[:subtotal],
+            tax: form_values[:tax],
+            tip: form_values[:tip],
+            participants_text: form_values[:participants]
+          )
+
+          view 'split_bill', locals: { result: result, form_values: form_values }
+        rescue FinanceTracker::Services::SplitBillCalculator::InvalidInput => e
+          flash.now[:error] = e.message
+          view 'split_bill', locals: { result: nil, form_values: form_values }
+        end
       end
     end
 

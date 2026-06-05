@@ -67,7 +67,7 @@ module FinanceTracker
           routing.redirect "/account/#{@current_account['username']}"
         end
 
-        routing.on 'system_roles' do
+        routing.on 'roles' do
           routing.on String do |role_name|
             unless system_admin?(@current_account)
               flash[:error] = 'Only admins can manage system roles'

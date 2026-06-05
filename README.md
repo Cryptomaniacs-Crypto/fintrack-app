@@ -10,6 +10,8 @@ Server-rendered web client (Roda + Slim) that follows the FinanceTracker app str
 - `/account/:username` account overview (requires login)
 - `/payment-methods` payment method list (requires login)
 - `/payment-methods/new` create payment method form (requires login)
+- `/split-bill` split bill calculator (requires login)
+- `POST /split-bill` calculate equal or weighted split
 - `DELETE /account/:username` logout by clearing the session
 
 Admin-only system role management routes also exist:
@@ -77,8 +79,7 @@ To wipe all Redis sessions (e.g., forced logout after key rotation):
 
 The account overview attempts to load transactions from the FinTrack API:
 
-- `FINTRACK_API_URL` (default: `http://localhost:3000`)
-- `FINTRACK_API_URL` (default: `http://localhost:9292`)
+- `FINTRACK_API_URL` (set explicitly for your local API; common values are `http://localhost:3000` for Procfile runs or `http://localhost:9292` when running `puma` directly)
 
 Login attempts to authenticate via the API endpoint:
 
@@ -105,9 +106,9 @@ How it works:
   and builds the Google authorize URL with `client_id`, `redirect_uri`, `scope`, `response_type=code`,
   and the `state` parameter.
 - After the user authenticates with Google, Google redirects back to `/auth/sso_callback?code=...&state=...`.
-- The app verifies the returned `state` matches the session `sso_state`, then POSTs the `code` to
-  the backend API endpoint `/api/v1/auth/sso` via `AuthorizeGoogleAccount` service. The API performs
-  the Google token exchange and returns `auth_token`, `account` and optionally `account_api_token`.
+- The app verifies the returned `state` matches the session `sso_state`, exchanges the `code` for an
+  `id_token` at Google's token endpoint, then POSTs that `id_token` to the backend API endpoint
+  `/api/v1/auth/sso` via `AuthorizeGoogleAccount` service.
 - The web app persists the returned `auth_token`, `account`, and `account_api_token` into the secure session.
 
 Testing locally (no Google setup required):

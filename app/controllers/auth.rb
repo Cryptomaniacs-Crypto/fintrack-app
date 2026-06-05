@@ -75,12 +75,11 @@ module FinanceTracker
 
             begin
               authorized = FinanceTracker::Services::AuthorizeGoogleAccount.new(App.config).call(routing.params['code'])
-              account = FinanceTracker::Account.from_api(authorized['account'] || authorized[:account], authorized['auth_token'] || authorized[:auth_token])
-              FinanceTracker::CurrentSession.new(session).current_account = account
-              FinanceTracker::CurrentSession.new(session).auth_token = (authorized['auth_token'] || authorized[:auth_token])
-              if authorized.is_a?(Hash) && (authorized['account_api_token'] || authorized[:account_api_token])
-                FinanceTracker::CurrentSession.new(session).account_api_token = authorized['account_api_token'] || authorized[:account_api_token]
-              end
+              account = FinanceTracker::Account.from_api(authorized)
+              current_session = FinanceTracker::CurrentSession.new(session)
+              current_session.current_account = account
+              current_session.auth_token = account.auth_token if account.auth_token
+              current_session.account_api_token = account.account_api_token if account.account_api_token
 
               flash[:notice] = "Welcome #{account['username']}!"
               routing.redirect '/'
@@ -91,13 +90,13 @@ module FinanceTracker
             rescue StandardError => e
               App.logger.error "SSO LOGIN ERROR: #{e.inspect}"
               flash[:error] = 'Unexpected error during Google sign-in'
-              response.status = 500
-              routing.redirect '/auth/login'
+                    authorized = FinanceTracker::Services::AuthorizeGoogleAccount.new(App.config).call(routing.params['code'])
+                    account = FinanceTracker::Account.from_api(authorized)
             end
           end
-        end
-
-        routing.on 'register' do
+                    current_session.current_account = account
+                    current_session.auth_token = account.auth_token
+                    current_session.account_api_token = account.account_api_token if account.account_api_token
           routing.is String do |registration_token|
             token = RegistrationToken.load(registration_token)
             view :register_confirm, locals: {

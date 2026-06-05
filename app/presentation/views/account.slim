@@ -36,10 +36,9 @@
           .d-flex.flex-wrap.gap-2
             - %w[admin creator member].each do |role_name|
               - if Array(account['system_roles']).include?(role_name)
-                form method="post" action="/account/#{account['username']}/system_roles/#{role_name}"
+                form method="post" action="/account/#{account['username']}/roles/#{role_name}"
                   input type="hidden" name="_method" value="delete"
                   button.btn.btn-outline-danger.btn-sm type="submit" Revoke #{role_name}
               - else
-                form method="post" action="/account/#{account['username']}/system_roles/#{role_name}"
-                  input type="hidden" name="_method" value="put"
+                form method="post" action="/account/#{account['username']}/roles/#{role_name}"
                   button.btn.btn-outline-primary.btn-sm type="submit" Grant #{role_name}
