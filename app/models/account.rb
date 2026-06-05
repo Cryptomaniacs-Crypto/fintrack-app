@@ -60,10 +60,24 @@ module FinanceTracker
 				meta['account_api_token'] || meta[:account_api_token] ||
 				root['account_api_token'] || root[:account_api_token]
 
+			@capabilities =
+				root['capabilities'] || root[:capabilities] ||
+				data['capabilities'] || data[:capabilities] ||
+				attrs['capabilities'] || attrs[:capabilities] || {}
+			@capabilities = {} unless @capabilities.is_a?(Hash)
+
+			@policies =
+				root['policies'] || root[:policies] ||
+				data['policies'] || data[:policies] ||
+				attrs['policies'] || attrs[:policies] || {}
+			@policies = {} unless @policies.is_a?(Hash)
+
 			@account_info = attrs.dup
 			@account_info.delete('auth_token')
 			@account_info.delete(:auth_token)
 			@account_info['system_roles'] = roles
+			@account_info['capabilities'] = @capabilities
+			@account_info['policies'] = @policies
 		end
 		# rubocop:enable Metrics/AbcSize, Metrics/CyclomaticComplexity
 
@@ -71,13 +85,35 @@ module FinanceTracker
 		def username = fetch_field('username')
 		def email = fetch_field('email')
 		def system_roles = Array(fetch_field('system_roles'))
+		def capabilities = @capabilities
+		def policies = @policies
 
 		def admin?
-			system_roles.include?('admin')
+			@capabilities['is_admin'] || @capabilities[:is_admin] || system_roles.include?('admin')
+		end
+
+		def can_manage_system_roles?
+			@capabilities['can_manage_system_roles'] || @capabilities[:can_manage_system_roles] || false
+		end
+
+		def can_create_wallet?
+			@capabilities['can_create_wallet'] || @capabilities[:can_create_wallet] || false
+		end
+
+		def can_create_transaction?
+			@capabilities['can_create_transaction'] || @capabilities[:can_create_transaction] || false
 		end
 
 		def [](key)
 			fetch_field(key)
+		end
+
+		def dig(*keys)
+			keys.reduce(@account_info) do |value, key|
+				next nil unless value.respond_to?(:[])
+
+				value[key.to_s] || value[key.to_sym]
+			end
 		end
 
 		private
