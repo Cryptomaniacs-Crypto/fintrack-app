@@ -24,7 +24,7 @@ module FinanceTracker
                      elsif config.is_a?(Hash)
                        config[:API_URL] || config['API_URL']
                      end
-        @base_url = configured.to_s.empty? ? base_url : configured
+        @base_url = (configured.to_s.empty? ? base_url : configured).to_s.chomp('/')
       end
 
       def get(path, params: {}, auth_token: nil, account_api_token: nil)
@@ -61,9 +61,12 @@ module FinanceTracker
 
       def url(path)
         path_str = path.to_s
+        path_str = "/#{path_str}" unless path_str.start_with?('/')
+
         if @base_url.end_with?('/api/v1') && path_str.start_with?('/api/v1')
           path_str = path_str.sub(%r{\A/api/v1}, '')
         end
+
         "#{@base_url}#{path_str}"
       end
 
