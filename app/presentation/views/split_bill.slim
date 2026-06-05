@@ -14,20 +14,25 @@
               label.form-label for="service_percent" Service charge (%)
               input.form-control type="number" step="0.01" min="0" name="service_percent" id="service_percent" value=form_values[:service_percent]
             .col-md-4
-              .small.text-muted.pt-4
-                | Enter each person as 
-                code Name:amount
+              .small.text-muted.pt-4 Add one row per person
 
             .col-12
-              label.form-label for="participants" Participants
-              textarea.form-control name="participants" id="participants" rows="6" required=true
-                = form_values[:participants]
+              label.form-label Participants
+              .table-responsive
+                table.table.align-middle
+                  thead
+                    tr
+                      th Name
+                      th Amount
+                  tbody
+                    - Array(form_values[:participants]).each_with_index do |participant, index|
+                      tr
+                        td
+                          input.form-control type="text" name="participants[][name]" id="participant_name_#{index}" placeholder="Alice" value=participant['name']
+                        td
+                          input.form-control type="number" step="0.01" min="0" name="participants[][amount]" id="participant_amount_#{index}" placeholder="100.00" value=participant['amount']
               .form-text
-                | One per line. Example: 
-                code Alice:120
-                |  or 
-                code Bob:85.50
-                | . Tax and service charge are applied as percentages to each person's amount.
+                | Enter each person in its own row. Tax and service charge are applied as percentages to each person's amount.
 
             .col-12
               button.btn.btn-primary type="submit" Calculate Split

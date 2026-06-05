@@ -56,21 +56,37 @@ module FinanceTracker
       end
 
       def parse_participants(participants_text)
-        rows = participants_text.to_s.split(/[\n,;]/).map(&:strip).reject(&:empty?)
-        raise InvalidInput, 'At least one person is required' if rows.empty?
+        rows =
+          if participants_text.is_a?(Array)
+            participants_text
+          else
+            participants_text.to_s.split(/[\n,;]/).map { |row| { 'name' => row.split(':', 2)[0], 'amount' => row.split(':', 2)[1] } }
+          end
 
-        rows.map do |row|
-          name, raw_amount = row.split(':', 2).map { |piece| piece.to_s.strip }
-          raise InvalidInput, 'Participant name is required' if name.empty?
-          raise InvalidInput, "Amount for #{name} is required" if raw_amount.empty?
+        normalized = rows.map do |row|
+          parse_participant_row(row)
+        end.compact
 
-          amount = parse_money(raw_amount, "Amount for #{name}")
-          raise InvalidInput, "Amount for #{name} must be greater than zero" unless amount.positive?
+        raise InvalidInput, 'At least one person is required' if normalized.empty?
 
-          { name: name, amount: amount }
-        rescue ArgumentError
-          raise InvalidInput, "Amount for #{name} must be a valid number"
-        end
+        normalized
+      end
+
+      def parse_participant_row(row)
+        name = row.is_a?(Hash) ? (row['name'] || row[:name]).to_s.strip : ''
+        amount_text = row.is_a?(Hash) ? (row['amount'] || row[:amount]).to_s.strip : ''
+
+        return nil if name.empty? && amount_text.empty?
+
+        raise InvalidInput, 'Participant name is required' if name.empty?
+        raise InvalidInput, "Amount for #{name} is required" if amount_text.empty?
+
+        amount = parse_money(amount_text, "Amount for #{name}")
+        raise InvalidInput, "Amount for #{name} must be greater than zero" unless amount.positive?
+
+        { name: name, amount: amount }
+      rescue ArgumentError
+        raise InvalidInput, "Amount for #{name} must be a valid number"
       end
 
       def money(value)

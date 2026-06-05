@@ -25,14 +25,17 @@ describe 'Split bill feature' do
     post '/split-bill', {
       tax_percent: '10',
       service_percent: '5',
-      participants: "Alice:100\nBob:200"
+      participants: [
+        { 'name' => 'Alice', 'amount' => '100' },
+        { 'name' => 'Bob', 'amount' => '200' }
+      ]
     }
 
     _(last_response.status).must_equal 200
     _(last_response.body).must_include 'Result'
     _(last_response.body).must_include '$115.0'
-    _(last_response.body).must_include '$100.0'
-    _(last_response.body).must_include '$215.0'
+    _(last_response.body).must_include '$230.0'
+    _(last_response.body).must_include '$345.0'
   end
 
   it 'shows validation error for missing amount' do
@@ -42,7 +45,9 @@ describe 'Split bill feature' do
     rack_mock_session.cookie_jar['current_account'] = session_data
 
     post '/split-bill', {
-      participants: 'Alice'
+      participants: [
+        { 'name' => 'Alice', 'amount' => '' }
+      ]
     }
 
     _(last_response.status).must_equal 200
