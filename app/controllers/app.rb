@@ -40,27 +40,42 @@ module FinanceTracker
 
         routing.get do
           defaults = {
-            subtotal: '',
-            tax: '',
-            tip: '',
-            participants: "Alice\nBob"
+            tax_percent: '',
+            service_percent: '',
+            participants: [
+              { 'name' => '', 'amount' => '' }
+            ]
           }
           view 'split_bill', locals: { result: nil, form_values: defaults }
         end
 
         routing.post do
+          raw_participants = routing.params['participants']
+          participants =
+            if raw_participants.is_a?(Array)
+              raw_participants.map do |row|
+                {
+                  'name' => row['name'].to_s,
+                  'amount' => row['amount'].to_s
+                }
+              end
+            else
+              raw_participants.to_s.split(/\n/).map do |row|
+                name, amount = row.split(':', 2)
+                { 'name' => name.to_s, 'amount' => amount.to_s }
+              end
+            end
+
           form_values = {
-            subtotal: routing.params['subtotal'].to_s,
-            tax: routing.params['tax'].to_s,
-            tip: routing.params['tip'].to_s,
-            participants: routing.params['participants'].to_s
+            tax_percent: routing.params['tax_percent'].to_s,
+            service_percent: routing.params['service_percent'].to_s,
+            participants: participants
           }
 
           result = FinanceTracker::Services::SplitBillCalculator.new.call(
-            subtotal: form_values[:subtotal],
-            tax: form_values[:tax],
-            tip: form_values[:tip],
-            participants_text: form_values[:participants]
+            participants_text: form_values[:participants],
+            tax_percent: form_values[:tax_percent],
+            service_percent: form_values[:service_percent]
           )
 
           view 'split_bill', locals: { result: result, form_values: form_values }
