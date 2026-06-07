@@ -12,8 +12,17 @@ nav.navbar.navbar-expand-sm.navbar-dark.bg-primary
               a.nav-link href="/admin/accounts" Members
           li.nav-item
             a.nav-link href="/account/#{@current_account['username']}" Account
-          li.nav-item
-            a.nav-link href="/payment-methods" Payment Methods
+          li.nav-item.dropdown
+            a.nav-link.dropdown-toggle href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+              | Money Tracker
+            ul.dropdown-menu
+              li
+                a.dropdown-item href="/transactions/new" + Record Transaction
+              li: hr.dropdown-divider
+              li
+                a.dropdown-item href="/payment-methods" My Wallets
+              li
+                a.dropdown-item href="/payment-methods/new" + Add Wallet
           li.nav-item
             a.nav-link href="/split-bill" Split Bill
           li.nav-item

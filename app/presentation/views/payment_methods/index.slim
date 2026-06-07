@@ -27,5 +27,5 @@ div class="d-flex justify-content-between align-items-center mb-4"
             div class="d-flex gap-2"
               a href="/payment-methods/#{wallet.id}" class="btn btn-sm btn-outline-primary flex-fill"
                 | View Details
-              a href="/transactions/#{wallet.id}/new" class="btn btn-sm btn-primary flex-fill"
+              a href="/transactions/new?wallet_id=#{wallet.id}" class="btn btn-sm btn-primary flex-fill"
                 | + Record

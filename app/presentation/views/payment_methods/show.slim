@@ -2,7 +2,7 @@ div class="d-flex align-items-center justify-content-between mb-4"
   div class="d-flex align-items-center gap-2"
     a href="/payment-methods" class="btn btn-sm btn-outline-secondary" ← Back
     h1.h3.mb-0 = wallet.name
-  a href="/transactions/#{wallet.id}/new" class="btn btn-primary"
+  a href="/transactions/new?wallet_id=#{wallet.id}" class="btn btn-primary"
     | + Record Transaction
 
 div class="row g-4 mb-4"
@@ -36,7 +36,7 @@ h2.h5.mb-3 Transaction History
   div class="card border-0 shadow-sm"
     div class="card-body text-center py-5"
       p.text-muted.mb-3 No transactions yet for this wallet.
-      a href="/transactions/#{wallet.id}/new" class="btn btn-primary"
+      a href="/transactions/new?wallet_id=#{wallet.id}" class="btn btn-primary"
         | + Record your first transaction
 - else
   div class="card border-0 shadow-sm"
