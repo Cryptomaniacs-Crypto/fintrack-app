@@ -36,6 +36,7 @@ module FinanceTracker
     route('auth') do |routing|
       routing.on do
         routing.get 'login' do
+          routing.redirect "/account/#{@current_account['username']}" if @current_account
           view :login, locals: { google_oauth_url: sso_login_url(session) }
         end
 
@@ -54,7 +55,7 @@ module FinanceTracker
             SecureSession.set(session, 'account_api_token', account_api_token) if account_api_token
 
             flash[:notice] = "Welcome back #{account_info['username']}!"
-            routing.redirect '/'
+            routing.redirect "/account/#{account_info['username']}"
           rescue FinanceTracker::Services::AuthenticateAccount::UnauthorizedError
             flash.now[:error] = 'Username and password did not match our records'
             response.status = 400
@@ -82,8 +83,9 @@ module FinanceTracker
               current_session.auth_token = account.auth_token if account.auth_token
               current_session.account_api_token = account.account_api_token if account.account_api_token
 
-              flash[:notice] = "Welcome #{account.username || account['username']}!"
-              routing.redirect '/'
+              username = account.username || account['username']
+              flash[:notice] = "Welcome #{username}!"
+              routing.redirect "/account/#{username}"
             rescue FinanceTracker::Services::AuthorizeGoogleAccount::AuthorizeError
               flash[:error] = 'Could not sign in with Google'
               response.status = 403
@@ -112,6 +114,7 @@ module FinanceTracker
 
           routing.is do
             routing.get do
+              routing.redirect "/account/#{@current_account['username']}" if @current_account
               view :register
             end
 
@@ -121,7 +124,7 @@ module FinanceTracker
                 username: routing.params['username'].to_s.strip
               )
               flash[:notice] = 'Check your email for a verification link'
-              routing.redirect '/'
+              routing.redirect '/auth/login'
             rescue FinanceTracker::Services::VerifyRegistration::VerificationError => e
               flash[:error] = e.message
               routing.redirect '/auth/register'

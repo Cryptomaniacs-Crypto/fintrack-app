@@ -32,7 +32,11 @@ module FinanceTracker
 
       # GET /
       routing.root do
-        view 'home', locals: { current_account: @current_account }
+        if @current_account
+          routing.redirect "/account/#{@current_account['username']}"
+        else
+          routing.redirect '/auth/login'
+        end
       end
 
       routing.on 'split-bill' do

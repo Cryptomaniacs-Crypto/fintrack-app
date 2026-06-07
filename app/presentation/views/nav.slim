@@ -6,21 +6,15 @@ nav.navbar.navbar-expand-sm.navbar-dark.bg-primary
 
     .collapse.navbar-collapse#mainNavbar
       ul.navbar-nav.me-auto
-        li.nav-item
-          a.nav-link href="/" Home
         - if @current_account
+          li.nav-item
+            a.nav-link href="/account/#{@current_account['username']}" Account
           li.nav-item
             a.nav-link href="/payment-methods" Payment Methods
           li.nav-item
             a.nav-link href="/split-bill" Split Bill
-          li.nav-item.dropdown
-            a.nav-link.dropdown-toggle href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
-              = @current_account['username']
-            ul.dropdown-menu
-              li
-                a.dropdown-item href="/account/#{@current_account['username']}" Account
-              li
-                a.dropdown-item href="/auth/logout" Logout
+          li.nav-item
+            a.nav-link href="/auth/logout" Logout
         - else
           li.nav-item
             a.nav-link href="/auth/login" Login

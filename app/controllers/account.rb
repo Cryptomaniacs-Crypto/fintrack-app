@@ -139,6 +139,8 @@ module FinanceTracker
 
           routing.delete do
             SecureSession.delete(session, 'current_account')
+            SecureSession.delete(session, 'auth_token')
+            SecureSession.delete(session, 'account_api_token')
             flash[:notice] = 'Logged out'
             routing.redirect '/auth/login'
           end
