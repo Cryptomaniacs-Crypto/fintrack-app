@@ -28,7 +28,7 @@ module FinanceTracker
       # GET /payment-methods/new
       routing.is 'new' do
         routing.get do
-          view 'payment_methods/new', locals: { can_create_payment_method: can_create }
+          view 'payment_methods/new', locals: { can_create_payment_method: can_create, values: {} }
         end
       end
 
