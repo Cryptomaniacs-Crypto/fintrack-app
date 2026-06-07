@@ -71,4 +71,5 @@ describe 'Split bill feature' do
     _(last_response.status).must_equal 200
     _(last_response.body).must_include 'Amount for Alice is required'
   end
+
 end
