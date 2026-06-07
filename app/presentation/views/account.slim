@@ -44,4 +44,5 @@
                   button.btn.btn-outline-danger.btn-sm type="submit" Revoke #{role_name}
               - else
                 form method="post" action="/account/#{account['username']}/roles/#{role_name}"
+                  input type="hidden" name="_method" value="put"
                   button.btn.btn-outline-primary.btn-sm type="submit" Grant #{role_name}
