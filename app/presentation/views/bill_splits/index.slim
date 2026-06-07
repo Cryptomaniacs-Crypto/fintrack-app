@@ -1,0 +1,43 @@
+.row.justify-content-center
+  - splits ||= []
+  - current_account_id ||= nil
+  .col-lg-9
+    .card.shadow-sm.border-0
+      .card-body.p-4.p-md-5
+        .d-flex.justify-content-between.align-items-start.mb-4
+          .me-3
+            p.text-uppercase.text-primary.fw-semibold.mb-2 Bill Splits
+            h1.h3.mb-0 My Bill Splits
+          a.btn.btn-primary href="/bill-splits/new" + New Bill Split
+
+        - if splits.empty?
+          .alert.alert-info.mb-0 No bill splits yet.
+        - else
+          .table-responsive
+            table.table.table-sm.align-middle
+              thead
+                tr
+                  th Other Party
+                  th.text-end Amount
+                  th Status
+                  th Created
+                  th.text-end
+              tbody
+                - splits.each do |s|
+                  - attrs = s.is_a?(Hash) && s['creator_id'] ? s : (s['attributes'] || s)
+                  - is_creator = attrs['creator_id'].to_s == current_account_id.to_s
+                  - other = is_creator ? attrs['recipient_username'] : attrs['creator_username']
+                  - role_badge = is_creator ? 'you owe' : 'owes you'
+                  tr
+                    td
+                      = other
+                      = " "
+                      span.badge.bg-secondary.text-white.small = role_badge
+                    td.text-end $#{attrs['amount']}
+                    - status = attrs['status'].to_s
+                    - badge_class = status == 'settled' ? 'bg-success' : (status == 'agreed' ? 'bg-info' : 'bg-warning text-dark')
+                    td
+                      span class="badge #{badge_class}" = status.capitalize
+                    td.small.text-muted = attrs['created_at'].to_s[0, 10]
+                    td.text-end
+                      a.btn.btn-outline-primary.btn-sm href="/bill-splits/#{attrs['id']}" View

@@ -1,0 +1,104 @@
+.row.justify-content-center
+  - split ||= {}
+  - current_account_id ||= nil
+  - is_creator   = split['creator_id'].to_s == current_account_id.to_s
+  - is_recipient  = split['recipient_id'].to_s == current_account_id.to_s
+  - settled       = split['status'].to_s == 'settled'
+  .col-lg-7
+    .card.shadow-sm.border-0
+      .card-body.p-4.p-md-5
+        .d-flex.justify-content-between.align-items-start.mb-4
+          .me-3
+            p.text-uppercase.text-primary.fw-semibold.mb-2 Bill Splits
+            h1.h3.mb-0 Bill Split Detail
+          a.btn.btn-outline-secondary href="/bill-splits" Back
+
+        / Summary row
+        .row.g-3.mb-4
+          .col-sm-6
+            .small.text-muted Creator
+            .fw-semibold = split['creator_username']
+          .col-sm-6
+            .small.text-muted Recipient
+            .fw-semibold = split['recipient_username']
+          .col-sm-4
+            .small.text-muted Amount
+            .fw-semibold $#{split['amount']}
+          .col-sm-4
+            .small.text-muted Status
+            - badge_class = settled ? 'bg-success' : (split['status'] == 'agreed' ? 'bg-info' : 'bg-warning text-dark')
+            span class="badge #{badge_class}" = split['status'].to_s.capitalize
+          .col-sm-4
+            .small.text-muted Created
+            .fw-semibold = split['created_at'].to_s[0, 10]
+
+        / Reason
+        .mb-3
+          .small.text-muted.mb-1 Reason
+          .border.rounded.p-3.bg-light = split['reason_note']
+
+        / Dispute note
+        - if split['dispute_note'] && !split['dispute_note'].to_s.empty?
+          .alert.alert-warning
+            strong Dispute:
+            = " #{split['dispute_note']}"
+
+        / Timestamps
+        - if split['recipient_agreed_at']
+          .small.text-muted.mb-1 Agreed at: #{split['recipient_agreed_at'].to_s[0, 19]}
+        - if split['settled_at']
+          .small.text-muted.mb-1 Settled at: #{split['settled_at'].to_s[0, 19]}
+
+        - unless settled
+          hr.my-4
+
+          / Creator actions
+          - if is_creator
+            h2.h6.mb-3 Your Actions
+            .d-flex.flex-wrap.gap-2.mb-3
+              / Edit form (inline modal-free)
+              button.btn.btn-outline-secondary type="button" data-bs-toggle="collapse" data-bs-target="#editForm" Edit
+
+              / Delete
+              form method="post" action="/bill-splits/#{split['id']}"
+                input type="hidden" name="_method" value="DELETE"
+                button.btn.btn-outline-danger type="submit" onclick="return confirm('Delete this bill split?')" Delete
+
+              / Mark settled
+              form method="post" action="/bill-splits/#{split['id']}/settle"
+                button.btn.btn-success type="submit" onclick="return confirm('Mark as settled?')" Mark Settled
+
+            .collapse#editForm
+              .card.card-body.mb-3
+                form method="post" action="/bill-splits/#{split['id']}"
+                  input type="hidden" name="_method" value="PATCH"
+                  .mb-2
+                    label.form-label.small for="edit_amount" Amount ($)
+                    input.form-control.form-control-sm type="number" step="0.01" min="0.01" id="edit_amount" name="amount" value=split['amount']
+                  .mb-2
+                    label.form-label.small for="edit_reason" Reason
+                    textarea.form-control.form-control-sm id="edit_reason" name="reason_note" rows="2"
+                      = split['reason_note']
+                  button.btn.btn-primary.btn-sm type="submit" Save Changes
+
+          / Recipient actions
+          - if is_recipient
+            h2.h6.mb-3 Your Actions
+            .d-flex.flex-wrap.gap-2.mb-3
+              - unless split['status'] == 'agreed'
+                form method="post" action="/bill-splits/#{split['id']}/agree"
+                  button.btn.btn-primary type="submit" I Agree
+
+              form method="post" action="/bill-splits/#{split['id']}/settle"
+                button.btn.btn-success type="submit" onclick="return confirm('Mark as settled?')" Mark Settled
+
+            / Dispute form
+            - unless split['status'] == 'agreed'
+              form method="post" action="/bill-splits/#{split['id']}/dispute"
+                .input-group
+                  input.form-control type="text" name="reason" placeholder="Dispute reason…"
+                  button.btn.btn-outline-danger type="submit" Dispute
+
+        - if settled
+          .alert.alert-success.mt-4.mb-0
+            | This bill split is settled and locked.

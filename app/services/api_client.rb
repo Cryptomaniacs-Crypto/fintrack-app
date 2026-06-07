@@ -40,6 +40,10 @@ module FinanceTracker
         parse(http(auth_token: auth_token, account_api_token: account_api_token).put(url(path), json: body))
       end
 
+      def patch(path, body, auth_token: nil, account_api_token: nil)
+        parse(http(auth_token: auth_token, account_api_token: account_api_token).patch(url(path), json: body))
+      end
+
       def delete(path, body = nil, auth_token: nil, account_api_token: nil)
         request = http(auth_token: auth_token, account_api_token: account_api_token).headers('Content-Type' => 'application/json')
         response = body ? request.delete(url(path), body: body.to_json) : request.delete(url(path))

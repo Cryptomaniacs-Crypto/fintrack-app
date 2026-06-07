@@ -18,43 +18,49 @@ module FinanceTracker
         raise
       end
 
-      def list_split_agreements(auth_token:, account_api_token: nil)
-        @client.get('/api/v1/split-agreements', auth_token: auth_token, account_api_token: account_api_token)
-      end
-
       def list_transactions(auth_token: nil, account_api_token: nil)
         @client.get('/api/v1/transactions', auth_token: auth_token, account_api_token: account_api_token)
       rescue StandardError
         []
       end
 
-      def create_split_agreement(payload, auth_token:, account_api_token: nil)
-        @client.post('/api/v1/split-agreements', payload, auth_token: auth_token, account_api_token: account_api_token)
+      # --- Bill Splits ---
+
+      def list_bill_splits(auth_token:, account_api_token: nil)
+        @client.get('/api/v1/bill-splits', auth_token: auth_token, account_api_token: account_api_token)
       end
 
-      def get_split_agreement(agreement_id, auth_token:, account_api_token: nil)
-        @client.get("/api/v1/split-agreements/#{agreement_id}", auth_token: auth_token, account_api_token: account_api_token)
+      def create_bill_split(payload, auth_token:, account_api_token: nil)
+        @client.post('/api/v1/bill-splits', payload, auth_token: auth_token, account_api_token: account_api_token)
       end
 
-      def agree_split_agreement(agreement_id, auth_token:, account_api_token: nil)
-        @client.post("/api/v1/split-agreements/#{agreement_id}/agree", {}, auth_token: auth_token, account_api_token: account_api_token)
+      def get_bill_split(id, auth_token:, account_api_token: nil)
+        @client.get("/api/v1/bill-splits/#{id}", auth_token: auth_token, account_api_token: account_api_token)
       end
 
-      def mark_paid_split_agreement(agreement_id, auth_token:, account_api_token: nil)
-        @client.post("/api/v1/split-agreements/#{agreement_id}/mark-paid", {}, auth_token: auth_token, account_api_token: account_api_token)
+      def update_bill_split(id, payload, auth_token:, account_api_token: nil)
+        @client.patch("/api/v1/bill-splits/#{id}", payload, auth_token: auth_token, account_api_token: account_api_token)
       end
 
-      def dispute_split_agreement(agreement_id, reason:, auth_token:, account_api_token: nil)
+      def delete_bill_split(id, auth_token:, account_api_token: nil)
+        @client.delete("/api/v1/bill-splits/#{id}", auth_token: auth_token, account_api_token: account_api_token)
+      end
+
+      def agree_bill_split(id, auth_token:, account_api_token: nil)
+        @client.post("/api/v1/bill-splits/#{id}/agree", {}, auth_token: auth_token, account_api_token: account_api_token)
+      end
+
+      def dispute_bill_split(id, reason:, auth_token:, account_api_token: nil)
         @client.post(
-          "/api/v1/split-agreements/#{agreement_id}/dispute",
+          "/api/v1/bill-splits/#{id}/dispute",
           { reason: reason },
           auth_token: auth_token,
           account_api_token: account_api_token
         )
       end
 
-      def finalize_split_agreement(agreement_id, auth_token:, account_api_token: nil)
-        @client.post("/api/v1/split-agreements/#{agreement_id}/finalize", {}, auth_token: auth_token, account_api_token: account_api_token)
+      def settle_bill_split(id, auth_token:, account_api_token: nil)
+        @client.post("/api/v1/bill-splits/#{id}/settle", {}, auth_token: auth_token, account_api_token: account_api_token)
       end
     end
   end

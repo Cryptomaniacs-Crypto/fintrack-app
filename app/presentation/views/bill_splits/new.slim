@@ -1,0 +1,27 @@
+.row.justify-content-center
+  - values ||= {}
+  .col-lg-6
+    .card.shadow-sm.border-0
+      .card-body.p-4.p-md-5
+        .d-flex.justify-content-between.align-items-start.mb-4
+          .me-3
+            p.text-uppercase.text-primary.fw-semibold.mb-2 Bill Splits
+            h1.h3.mb-0 New Bill Split
+          a.btn.btn-outline-secondary href="/bill-splits" Back
+
+        form method="post" action="/bill-splits"
+          .mb-3
+            label.form-label for="recipient_username" Recipient Username
+            input.form-control type="text" id="recipient_username" name="recipient_username" placeholder="e.g. bob" value=values['recipient_username'].to_s required=true autofocus=true
+            .form-text The username of the person who owes you.
+
+          .mb-3
+            label.form-label for="amount" Amount ($)
+            input.form-control type="number" step="0.01" min="0.01" id="amount" name="amount" placeholder="0.00" value=values['amount'].to_s required=true
+
+          .mb-3
+            label.form-label for="reason_note" Reason
+            textarea.form-control id="reason_note" name="reason_note" rows="3" placeholder="Dinner, groceries, utilities…" required=true
+              = values['reason_note'].to_s
+
+          button.btn.btn-primary.w-100 type="submit" Create Bill Split

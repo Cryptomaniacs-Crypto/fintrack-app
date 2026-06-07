@@ -5,7 +5,8 @@ require 'roda'
 require 'slim'
 require 'slim/include'
 require_relative '../lib/secure_session'
-require_relative '../services/split_bill_calculator'
+require_relative '../models/current_session'
+require_relative '../services/fintrack_api'
 
 module FinanceTracker
   # Base class for the FinanceTracker web app.
@@ -24,7 +25,7 @@ module FinanceTracker
       routing.redirect_http_to_https if App.environment == :production
 
       response['Content-Type'] = 'text/html; charset=utf-8'
-      @current_account = FinanceTracker::Account.from_api(SecureSession.get(session, 'current_account'))
+      @current_account = SecureSession.get(session, 'current_account')
 
       routing.public
       routing.assets
@@ -32,61 +33,7 @@ module FinanceTracker
 
       # GET /
       routing.root do
-        if @current_account&.username
-          routing.redirect "/account/#{@current_account.username}"
-        else
-          routing.redirect '/auth/login'
-        end
-      end
-
-      routing.on 'split-bill' do
-        require_login!(routing)
-
-        routing.get do
-          defaults = {
-            tax_percent: '',
-            service_percent: '',
-            participants: [
-              { 'name' => '', 'amount' => '' }
-            ]
-          }
-          view 'split_bill', locals: { result: nil, form_values: defaults }
-        end
-
-        routing.post do
-          raw_participants = routing.params['participants']
-          participants =
-            if raw_participants.is_a?(Array)
-              raw_participants.map do |row|
-                {
-                  'name' => row['name'].to_s,
-                  'amount' => row['amount'].to_s
-                }
-              end
-            else
-              raw_participants.to_s.split(/\n/).map do |row|
-                name, amount = row.split(':', 2)
-                { 'name' => name.to_s, 'amount' => amount.to_s }
-              end
-            end
-
-          form_values = {
-            tax_percent: routing.params['tax_percent'].to_s,
-            service_percent: routing.params['service_percent'].to_s,
-            participants: participants
-          }
-
-          result = FinanceTracker::Services::SplitBillCalculator.new.call(
-            participants_text: form_values[:participants],
-            tax_percent: form_values[:tax_percent],
-            service_percent: form_values[:service_percent]
-          )
-
-          view 'split_bill', locals: { result: result, form_values: form_values }
-        rescue FinanceTracker::Services::SplitBillCalculator::InvalidInput => e
-          flash.now[:error] = e.message
-          view 'split_bill', locals: { result: nil, form_values: form_values }
-        end
+        view 'home', locals: { current_account: @current_account }
       end
     end
 
@@ -94,14 +41,11 @@ module FinanceTracker
 
     def system_admin?(current_account = nil)
       account = current_account || @current_account
-      capabilities = account&.dig('capabilities') || {}
-      return true if capabilities['is_admin']
-
       Array(account&.dig('system_roles')).include?('admin')
     end
 
     def require_login!(routing)
-      return if @current_account&.username
+      return if @current_account
 
       flash[:error] = 'Please log in to continue'
       routing.redirect '/auth/login'
