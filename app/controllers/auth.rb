@@ -37,7 +37,7 @@ module FinanceTracker
     route('auth') do |routing|
       routing.on do
         routing.get 'login' do
-          routing.redirect "/account/#{@current_account.username}" if @current_account&.username
+          routing.redirect "/account/#{@current_account['username']}" if @current_account
           view :login, locals: { google_oauth_url: sso_login_url(session) }
         end
 
@@ -115,7 +115,7 @@ module FinanceTracker
 
           routing.is do
             routing.get do
-              routing.redirect "/account/#{@current_account.username}" if @current_account&.username
+              routing.redirect "/account/#{@current_account['username']}" if @current_account
               view :register
             end
 
