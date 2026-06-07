@@ -9,6 +9,15 @@ module FinanceTracker
         @client = ApiClient.new(base_url: base_url)
       end
 
+      def account_exists?(username)
+        @client.get("/api/v1/accounts/#{username}")
+        true
+      rescue ApiClient::ApiError => e
+        return false if e.status == 404
+
+        raise
+      end
+
       def list_split_agreements(auth_token:, account_api_token: nil)
         @client.get('/api/v1/split-agreements', auth_token: auth_token, account_api_token: account_api_token)
       end
