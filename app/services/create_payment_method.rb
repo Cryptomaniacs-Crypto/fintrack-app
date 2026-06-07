@@ -16,8 +16,8 @@ module FinanceTracker
         'e_wallet' => 'E-Wallet'
       }.freeze
 
-      def initialize(base_url: ENV.fetch('FINTRACK_API_URL', 'http://localhost:9292'))
-        @client = ApiClient.new(base_url: base_url)
+      def initialize(config = nil)
+        @client = ApiClient.new(config)
       end
 
       def call(auth_token:, name:, method_type:, account_number: nil, balance: nil, account_api_token: nil)
