@@ -75,7 +75,7 @@ module FinanceTracker
             end
 
             routing.put do
-              FinanceTracker::Services::AssignSystemRole.new.call(
+              FinanceTracker::Services::AssignSystemRole.new(App.config).call(
                   auth_token: auth_token,
                   target_username: username,
                   role_name: role_name,
@@ -89,7 +89,7 @@ module FinanceTracker
             end
 
             routing.delete do
-              FinanceTracker::Services::RevokeSystemRole.new.call(
+              FinanceTracker::Services::RevokeSystemRole.new(App.config).call(
                 auth_token: auth_token,
                 target_username: username,
                 role_name: role_name,

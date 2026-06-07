@@ -7,6 +7,9 @@ nav.navbar.navbar-expand-sm.navbar-dark.bg-primary
     .collapse.navbar-collapse#mainNavbar
       ul.navbar-nav.me-auto
         - if @current_account&.username
+          - if @current_account.admin?
+            li.nav-item
+              a.nav-link href="/admin/accounts" Members
           li.nav-item
             a.nav-link href="/account/#{@current_account['username']}" Account
           li.nav-item
