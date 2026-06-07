@@ -1,0 +1,44 @@
+- type_label = txn.expense? ? 'Expense' : 'Income'
+- type_class = txn.expense? ? 'text-danger' : 'text-success'
+
+div class="d-flex align-items-center justify-content-between mb-4"
+  div class="d-flex align-items-center gap-2"
+    a href="/transactions" class="btn btn-sm btn-outline-secondary" ← Back
+    h1.h3.mb-0 Transaction Details
+  div class="d-flex gap-2"
+    a href="/transactions/#{txn.id}/edit" class="btn btn-outline-secondary" Edit
+    form method="post" action="/transactions/#{txn.id}/delete" class="d-inline"
+      button type="submit" class="btn btn-outline-danger" onclick="return confirm('Delete this transaction?')" Delete
+
+div class="row justify-content-center"
+  div class="col-md-6"
+    div class="card border-0 shadow-sm"
+      div class="card-body p-4"
+
+        div class="text-center mb-4"
+          p class="display-5 fw-bold mb-1 #{type_class}"
+            = txn.display_amount
+          span class="badge text-bg-secondary" = type_label
+
+        dl.row.mb-0
+          dt.col-sm-5 Description
+          dd.col-sm-7 = txn.title
+
+          dt.col-sm-5 Account
+          dd.col-sm-7
+            - if txn.wallet_name
+              a href="/payment-methods/#{txn.wallet_id}" = txn.wallet_name
+            - else
+              = txn.wallet_id
+
+          dt.col-sm-5 Date
+          dd.col-sm-7 = txn.transaction_date
+
+          - if txn.category_name
+            dt.col-sm-5 Category
+            dd.col-sm-7
+              span class="badge text-bg-light text-dark border" = txn.category_name
+
+          - unless txn.note.to_s.empty?
+            dt.col-sm-5 Note
+            dd.col-sm-7 = txn.note

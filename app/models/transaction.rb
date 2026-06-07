@@ -24,12 +24,13 @@ module FinanceTracker
       @transaction_date = attrs['transaction_date'] || attrs[:transaction_date]
       @note             = attrs['note'] || attrs[:note]
       @wallet_id        = attrs['wallet_id'] || attrs[:wallet_id]
+      @wallet_name      = attrs['wallet_name'] || attrs[:wallet_name]
       @category_id      = attrs['category_id'] || attrs[:category_id]
       @category_name    = attrs['category_name'] || attrs[:category_name]
     end
 
     attr_reader :id, :title, :amount, :transaction_date, :note,
-                :wallet_id, :category_id, :category_name
+                :wallet_id, :wallet_name, :category_id, :category_name
 
     def [](key)
       send(key.to_s) rescue nil
