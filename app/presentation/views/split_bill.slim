@@ -1,4 +1,6 @@
 .row.justify-content-center
+  - agreement ||= nil
+  - current_username ||= ''
   .col-lg-9
     .card.shadow-sm.border-0
       .card-body.p-4.p-md-5
@@ -81,6 +83,67 @@
                     td.text-end $#{entry[:tax]}
                     td.text-end $#{entry[:service]}
                     td.text-end.fw-semibold $#{entry[:total]}
+
+          .mt-3
+            form method="post" action="/split-bill/agreements"
+              input type="hidden" name="tax_percent" value=form_values[:tax_percent]
+              input type="hidden" name="service_percent" value=form_values[:service_percent]
+              - Array(form_values[:participants]).each do |participant|
+                input type="hidden" name="participants[][name]" value=participant['name']
+                input type="hidden" name="participants[][amount]" value=participant['amount']
+              button.btn.btn-success type="submit" Create Mutual Sign-off Agreement
+
+        - if agreement
+          hr.my-4
+          h2.h5.mb-3 Mutual Agreement
+          .row.g-2.mb-3
+            .col-sm-4
+              .small.text-muted Agreement ID
+              .fw-semibold = agreement['id']
+            .col-sm-4
+              .small.text-muted Initiator
+              .fw-semibold = agreement['initiator_username']
+            .col-sm-4
+              .small.text-muted Status
+              .fw-semibold.text-capitalize = agreement['status']
+
+          .table-responsive
+            table.table.table-sm.align-middle
+              thead
+                tr
+                  th Participant
+                  th.text-end Total
+                  th.text-center Agreed
+                  th.text-center Paid
+                  th.text-center Disputed
+              tbody
+                - Array(agreement['participants']).each do |entry|
+                  tr
+                    td = entry['name']
+                    td.text-end $#{entry['total'] || entry['amount']}
+                    td.text-center = entry['agreed'] ? '✅' : '—'
+                    td.text-center = entry['paid'] ? '✅' : '—'
+                    td.text-center = entry['disputed'] ? '⚠️' : '—'
+
+          - participant_entry = Array(agreement['participants']).find { |entry| entry['name'].to_s == current_username.to_s }
+          - if participant_entry && !participant_entry['agreed']
+            form.d-inline method="post" action="/split-bill/agreements/#{agreement['id']}/agree"
+              button.btn.btn-primary.btn-sm type="submit" I Agree
+
+          - if participant_entry && participant_entry['agreed'] && !participant_entry['paid']
+            form.d-inline.ms-2 method="post" action="/split-bill/agreements/#{agreement['id']}/mark-paid"
+              button.btn.btn-outline-success.btn-sm type="submit" Mark Paid
+
+          - if participant_entry && !participant_entry['disputed']
+            form.mt-3 method="post" action="/split-bill/agreements/#{agreement['id']}/dispute"
+              label.form-label for="dispute_reason" Raise Dispute
+              .input-group
+                input.form-control type="text" name="reason" id="dispute_reason" placeholder="Reason for dispute"
+                button.btn.btn-outline-danger type="submit" Submit Dispute
+
+          - if agreement['initiator_username'].to_s == current_username.to_s && agreement['status'].to_s != 'finalized'
+            form.mt-3 method="post" action="/split-bill/agreements/#{agreement['id']}/finalize"
+              button.btn.btn-dark type="submit" Finalize Agreement
 
         javascript:
           (function() {

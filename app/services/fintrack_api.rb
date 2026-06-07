@@ -14,6 +14,35 @@ module FinanceTracker
       rescue StandardError
         []
       end
+
+      def create_split_agreement(payload, auth_token:, account_api_token: nil)
+        @client.post('/api/v1/split-agreements', payload, auth_token: auth_token, account_api_token: account_api_token)
+      end
+
+      def get_split_agreement(agreement_id, auth_token:, account_api_token: nil)
+        @client.get("/api/v1/split-agreements/#{agreement_id}", auth_token: auth_token, account_api_token: account_api_token)
+      end
+
+      def agree_split_agreement(agreement_id, auth_token:, account_api_token: nil)
+        @client.post("/api/v1/split-agreements/#{agreement_id}/agree", {}, auth_token: auth_token, account_api_token: account_api_token)
+      end
+
+      def mark_paid_split_agreement(agreement_id, auth_token:, account_api_token: nil)
+        @client.post("/api/v1/split-agreements/#{agreement_id}/mark-paid", {}, auth_token: auth_token, account_api_token: account_api_token)
+      end
+
+      def dispute_split_agreement(agreement_id, reason:, auth_token:, account_api_token: nil)
+        @client.post(
+          "/api/v1/split-agreements/#{agreement_id}/dispute",
+          { reason: reason },
+          auth_token: auth_token,
+          account_api_token: account_api_token
+        )
+      end
+
+      def finalize_split_agreement(agreement_id, auth_token:, account_api_token: nil)
+        @client.post("/api/v1/split-agreements/#{agreement_id}/finalize", {}, auth_token: auth_token, account_api_token: account_api_token)
+      end
     end
   end
 end
