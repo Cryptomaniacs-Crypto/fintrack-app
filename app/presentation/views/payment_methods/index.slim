@@ -1,13 +1,13 @@
 div class="d-flex justify-content-between align-items-center mb-4"
-  h1.h3.mb-0 Payment Methods
+  h1.h3.mb-0 My Accounts
   - if can_create_payment_method
-    a class="btn btn-primary" href="/payment-methods/new" + Add Payment Method
+    a class="btn btn-primary" href="/payment-methods/new" + Add Account
 
 - if payment_methods.empty?
   div class="text-center py-5"
-    p.text-muted.mb-3 No payment methods yet. Add one to start tracking your money.
+    p.text-muted.mb-3 No accounts yet. Add one to start tracking your money.
     - if can_create_payment_method
-      a.btn.btn-primary href="/payment-methods/new" + Add Payment Method
+      a.btn.btn-primary href="/payment-methods/new" + Add Account
 - else
   div class="row g-3"
     - payment_methods.each do |wallet|

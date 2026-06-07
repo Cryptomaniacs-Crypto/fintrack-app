@@ -14,9 +14,9 @@ div class="row justify-content-center"
 
           - if wallet.nil?
             div class="form-group mb-3"
-              label.form-label for="input-wallet" Payment Method
+              label.form-label for="input-wallet" Account
               select name="wallet_id" id="input-wallet" class="form-select" required="required"
-                option value="" — Select a payment method —
+                option value="" — Select an account —
                 - wallets.each do |w|
                   option value=w.id selected=(preselect_wallet_id.to_s == w.id.to_s) = w.name
           - else
@@ -24,18 +24,28 @@ div class="row justify-content-center"
             input type="hidden" name="wallet_id" value=wallet.id
 
           div class="form-group mb-3"
-            label.form-label for="input-title" Description
-            input type="text" name="title" id="input-title" class="form-control" required="required" maxlength="200" value=values['title'].to_s
-
-          div class="form-group mb-3"
             label.form-label Transaction Type
             div class="d-flex gap-3"
               div class="form-check"
-                input class="form-check-input" type="radio" name="transaction_type" id="type-income" value="income" checked=(values['transaction_type'] != 'expense')
+                input class="form-check-input" type="radio" name="transaction_type" id="type-income" value="income" checked=(values['transaction_type'] == 'income' || values['transaction_type'].to_s.empty?)
                 label class="form-check-label text-success fw-semibold" for="type-income" + Income
               div class="form-check"
                 input class="form-check-input" type="radio" name="transaction_type" id="type-expense" value="expense" checked=(values['transaction_type'] == 'expense')
                 label class="form-check-label text-danger fw-semibold" for="type-expense" − Expense
+              div class="form-check"
+                input class="form-check-input" type="radio" name="transaction_type" id="type-transfer" value="transfer" checked=(values['transaction_type'] == 'transfer')
+                label class="form-check-label text-primary fw-semibold" for="type-transfer" ⇄ Transfer
+
+          div id="transfer-fields" class="form-group mb-3" style=(values['transaction_type'] == 'transfer' ? '' : 'display:none')
+            label.form-label for="input-to-wallet" To Account
+            select name="to_wallet_id" id="input-to-wallet" class="form-select"
+              option value="" — Select destination account —
+              - wallets.each do |w|
+                option value=w.id selected=(values['to_wallet_id'].to_s == w.id.to_s) = w.name
+
+          div class="form-group mb-3"
+            label.form-label for="input-title" Description
+            input type="text" name="title" id="input-title" class="form-control" required="required" maxlength="200" value=values['title'].to_s
 
           div class="form-group mb-3"
             label.form-label for="input-amount" Amount
@@ -47,12 +57,13 @@ div class="row justify-content-center"
             label.form-label for="input-date" Date
             input type="date" name="transaction_date" id="input-date" class="form-control" required="required" value=(values['transaction_date'] || Time.now.strftime('%Y-%m-%d'))
 
-          div class="form-group mb-3"
-            label.form-label for="input-category" Category (optional)
-            select name="category_id" id="input-category" class="form-select"
-              option value="" — None —
-              - categories.each do |cat|
-                option value=cat.id selected=(values['category_id'].to_s == cat.id.to_s) = cat.name
+          div id="category-fields" style=(values['transaction_type'] == 'transfer' ? 'display:none' : '')
+            div class="form-group mb-3"
+              label.form-label for="input-category" Category (optional)
+              select name="category_id" id="input-category" class="form-select"
+                option value="" — None —
+                - categories.each do |cat|
+                  option value=cat.id selected=(values['category_id'].to_s == cat.id.to_s) = cat.name
 
           div class="form-group mb-4"
             label.form-label for="input-note" Note (optional)
@@ -61,3 +72,16 @@ div class="row justify-content-center"
           div class="d-flex gap-2"
             button type="submit" class="btn btn-primary" Save Transaction
             a class="btn btn-outline-secondary" href=back_href Cancel
+
+javascript:
+  (function () {
+    var radios = document.querySelectorAll('input[name="transaction_type"]');
+    var transferFields = document.getElementById('transfer-fields');
+    var categoryFields = document.getElementById('category-fields');
+    function toggle() {
+      var isTransfer = document.getElementById('type-transfer').checked;
+      transferFields.style.display = isTransfer ? '' : 'none';
+      if (categoryFields) categoryFields.style.display = isTransfer ? 'none' : '';
+    }
+    radios.forEach(function(r) { r.addEventListener('change', toggle); });
+  })();
