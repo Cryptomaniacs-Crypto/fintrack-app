@@ -6,7 +6,7 @@ nav.navbar.navbar-expand-sm.navbar-dark.bg-primary
 
     .collapse.navbar-collapse#mainNavbar
       ul.navbar-nav.me-auto
-        - if @current_account
+        - if @current_account&.username
           li.nav-item
             a.nav-link href="/account/#{@current_account['username']}" Account
           li.nav-item

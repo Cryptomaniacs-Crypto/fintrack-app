@@ -8,6 +8,8 @@ module FinanceTracker
 		attr_reader :account_info, :auth_token, :account_api_token
 
 		def self.from_api(envelope)
+			return nil if envelope.nil?
+
 			new(envelope)
 		end
 

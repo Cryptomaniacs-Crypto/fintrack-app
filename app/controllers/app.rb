@@ -32,8 +32,8 @@ module FinanceTracker
 
       # GET /
       routing.root do
-        if @current_account
-          routing.redirect "/account/#{@current_account['username']}"
+        if @current_account&.username
+          routing.redirect "/account/#{@current_account.username}"
         else
           routing.redirect '/auth/login'
         end
@@ -101,7 +101,7 @@ module FinanceTracker
     end
 
     def require_login!(routing)
-      return if @current_account
+      return if @current_account&.username
 
       flash[:error] = 'Please log in to continue'
       routing.redirect '/auth/login'
