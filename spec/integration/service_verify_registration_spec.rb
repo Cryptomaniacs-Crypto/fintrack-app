@@ -24,7 +24,8 @@ describe 'VerifyRegistration service' do
 
     _(result[:email]).must_equal @registration[:email]
     assert_requested(:post, "#{API_URL}/api/v1/auth/register") do |req|
-      body = JSON.parse(req.body)
+      # Body is now a signed envelope: the registration fields live under `data`.
+      body = JSON.parse(req.body)['data']
       body['verification_url'].start_with?("#{@config.APP_URL}/auth/register/")
     end
   end
@@ -32,7 +33,7 @@ describe 'VerifyRegistration service' do
   it 'SECURITY: verification_url carries an encrypted token with the registration data' do
     decrypted = nil
     WebMock.stub_request(:post, "#{API_URL}/api/v1/auth/register").to_return(status: 202).with do |req|
-      body = JSON.parse(req.body)
+      body = JSON.parse(req.body)['data']
       token = body['verification_url'].split('/').last
       decrypted = JSON.parse(FinanceTracker::SecureMessage.decrypt(token))
       true

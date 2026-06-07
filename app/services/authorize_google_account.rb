@@ -4,6 +4,7 @@ require 'http'
 require 'json'
 
 require_relative 'api_client'
+require_relative '../lib/signed_message'
 
 module FinanceTracker
   module Services
@@ -20,7 +21,8 @@ module FinanceTracker
       # the token exchange/validation and returns account/auth tokens.
       def call(code)
         id_token = exchange_code_for_id_token(code)
-        @client.post('/api/v1/auth/sso', { id_token: id_token })
+        # SSO POST carries no auth_token, so the API requires a signed body.
+        @client.post('/api/v1/auth/sso', FinanceTracker::SignedMessage.sign({ id_token: id_token }))
       rescue ApiClient::ApiError => e
         raise AuthorizeError, e.message
       end
