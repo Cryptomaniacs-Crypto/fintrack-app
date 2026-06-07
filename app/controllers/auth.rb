@@ -32,6 +32,7 @@ module FinanceTracker
       state = (session['sso_state'] ||= SecureRandom.hex(16))
       google_oauth_url(App.config, state)
     end
+
     route('auth') do |routing|
       routing.on do
         routing.get 'login' do
@@ -81,7 +82,7 @@ module FinanceTracker
               current_session.auth_token = account.auth_token if account.auth_token
               current_session.account_api_token = account.account_api_token if account.account_api_token
 
-              flash[:notice] = "Welcome #{account['username']}!"
+              flash[:notice] = "Welcome #{account.username || account['username']}!"
               routing.redirect '/'
             rescue FinanceTracker::Services::AuthorizeGoogleAccount::AuthorizeError
               flash[:error] = 'Could not sign in with Google'
@@ -90,13 +91,13 @@ module FinanceTracker
             rescue StandardError => e
               App.logger.error "SSO LOGIN ERROR: #{e.inspect}"
               flash[:error] = 'Unexpected error during Google sign-in'
-                    authorized = FinanceTracker::Services::AuthorizeGoogleAccount.new(App.config).call(routing.params['code'])
-                    account = FinanceTracker::Account.from_api(authorized)
+              response.status = 500
+              routing.redirect '/auth/login'
             end
           end
-                    current_session.current_account = account
-                    current_session.auth_token = account.auth_token
-                    current_session.account_api_token = account.account_api_token if account.account_api_token
+        end
+
+        routing.on 'register' do
           routing.is String do |registration_token|
             token = RegistrationToken.load(registration_token)
             view :register_confirm, locals: {
