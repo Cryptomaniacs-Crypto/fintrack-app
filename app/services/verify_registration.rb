@@ -2,6 +2,7 @@
 
 require_relative 'api_client'
 require_relative '../lib/registration_token'
+require_relative '../lib/signed_message'
 
 module FinanceTracker
   module Services
@@ -20,7 +21,8 @@ module FinanceTracker
         verification_url = "#{@config.APP_URL}/auth/register/#{registration_token}"
         registration_data = { email: email, username: username, verification_url: verification_url }
 
-        @client.post('/api/v1/auth/register', registration_data)
+        # No auth_token on registration, so the API requires a signed body.
+        @client.post('/api/v1/auth/register', FinanceTracker::SignedMessage.sign(registration_data))
         registration_data
       rescue ApiClient::ApiError => e
         raise ApiServerError, e.message if e.status >= 500
