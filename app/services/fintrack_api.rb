@@ -9,6 +9,10 @@ module FinanceTracker
         @client = ApiClient.new(base_url: base_url)
       end
 
+      def list_split_agreements(auth_token:, account_api_token: nil)
+        @client.get('/api/v1/split-agreements', auth_token: auth_token, account_api_token: account_api_token)
+      end
+
       def list_transactions(auth_token: nil, account_api_token: nil)
         @client.get('/api/v1/transactions', auth_token: auth_token, account_api_token: account_api_token)
       rescue StandardError

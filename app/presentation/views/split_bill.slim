@@ -1,5 +1,6 @@
 .row.justify-content-center
   - agreement ||= nil
+  - agreements ||= []
   - current_username ||= ''
   .col-lg-9
     .card.shadow-sm.border-0
@@ -144,6 +145,26 @@
           - if agreement['initiator_username'].to_s == current_username.to_s && agreement['status'].to_s != 'finalized'
             form.mt-3 method="post" action="/split-bill/agreements/#{agreement['id']}/finalize"
               button.btn.btn-dark type="submit" Finalize Agreement
+
+        - if agreements.any?
+          hr.my-4
+          h2.h5.mb-3 My Agreements
+          .table-responsive
+            table.table.table-sm.align-middle
+              thead
+                tr
+                  th Agreement ID
+                  th Initiator
+                  th Status
+                  th.text-end
+              tbody
+                - agreements.each do |entry|
+                  tr
+                    td = entry['id']
+                    td = entry['initiator_username']
+                    td.text-capitalize = entry['status']
+                    td.text-end
+                      a.btn.btn-outline-primary.btn-sm href="/split-bill?agreement_id=#{entry['id']}" Open
 
         javascript:
           (function() {
