@@ -104,21 +104,6 @@ module FinanceTracker
           end
         end
 
-        routing.on 'reset_session' do
-          routing.post do
-            begin
-              # Clear only the account_api_token from the secure session (do not log out)
-              SecureSession.delete(session, 'account_api_token')
-              flash[:notice] = 'Session API key cleared'
-            rescue StandardError => e
-              App.logger.error "ERROR CLEARING API KEY: #{e.inspect}"
-              flash[:error] = 'Could not clear API key from session'
-            end
-
-            routing.redirect "/account/#{username}"
-          end
-        end
-
         routing.is do
           routing.get do
             target_account = load_account(username, account_api_token: account_api_token)

@@ -18,14 +18,17 @@
               - Array(account['system_roles']).each do |role_name|
                 span.badge.text-bg-dark.me-1 = role_name
 
-          dt.col-sm-4 Account API Key
-          dd.col-sm-8
-            - if account_api_token && !account_api_token.to_s.empty?
-              span.d-block.text-monospace= account_api_token
-              form method="post" action="/account/#{account['username']}/reset_session"
-                button.btn.btn-outline-secondary.btn-sm type="submit" Clear API key
-            - else
-              span.text-muted Not available
+  - if account_api_token && !account_api_token.to_s.empty? && viewer && viewer['username'] == account['username']
+    .card.shadow-sm.border-0.mb-4
+      .card-body.p-4
+        h2.h5.mb-1 API Access
+        p.text-muted.small.mb-3
+          | Read-only API key (valid for one month). Hand this to a tool or deputy that should be able to read your data but never change it.
+        a.btn.btn-sm.btn-outline-secondary data-bs-toggle="collapse" href="#api_key" role="button" aria-expanded="false" aria-controls="api_key"
+          | Show key
+        #api_key.collapse.mt-2
+          .card.card-body
+            pre.text-wrap.mb-0 = account_api_token
 
 
   .col-lg-5
