@@ -36,7 +36,7 @@ describe 'Test Service Objects' do
   describe 'Authenticate account' do
     it 'HAPPY: should authenticate with valid credentials' do
       WebMock.stub_request(:post, "#{API_URL}/api/v1/auth/authentication")
-        .with(body: @credentials.to_json)
+        .with(body: signed_body(@credentials))
         .to_return(
           body: @api_response.to_json,
           headers: { 'content-type' => 'application/json' }
@@ -51,7 +51,7 @@ describe 'Test Service Objects' do
 
     it 'BAD: should raise error on wrong credentials' do
       WebMock.stub_request(:post, "#{API_URL}/api/v1/auth/authentication")
-        .with(body: @bad_credentials.to_json)
+        .with(body: signed_body(@bad_credentials))
         .to_return(status: 403)
 
       assert_raises FinanceTracker::Services::AuthenticateAccount::UnauthorizedError do

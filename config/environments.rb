@@ -42,6 +42,7 @@ module FinanceTracker
       end
 
     SecureMessage.setup(ENV.fetch('MSG_KEY', nil))
+    SignedMessage.setup(ENV.fetch('SIGNING_KEY', nil)) # signs unauthenticated API requests
     SecureSession.setup(@redis_server) # used by `rake session:wipe`
 
     configure :development, :test do
