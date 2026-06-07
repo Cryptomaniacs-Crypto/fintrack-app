@@ -24,6 +24,7 @@ module FinanceTracker
 
     def id = attribute('id')
     def name = attribute('name')
+    def method_type = attribute('method_type')
     def account_number = attribute('account_number')
     def balance = attribute('balance')
     def policies = @wallet_info['policies'] || @wallet_info[:policies] || {}
