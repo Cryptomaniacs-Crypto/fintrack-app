@@ -33,7 +33,7 @@ module FinanceTracker
     # Session configuration
     ONE_MONTH = 30 * 24 * 60 * 60
 
-    @redis_url = ENV['REDISCLOUD_URL'] || ENV.fetch('REDIS_URL', nil)
+    @redis_url = ENV.delete('REDISCLOUD_URL') || ENV.delete('REDIS_URL')
     @redis_server =
       if @redis_url&.start_with?('rediss://')
         { url: @redis_url, ssl_params: { verify_mode: OpenSSL::SSL::VERIFY_NONE } }
@@ -41,15 +41,21 @@ module FinanceTracker
         @redis_url
       end
 
-    SecureMessage.setup(ENV.fetch('MSG_KEY', nil))
+    SecureMessage.setup(ENV.delete('MSG_KEY'))
     SecureSession.setup(@redis_server) # used by `rake session:wipe`
 
     configure :development, :test do
       # Suppresses log info/warning outputs in dev/test environments
       logger.level = Logger::ERROR
 
+      # Session cookie hardening: httponly blocks XSS exfiltration via document.cookie;
+      # SameSite=Lax stops cross-site requests from carrying the session (CSRF mitigation).
+      # No `secure:` in dev/test — rack-session refuses to commit a Secure cookie over
+      # plain HTTP, which would break http://localhost logins.
       use Rack::Session::Pool,
-          expire_after: ONE_MONTH
+          expire_after: ONE_MONTH,
+          httponly: true,
+          same_site: :lax
       require 'pry'
 
       def self.reload!
@@ -58,13 +64,16 @@ module FinanceTracker
     end
 
     configure :production do
-      # round-trip.
       plugin :redirect_http_to_https
       plugin :hsts
 
+      # Production: add Secure so the cookie is TLS-only (always behind HTTPS on Heroku).
       use Rack::Session::Redis,
           expire_after: ONE_MONTH,
-          redis_server: @redis_server
+          redis_server: @redis_server,
+          secure: true,
+          httponly: true,
+          same_site: :lax
     end
   end
 end

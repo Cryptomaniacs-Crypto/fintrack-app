@@ -20,7 +20,8 @@ module FinanceTracker
         redirect_uri: config.GOOGLE_REDIRECT_URI,
         response_type: 'code',
         scope: config.GOOGLE_SCOPE,
-        state: state
+        state: state,
+        prompt: 'select_account'
       )
 
       "#{config.GOOGLE_OAUTH_URL}?#{query}"
