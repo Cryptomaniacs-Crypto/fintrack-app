@@ -34,3 +34,39 @@ body {
 .list-group-item {
 	background: transparent;
 }
+
+/* Transaction form type selector */
+.btn-group .btn-check:checked + .btn-outline-success {
+	background-color: #198754;
+	color: #fff;
+}
+
+.btn-group .btn-check:checked + .btn-outline-danger {
+	background-color: #dc3545;
+	color: #fff;
+}
+
+.btn-group .btn-check:checked + .btn-outline-primary {
+	background-color: #0d6efd;
+	color: #fff;
+}
+
+/* Transaction index summary cards */
+.txn-summary-card {
+	transition: box-shadow 0.15s ease;
+}
+
+.txn-summary-card:hover {
+	box-shadow: 0 4px 16px rgba(0,0,0,0.10) !important;
+}
+
+/* Table polish */
+.table > tbody > tr > td {
+	vertical-align: middle;
+}
+
+/* Breadcrumb-style nav in page headers */
+.page-breadcrumb {
+	font-size: 0.8rem;
+	opacity: 0.75;
+}
