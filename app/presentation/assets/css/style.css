@@ -1,3 +1,8 @@
+/* Bill-split payment-proof thumbnail (avoids an inline style blocked by CSP). */
+.proof-thumb {
+	max-height: 160px;
+}
+
 body {
 	min-height: 100vh;
 	background:

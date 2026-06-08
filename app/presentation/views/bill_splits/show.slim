@@ -88,9 +88,9 @@
           .d-flex.flex-wrap.gap-2.mb-3
             - if %w[draft disputed].include?(status)
               a.btn.btn-outline-secondary href="/bill-splits/#{bill['id']}/items" Edit Dishes
-            form method="post" action="/bill-splits/#{bill['id']}"
+            form method="post" action="/bill-splits/#{bill['id']}" data-confirm="Delete this bill split?"
               input type="hidden" name="_method" value="DELETE"
-              button.btn.btn-outline-danger type="submit" onclick="return confirm('Delete this bill split?')" Delete
+              button.btn.btn-outline-danger type="submit" Delete
           - if status == 'draft'
             form method="post" action="/bill-splits/#{bill['id']}/send"
               .row.g-2.align-items-end
@@ -130,7 +130,9 @@
                             option value=w.id = w.name
                         button.btn.btn-success type="submit" Confirm received
                     - else
-                      .small.text-muted Add a payment method to receive funds.
+                      .alert.alert-warning.py-2.small.mb-0
+                        | You need a payment method to receive this money.
+                        a.ms-1 href="/payment-methods/new" Add one
 
         / ─── Participant (not the owner): agree / reject / pay ───
         - if me && !me['is_owner'] && status != 'draft'
@@ -142,7 +144,7 @@
           - elsif my_status == 'paid'
             .alert.alert-info.py-2 You paid $#{me['total']}. Waiting for #{bill['creator_username']} to confirm.
             - if me['has_proof']
-              img.img-thumbnail.mt-2 src="/bill-splits/#{bill['id']}/participants/#{me['participant_id']}/proof" alt="Your payment proof" style="max-height:160px"
+              img.img-thumbnail.mt-2.proof-thumb src="/bill-splits/#{bill['id']}/participants/#{me['participant_id']}/proof" alt="Your payment proof"
           - elsif my_status == 'rejected'
             .alert.alert-danger.py-2
               | You rejected this bill split.
@@ -180,3 +182,5 @@
 
         - if settled
           .alert.alert-success.mt-4.mb-0 This bill split is settled and locked.
+
+  script src="/js/confirm.js"
