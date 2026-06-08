@@ -12,8 +12,7 @@ module FinanceTracker
 
     # CSP allowlists for FinanceTracker's pinned CDN assets (all SRI-hashed in views)
     SCRIPT_SRC = %w[https://cdn.jsdelivr.net].freeze
-    STYLE_SRC  = %w[https://bootswatch.com https://cdn.jsdelivr.net https://fonts.googleapis.com].freeze
-    FONT_SRC   = %w[https://fonts.gstatic.com].freeze
+    STYLE_SRC  = %w[https://bootswatch.com https://cdn.jsdelivr.net].freeze
     # Google SSO avatars; data: covers Bootstrap's inline data-URI icons
     IMG_SRC = %w[https://*.googleusercontent.com data:].freeze
 
@@ -43,7 +42,7 @@ module FinanceTracker
         child_src: %w['self'],
         connect_src: %w['self'],
         img_src: %w['self'] + IMG_SRC,
-        font_src: %w['self'] + FONT_SRC,
+        font_src: %w['self'],
         script_src: %w['self'] + SCRIPT_SRC,
         style_src: %w['self'] + STYLE_SRC,
         form_action: %w['self'],

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'api_client'
+require_relative 'mailgun_email'
 require_relative '../lib/registration_token'
 require_relative '../lib/signed_message'
 
@@ -23,6 +24,13 @@ module FinanceTracker
 
         # No auth_token on registration, so the API requires a signed body.
         @client.post('/api/v1/auth/register', FinanceTracker::SignedMessage.sign(registration_data))
+
+        FinanceTracker::Services::MailgunEmail.new.send_verification_email(
+          to:               email,
+          username:         username,
+          verification_url: verification_url
+        )
+
         registration_data
       rescue ApiClient::ApiError => e
         raise ApiServerError, e.message if e.status >= 500

@@ -3,7 +3,9 @@
 require 'base64'
 require_relative 'app'
 require_relative '../services/fintrack_api'
+require_relative '../services/get_account'
 require_relative '../services/list_payment_methods'
+require_relative '../services/mailgun_email'
 require_relative '../models/current_session'
 
 module FinanceTracker
@@ -56,6 +58,7 @@ module FinanceTracker
         routing.post 'send' do
           api.send_bill_split(split_id, wallet_id: routing.params['wallet_id'],
                               auth_token: auth_token, account_api_token: account_api_token)
+          notify_bill_split_participants(split_id, api, auth_token, account_api_token)
           flash[:notice] = 'Bill split sent to participants.'
           routing.redirect "/bill-splits/#{split_id}"
         rescue FinanceTracker::Services::ApiClient::ApiError => e
@@ -197,6 +200,43 @@ module FinanceTracker
       return [nil, nil] if bytes.to_s.empty?
 
       [Base64.strict_encode64(bytes), upload[:type]]
+    end
+
+    # Email every non-owner participant after a bill split is sent.
+    # Looks up each participant's email via the accounts API.
+    # All errors are swallowed so email failures never break the flow.
+    def notify_bill_split_participants(split_id, api, auth_token, account_api_token)
+      mailer = FinanceTracker::Services::MailgunEmail.new
+      return unless mailer.available?
+
+      bill      = fetch_bill(api, split_id, auth_token, account_api_token)
+      owner     = bill['creator_username'].to_s
+      title     = bill['title'].to_s
+      app_url   = App.config.APP_URL.to_s.chomp('/')
+      bill_url  = "#{app_url}/bill-splits/#{split_id}"
+      accounts  = FinanceTracker::Services::GetAccount.new
+
+      Array(bill['participants']).each do |participant|
+        next if participant['is_owner']
+
+        username = participant['username'].to_s
+        amount   = participant['total'].to_s
+        email    = accounts.call(username, auth_token: auth_token)&.email
+        next if email.to_s.strip.empty?
+
+        mailer.send_bill_split_notification(
+          to:                 email,
+          recipient_username: username,
+          owner_username:     owner,
+          bill_title:         title,
+          bill_url:           bill_url,
+          amount:             amount
+        )
+      rescue StandardError
+        next
+      end
+    rescue StandardError
+      nil
     end
 
     # Build the API `items` array from the dish editor's namespaced form fields:
