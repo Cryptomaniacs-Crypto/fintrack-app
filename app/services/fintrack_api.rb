@@ -38,6 +38,8 @@ module FinanceTracker
         @client.get("/api/v1/bill-splits/#{id}", auth_token: auth_token, account_api_token: account_api_token)
       end
 
+      # Replaces the bill's dishes + tax/service. payload: { title?, tax_percent?,
+      # service_percent?, items: [{ name, amount, sharer_usernames: [...] }] }
       def update_bill_split(id, payload, auth_token:, account_api_token: nil)
         @client.patch("/api/v1/bill-splits/#{id}", payload, auth_token: auth_token, account_api_token: account_api_token)
       end
@@ -46,13 +48,18 @@ module FinanceTracker
         @client.delete("/api/v1/bill-splits/#{id}", auth_token: auth_token, account_api_token: account_api_token)
       end
 
+      # Confirm-and-send a draft to its participants.
+      def send_bill_split(id, auth_token:, account_api_token: nil)
+        @client.post("/api/v1/bill-splits/#{id}/send", {}, auth_token: auth_token, account_api_token: account_api_token)
+      end
+
       def agree_bill_split(id, auth_token:, account_api_token: nil)
         @client.post("/api/v1/bill-splits/#{id}/agree", {}, auth_token: auth_token, account_api_token: account_api_token)
       end
 
-      def dispute_bill_split(id, reason:, auth_token:, account_api_token: nil)
+      def reject_bill_split(id, reason:, auth_token:, account_api_token: nil)
         @client.post(
-          "/api/v1/bill-splits/#{id}/dispute",
+          "/api/v1/bill-splits/#{id}/reject",
           { reason: reason },
           auth_token: auth_token,
           account_api_token: account_api_token

@@ -1,5 +1,7 @@
 .row.justify-content-center
   - values ||= {}
+  - entered = Array(values['participant_username']).map(&:to_s).reject(&:empty?)
+  - entered = [''] if entered.empty?
   .col-lg-6
     .card.shadow-sm.border-0
       .card-body.p-4.p-md-5
@@ -11,17 +13,26 @@
 
         form method="post" action="/bill-splits"
           .mb-3
-            label.form-label for="recipient_username" Recipient Username
-            input.form-control type="text" id="recipient_username" name="recipient_username" placeholder="e.g. bob" value=values['recipient_username'].to_s required=true autofocus=true
-            .form-text The username of the person who owes you.
+            label.form-label for="title" What's this for?
+            input.form-control#title type="text" name="title" placeholder="e.g. Dinner at Nobu" value=values['title'].to_s required=true autofocus=true
 
-          .mb-3
-            label.form-label for="amount" Amount ($)
-            input.form-control type="number" step="0.01" min="0.01" id="amount" name="amount" placeholder="0.00" value=values['amount'].to_s required=true
+          label.form-label.mb-1 Participants
+          p.form-text.mt-0 Add everyone splitting this bill by username. You're included automatically.
 
-          .mb-3
-            label.form-label for="reason_note" Reason
-            textarea.form-control id="reason_note" name="reason_note" rows="3" placeholder="Dinner, groceries, utilities…" required=true
-              = values['reason_note'].to_s
+          #participant-list data-participant-list=true
+            - entered.each do |username|
+              .input-group.mb-2.participant-row
+                input.form-control type="text" name="participant_username[]" placeholder="username" value=username
+                button.btn.btn-outline-danger type="button" data-remove-participant=true Remove
 
-          button.btn.btn-primary.w-100 type="submit" Create Bill Split
+          template#participant-template
+            .input-group.mb-2.participant-row
+              input.form-control type="text" name="participant_username[]" placeholder="username"
+              button.btn.btn-outline-danger type="button" data-remove-participant=true Remove
+
+          .mb-4
+            button.btn.btn-outline-secondary.btn-sm type="button" data-add-participant=true + Add participant
+
+          button.btn.btn-primary.w-100 type="submit" Create Split Bill →
+
+  script src="/js/bill_split_form.js"

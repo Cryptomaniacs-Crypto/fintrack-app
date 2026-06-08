@@ -1,6 +1,6 @@
 .row.justify-content-center
   - splits ||= []
-  - current_account_id ||= nil
+  - current_username ||= nil
   .col-lg-9
     .card.shadow-sm.border-0
       .card-body.p-4.p-md-5
@@ -17,27 +17,27 @@
             table.table.table-sm.align-middle
               thead
                 tr
-                  th Other Party
-                  th.text-end Amount
+                  th Title
+                  th Role
+                  th.text-end Your Share
+                  th.text-end Total
                   th Status
-                  th Created
                   th.text-end
               tbody
                 - splits.each do |s|
-                  - attrs = s.is_a?(Hash) && s['creator_id'] ? s : (s['attributes'] || s)
-                  - is_creator = attrs['creator_id'].to_s == current_account_id.to_s
-                  - other = is_creator ? attrs['recipient_username'] : attrs['creator_username']
-                  - role_badge = is_creator ? 'you owe' : 'owes you'
+                  - attrs = s.is_a?(Hash) && s['title'] ? s : (s['attributes'] || s)
+                  - is_creator = attrs['creator_username'].to_s == current_username.to_s
+                  - me = Array(attrs['participants']).find { |p| p['username'].to_s == current_username.to_s }
+                  - status = attrs['status'].to_s
+                  - badge = status == 'settled' ? 'bg-success' : (status == 'disputed' ? 'bg-danger' : (status == 'pending' ? 'bg-info' : 'bg-secondary'))
                   tr
                     td
-                      = other
-                      = " "
-                      span.badge.bg-secondary.text-white.small = role_badge
-                    td.text-end $#{attrs['amount']}
-                    - status = attrs['status'].to_s
-                    - badge_class = status == 'settled' ? 'bg-success' : (status == 'agreed' ? 'bg-info' : 'bg-warning text-dark')
+                      = attrs['title']
                     td
-                      span class="badge #{badge_class}" = status.capitalize
-                    td.small.text-muted = attrs['created_at'].to_s[0, 10]
+                      span.badge.bg-light.text-dark = is_creator ? 'owner' : 'participant'
+                    td.text-end = me ? "$#{me['total']}" : '—'
+                    td.text-end $#{attrs['grand_total']}
+                    td
+                      span class="badge #{badge}" = status.capitalize
                     td.text-end
                       a.btn.btn-outline-primary.btn-sm href="/bill-splits/#{attrs['id']}" View
