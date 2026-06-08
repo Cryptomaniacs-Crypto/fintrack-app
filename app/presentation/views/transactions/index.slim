@@ -9,17 +9,17 @@ div class="d-flex justify-content-between align-items-center mb-4"
 - unless transactions.empty?
   div class="row g-3 mb-4"
     div class="col-md-4"
-      div class="card border-0 shadow-sm text-center py-3"
-        p.text-uppercase.text-muted.small.mb-1 Total Income
-        p.h4.fw-bold.text-success.mb-0 = sprintf('+%.2f', total_income)
+      div class="card ft-stat ft-stat-income"
+        p.ft-stat-label Total Income
+        p class="ft-stat-value text-success mb-0" = sprintf('+%.2f', total_income)
     div class="col-md-4"
-      div class="card border-0 shadow-sm text-center py-3"
-        p.text-uppercase.text-muted.small.mb-1 Total Expenses
-        p.h4.fw-bold.text-danger.mb-0 = sprintf('-%.2f', total_expense)
+      div class="card ft-stat ft-stat-expense"
+        p.ft-stat-label Total Expenses
+        p class="ft-stat-value text-danger mb-0" = sprintf('-%.2f', total_expense)
     div class="col-md-4"
-      div class="card border-0 shadow-sm text-center py-3"
-        p.text-uppercase.text-muted.small.mb-1 Net
-        p class="h4 fw-bold mb-0 #{net >= 0 ? 'text-success' : 'text-danger'}"
+      div class="card ft-stat ft-stat-net"
+        p.ft-stat-label Net
+        p class="ft-stat-value mb-0 #{net >= 0 ? 'text-success' : 'text-danger'}"
           = sprintf('%+.2f', net)
 
 - if transactions.empty?

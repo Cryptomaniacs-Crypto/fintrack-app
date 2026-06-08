@@ -1,16 +1,63 @@
-.row.align-items-center.g-4
-  .col-lg-7
-    .p-4.p-md-5.mb-4.rounded.text-bg-dark.hero-panel
-      p.text-uppercase.fw-semibold.opacity-75.mb-2 Fintrack
-      h1.display-5.fw-bold.mb-3 Track your transactions
-      p.lead.mb-4 
-      - if current_account
-        - handle = current_account['username'] || current_account['email']
-        p.mb-2 You are signed in as #{handle}.
-        - if current_account['system_roles'] && !current_account['system_roles'].empty?
-          p.mb-3 System roles: #{current_account['system_roles'].join(', ')}
-        a.btn.btn-light.btn-lg href="/account/#{current_account['username']}" View account
-      - else
-        .d-flex.flex-wrap.gap-2
-          a.btn.btn-light.btn-lg href="/auth/login" Log in
-          a.btn.btn-outline-light.btn-lg href="/auth/register" Create account
+- if current_account
+  - handle = current_account['username'] || current_account['email']
+
+  div class="ft-hero p-4 p-md-5 mb-5"
+    p class="text-white fw-semibold small mb-1 opacity-75" style="letter-spacing:.06em;text-transform:uppercase" Welcome back
+    h1 class="display-6 fw-bold text-white mb-0" = handle
+
+  div class="row g-3"
+    div class="col-sm-6 col-lg-3"
+      a href="/transactions" class="ft-quick"
+        div class="ft-quick-icon" style="background:#EEF2FF;color:#6366F1" $
+        p.ft-quick-title Transactions
+        p.ft-quick-sub.mb-0 Record &amp; browse all activity
+
+    div class="col-sm-6 col-lg-3"
+      a href="/payment-methods" class="ft-quick"
+        div class="ft-quick-icon" style="background:#ECFDF5;color:#10B981" W
+        p.ft-quick-title My Wallets
+        p.ft-quick-sub.mb-0 View balances &amp; history
+
+    div class="col-sm-6 col-lg-3"
+      a href="/bill-splits" class="ft-quick"
+        div class="ft-quick-icon" style="background:#FEF3C7;color:#D97706" B
+        p.ft-quick-title Bill Splits
+        p.ft-quick-sub.mb-0 Split expenses with others
+
+    div class="col-sm-6 col-lg-3"
+      a href="/categories" class="ft-quick"
+        div class="ft-quick-icon" style="background:#F3E8FF;color:#9333EA" C
+        p.ft-quick-title Categories
+        p.ft-quick-sub.mb-0 Organise your spending
+
+- else
+  div class="row align-items-center g-5 py-4"
+    div class="col-lg-6"
+      p class="text-uppercase fw-bold small mb-3" style="color:var(--p);letter-spacing:.1em" Personal Finance Tracker
+      h1 class="display-4 fw-bold mb-4" style="letter-spacing:-.03em;color:var(--tx)"
+        | Track every
+        br
+        span style="background:linear-gradient(135deg,#6366F1,#7C3AED);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text" dollar,
+        |  effortlessly.
+      p class="lead mb-5" style="color:var(--txm);max-width:440px"
+        | Record transactions, manage wallets, and split bills — all in one clean dashboard designed for real life.
+      div class="d-flex gap-3 flex-wrap"
+        a href="/auth/register" class="btn btn-primary btn-lg px-4" Get started free
+        a href="/auth/login" class="btn btn-outline-secondary btn-lg px-4" Log in
+
+    div class="col-lg-6 d-none d-lg-block"
+      div class="ft-hero p-5 text-center"
+        p class="text-white opacity-50 small fw-bold mb-3" style="letter-spacing:.1em;text-transform:uppercase" This month
+        div class="row g-3 text-white"
+          div class="col-6"
+            div class="rounded-3 p-3" style="background:rgba(255,255,255,.12)"
+              p.small.opacity-75.mb-1 Income
+              p class="h4 fw-bold mb-0" +2,450.00
+          div class="col-6"
+            div class="rounded-3 p-3" style="background:rgba(255,255,255,.12)"
+              p.small.opacity-75.mb-1 Expenses
+              p class="h4 fw-bold mb-0" -1,180.00
+          div class="col-12"
+            div class="rounded-3 p-3" style="background:rgba(255,255,255,.15)"
+              p.small.opacity-75.mb-1 Net balance
+              p class="h3 fw-bold mb-0" +1,270.00

@@ -15,7 +15,7 @@ div class="d-flex justify-content-between align-items-center mb-4"
       - masked = account_number.empty? ? nil : "••••#{account_number[-4, 4]}"
       - label = method_type_labels.fetch(wallet.method_type.to_s, wallet.method_type.to_s)
       div class="col-md-6 col-lg-4"
-        div class="card shadow-sm border-0 h-100"
+        div class="card card-lift wallet-card h-100"
           div class="card-body p-4"
             div class="d-flex justify-content-between align-items-start mb-2"
               span class="badge text-bg-secondary" = label
