@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
+require 'base64'
 require_relative 'app'
 require_relative '../services/fintrack_api'
+require_relative '../services/list_payment_methods'
 require_relative '../models/current_session'
 
 module FinanceTracker
@@ -49,9 +51,11 @@ module FinanceTracker
           end
         end
 
-        # POST /bill-splits/:id/send — confirm and send the draft
+        # POST /bill-splits/:id/send — confirm and send; wallet_id records the
+        # owner's upfront expense for the grand total.
         routing.post 'send' do
-          api.send_bill_split(split_id, auth_token: auth_token, account_api_token: account_api_token)
+          api.send_bill_split(split_id, wallet_id: routing.params['wallet_id'],
+                              auth_token: auth_token, account_api_token: account_api_token)
           flash[:notice] = 'Bill split sent to participants.'
           routing.redirect "/bill-splits/#{split_id}"
         rescue FinanceTracker::Services::ApiClient::ApiError => e
@@ -84,21 +88,54 @@ module FinanceTracker
           routing.redirect "/bill-splits/#{split_id}"
         end
 
-        # POST /bill-splits/:id/settle
-        routing.post 'settle' do
-          api.settle_bill_split(split_id, auth_token: auth_token, account_api_token: account_api_token)
-          flash[:notice] = 'Bill split marked as settled.'
+        # POST /bill-splits/:id/pay — participant records payment from a wallet,
+        # optionally attaching a proof image (multipart upload -> base64).
+        routing.post 'pay' do
+          proof64, proof_type = read_proof_upload(routing.params['proof'])
+          api.pay_bill_split(split_id,
+                             wallet_id: routing.params['wallet_id'],
+                             proof_base64: proof64, proof_content_type: proof_type,
+                             auth_token: auth_token, account_api_token: account_api_token)
+          flash[:notice] = 'Payment recorded — waiting for the owner to confirm.'
           routing.redirect "/bill-splits/#{split_id}"
         rescue FinanceTracker::Services::ApiClient::ApiError => e
           flash[:error] = e.message
           routing.redirect "/bill-splits/#{split_id}"
         end
 
+        routing.on 'participants' do
+          routing.on String do |participant_id|
+            # POST .../participants/:pid/confirm — owner confirms receipt
+            routing.post 'confirm' do
+              api.confirm_bill_split_payment(split_id, participant_id: participant_id,
+                                             wallet_id: routing.params['wallet_id'],
+                                             auth_token: auth_token, account_api_token: account_api_token)
+              flash[:notice] = 'Payment confirmed.'
+              routing.redirect "/bill-splits/#{split_id}"
+            rescue FinanceTracker::Services::ApiClient::ApiError => e
+              flash[:error] = e.message
+              routing.redirect "/bill-splits/#{split_id}"
+            end
+
+            # GET .../participants/:pid/proof — stream the proof image
+            routing.get 'proof' do
+              data = api.bill_split_proof(split_id, participant_id: participant_id,
+                                          auth_token: auth_token, account_api_token: account_api_token)
+              response['Content-Type'] = data['content_type'] || 'application/octet-stream'
+              Base64.strict_decode64(data['image_base64'].to_s)
+            rescue FinanceTracker::Services::ApiClient::ApiError
+              response.status = 404
+              ''
+            end
+          end
+        end
+
         routing.is do
           # GET /bill-splits/:id — breakdown + actions
           routing.get do
             bill = fetch_bill(api, split_id, auth_token, account_api_token)
-            view 'bill_splits/show', locals: { bill: bill, current_username: current_username }
+            wallets = (FinanceTracker::Services::ListPaymentMethods.new(App.config).call(auth_token: auth_token) rescue [])
+            view 'bill_splits/show', locals: { bill: bill, current_username: current_username, wallets: wallets }
           rescue FinanceTracker::Services::ApiClient::ApiError => e
             flash[:error] = e.message
             routing.redirect '/bill-splits'
@@ -149,6 +186,17 @@ module FinanceTracker
     def fetch_bill(api, split_id, auth_token, account_api_token)
       result = api.get_bill_split(split_id, auth_token: auth_token, account_api_token: account_api_token)
       result.dig('data', 'attributes') || result
+    end
+
+    # Read a multipart file upload (Rack gives a Hash with :tempfile/:type) and
+    # return [base64, content_type], or [nil, nil] when nothing was uploaded.
+    def read_proof_upload(upload)
+      return [nil, nil] unless upload.is_a?(Hash) && upload[:tempfile]
+
+      bytes = upload[:tempfile].read
+      return [nil, nil] if bytes.to_s.empty?
+
+      [Base64.strict_encode64(bytes), upload[:type]]
     end
 
     # Build the API `items` array from the dish editor's namespaced form fields:

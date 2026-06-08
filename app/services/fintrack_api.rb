@@ -48,9 +48,11 @@ module FinanceTracker
         @client.delete("/api/v1/bill-splits/#{id}", auth_token: auth_token, account_api_token: account_api_token)
       end
 
-      # Confirm-and-send a draft to its participants.
-      def send_bill_split(id, auth_token:, account_api_token: nil)
-        @client.post("/api/v1/bill-splits/#{id}/send", {}, auth_token: auth_token, account_api_token: account_api_token)
+      # Confirm-and-send a draft to its participants. wallet_id (optional) records
+      # the owner's upfront expense for the grand total.
+      def send_bill_split(id, wallet_id: nil, auth_token:, account_api_token: nil)
+        @client.post("/api/v1/bill-splits/#{id}/send", { wallet_id: wallet_id },
+                     auth_token: auth_token, account_api_token: account_api_token)
       end
 
       def agree_bill_split(id, auth_token:, account_api_token: nil)
@@ -66,8 +68,30 @@ module FinanceTracker
         )
       end
 
-      def settle_bill_split(id, auth_token:, account_api_token: nil)
-        @client.post("/api/v1/bill-splits/#{id}/settle", {}, auth_token: auth_token, account_api_token: account_api_token)
+      # A participant records payment from their wallet (+ optional base64 proof).
+      def pay_bill_split(id, wallet_id:, proof_base64: nil, proof_content_type: nil, auth_token:, account_api_token: nil)
+        @client.post(
+          "/api/v1/bill-splits/#{id}/pay",
+          { wallet_id: wallet_id, proof_base64: proof_base64, proof_content_type: proof_content_type },
+          auth_token: auth_token, account_api_token: account_api_token
+        )
+      end
+
+      # The owner confirms a participant's payment, recording income on their wallet.
+      def confirm_bill_split_payment(id, participant_id:, wallet_id:, auth_token:, account_api_token: nil)
+        @client.post(
+          "/api/v1/bill-splits/#{id}/participants/#{participant_id}/confirm",
+          { wallet_id: wallet_id },
+          auth_token: auth_token, account_api_token: account_api_token
+        )
+      end
+
+      # Fetch a participant's proof image as { content_type, image_base64 }.
+      def bill_split_proof(id, participant_id:, auth_token:, account_api_token: nil)
+        @client.get(
+          "/api/v1/bill-splits/#{id}/participants/#{participant_id}/proof",
+          auth_token: auth_token, account_api_token: account_api_token
+        )
       end
     end
   end

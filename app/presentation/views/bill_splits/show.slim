@@ -78,47 +78,105 @@
                   .small.text-muted shared by #{Array(item['sharer_usernames']).join(', ')}
                 span.badge.bg-light.text-dark.rounded-pill $#{item['amount']}
 
-        - if settled
-          .alert.alert-success.mb-0 This bill split is settled and locked.
+        - wallets ||= []
+        - has_wallets = !wallets.empty?
 
-        - else
-          / Creator actions
-          - if is_creator
-            hr.my-4
-            h2.h6.mb-3 Owner Actions
-            .d-flex.flex-wrap.gap-2
+        / ─── Owner: edit / delete / send (with optional upfront wallet) ───
+        - if is_creator && !settled
+          hr.my-4
+          h2.h6.mb-3 Owner Actions
+          .d-flex.flex-wrap.gap-2.mb-3
+            - if %w[draft disputed].include?(status)
               a.btn.btn-outline-secondary href="/bill-splits/#{bill['id']}/items" Edit Dishes
-              - if status == 'draft'
-                form method="post" action="/bill-splits/#{bill['id']}/send"
+            form method="post" action="/bill-splits/#{bill['id']}"
+              input type="hidden" name="_method" value="DELETE"
+              button.btn.btn-outline-danger type="submit" onclick="return confirm('Delete this bill split?')" Delete
+          - if status == 'draft'
+            form method="post" action="/bill-splits/#{bill['id']}/send"
+              .row.g-2.align-items-end
+                .col-sm-7
+                  label.form-label.small Record your upfront payment from (optional)
+                  select.form-select name="wallet_id"
+                    option value="" — don't record it —
+                    - wallets.each do |w|
+                      option value=w.id = w.name
+                .col-sm-5.d-grid
                   button.btn.btn-primary type="submit" Send to Participants
-              - else
-                form method="post" action="/bill-splits/#{bill['id']}/settle"
-                  button.btn.btn-success type="submit" onclick="return confirm('Mark this bill as settled?')" Mark Settled
-              form method="post" action="/bill-splits/#{bill['id']}"
-                input type="hidden" name="_method" value="DELETE"
-                button.btn.btn-outline-danger type="submit" onclick="return confirm('Delete this bill split?')" Delete
+              .form-text You fronted $#{bill['grand_total']}; repayments come back as income.
 
-          / Participant actions (only after the bill has been sent)
-          - if me && status != 'draft'
-            - my_status = me['status'].to_s
-            hr.my-4
-            h2.h6.mb-3 Your Response
-            - if my_status == 'agreed'
-              .alert.alert-success.py-2 You have agreed to your share of $#{me['total']}.
-            - elsif my_status == 'rejected'
-              .alert.alert-danger.py-2
-                | You rejected this bill split.
-                - if me['reject_note'].to_s != ''
-                  = " (#{me['reject_note']})"
-            - else
-              .text-muted.small.mb-2 Your share is $#{me['total']}.
-            / Agree once (hidden after agreeing); Reject once (hidden after rejecting).
+        / ─── Owner: confirm incoming payments ───
+        - if is_creator && %w[pending disputed].include?(status)
+          - payers = participants.reject { |p| p['is_owner'] }
+          hr.my-4
+          h2.h6.mb-3 Payments
+          .list-group
+            - payers.each do |p|
+              - pstatus = p['status'].to_s
+              .list-group-item
+                .d-flex.justify-content-between.align-items-center
+                  div
+                    strong = p['username']
+                    span.text-muted.small &nbsp;owes $#{p['total']}
+                    - if p['has_proof']
+                      a.ms-2.small href="/bill-splits/#{bill['id']}/participants/#{p['participant_id']}/proof" target="_blank" view proof
+                  - pbadge = pstatus == 'settled' ? 'bg-success' : (pstatus == 'paid' ? 'bg-info' : (pstatus == 'rejected' ? 'bg-danger' : 'bg-warning text-dark'))
+                  span class="badge #{pbadge}" = pstatus.capitalize
+                - if pstatus == 'paid'
+                  form method="post" action="/bill-splits/#{bill['id']}/participants/#{p['participant_id']}/confirm" class="mt-2"
+                    - if has_wallets
+                      .input-group.input-group-sm
+                        select.form-select name="wallet_id"
+                          - wallets.each do |w|
+                            option value=w.id = w.name
+                        button.btn.btn-success type="submit" Confirm received
+                    - else
+                      .small.text-muted Add a payment method to receive funds.
+
+        / ─── Participant (not the owner): agree / reject / pay ───
+        - if me && !me['is_owner'] && status != 'draft'
+          - my_status = me['status'].to_s
+          hr.my-4
+          h2.h6.mb-3 Your Response
+          - if my_status == 'settled'
+            .alert.alert-success.py-2 Settled — your share of $#{me['total']} is confirmed.
+          - elsif my_status == 'paid'
+            .alert.alert-info.py-2 You paid $#{me['total']}. Waiting for #{bill['creator_username']} to confirm.
+            - if me['has_proof']
+              img.img-thumbnail.mt-2 src="/bill-splits/#{bill['id']}/participants/#{me['participant_id']}/proof" alt="Your payment proof" style="max-height:160px"
+          - elsif my_status == 'rejected'
+            .alert.alert-danger.py-2
+              | You rejected this bill split.
+              - if me['reject_note'].to_s != ''
+                = " (#{me['reject_note']})"
+          - else
+            .text-muted.small.mb-2 Your share is $#{me['total']}.
             .d-flex.flex-wrap.gap-2.mb-2
               - unless my_status == 'agreed'
                 form method="post" action="/bill-splits/#{bill['id']}/agree"
-                  button.btn.btn-primary type="submit" Agree ($#{me['total']})
-            - unless my_status == 'rejected'
-              form method="post" action="/bill-splits/#{bill['id']}/reject"
+                  button.btn.btn-outline-primary type="submit" Agree ($#{me['total']})
+            - if my_status == 'agreed'
+              - if has_wallets
+                form method="post" action="/bill-splits/#{bill['id']}/pay" enctype="multipart/form-data"
+                  .row.g-2.align-items-end
+                    .col-sm-5
+                      label.form-label.small Pay from
+                      select.form-select name="wallet_id"
+                        - wallets.each do |w|
+                          option value=w.id = w.name
+                    .col-sm-5
+                      label.form-label.small Proof image (optional)
+                      input.form-control type="file" name="proof" accept="image/png,image/jpeg"
+                    .col-sm-2.d-grid
+                      button.btn.btn-primary type="submit" I Paid
+              - else
+                .alert.alert-warning.py-2.small
+                  | Add a payment method before paying.
+                  a.ms-1 href="/payment-methods/new" Add one
+            - unless %w[rejected paid settled].include?(my_status)
+              form method="post" action="/bill-splits/#{bill['id']}/reject" class="mt-2"
                 .input-group
                   input.form-control type="text" name="reason" placeholder="Reason for rejecting…"
                   button.btn.btn-outline-danger type="submit" Reject
+
+        - if settled
+          .alert.alert-success.mt-4.mb-0 This bill split is settled and locked.
