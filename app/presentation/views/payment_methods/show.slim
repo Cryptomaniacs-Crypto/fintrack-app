@@ -14,7 +14,7 @@ div class="row g-4 mb-4"
           dt.col-sm-5 Type
           dd.col-sm-7 = method_type_label
           - unless wallet.account_number.to_s.empty?
-            dt.col-sm-5 Account / Card
+            dt.col-sm-5 Card / Account No.
             dd.col-sm-7
               | ••••#{wallet.account_number.to_s[-4, 4]}
           dt.col-sm-5 Opening Balance
