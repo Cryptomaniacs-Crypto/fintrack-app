@@ -100,15 +100,25 @@
 
           / Participant actions (only after the bill has been sent)
           - if me && status != 'draft'
+            - my_status = me['status'].to_s
             hr.my-4
             h2.h6.mb-3 Your Response
-            - if me['status'].to_s == 'agreed'
+            - if my_status == 'agreed'
               .alert.alert-success.py-2 You have agreed to your share of $#{me['total']}.
-            .d-flex.flex-wrap.gap-2.mb-3
-              - unless me['status'].to_s == 'agreed'
+            - elsif my_status == 'rejected'
+              .alert.alert-danger.py-2
+                | You rejected this bill split.
+                - if me['reject_note'].to_s != ''
+                  = " (#{me['reject_note']})"
+            - else
+              .text-muted.small.mb-2 Your share is $#{me['total']}.
+            / Agree once (hidden after agreeing); Reject once (hidden after rejecting).
+            .d-flex.flex-wrap.gap-2.mb-2
+              - unless my_status == 'agreed'
                 form method="post" action="/bill-splits/#{bill['id']}/agree"
                   button.btn.btn-primary type="submit" Agree ($#{me['total']})
-            form method="post" action="/bill-splits/#{bill['id']}/reject"
-              .input-group
-                input.form-control type="text" name="reason" placeholder="Reason for rejecting…"
-                button.btn.btn-outline-danger type="submit" Reject
+            - unless my_status == 'rejected'
+              form method="post" action="/bill-splits/#{bill['id']}/reject"
+                .input-group
+                  input.form-control type="text" name="reason" placeholder="Reason for rejecting…"
+                  button.btn.btn-outline-danger type="submit" Reject

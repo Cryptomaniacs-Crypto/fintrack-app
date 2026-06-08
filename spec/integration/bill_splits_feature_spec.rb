@@ -130,6 +130,16 @@ describe 'Bill split routes' do
     _(last_response.body).must_include 'I had the salad'
   end
 
+  it 'hides the reject form once the participant has already rejected' do
+    stub_bs_get
+    bob = { 'username' => 'bob', 'system_roles' => ['member'] }
+    bob_env = { 'rack.session' => { 'current_account' => FinanceTracker::SecureMessage.encrypt(bob.to_json) } }
+    get "/bill-splits/#{BS_ID}", {}, bob_env
+    _(last_response.status).must_equal 200
+    _(last_response.body).must_include 'You rejected'
+    _(last_response.body).wont_include 'name="reason"'
+  end
+
   # ── Lifecycle actions ──
   it 'sends a bill split' do
     stub_bs_action('send')
