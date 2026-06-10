@@ -24,8 +24,11 @@ div class="d-flex justify-content-between align-items-center mb-4"
             h5.card-title.mb-1 = wallet.name
             p class="h4 fw-bold mb-3 #{wallet.balance.to_f >= 0 ? 'text-success' : 'text-danger'}"
               = sprintf('%.2f', wallet.balance.to_f)
-            div class="d-flex gap-2"
+            div class="d-flex gap-2 flex-wrap"
               a href="/payment-methods/#{wallet.id}" class="btn btn-sm btn-outline-primary flex-fill"
-                | View Details
+                | View
+              - if wallet.can_edit?
+                a href="/payment-methods/#{wallet.id}/edit" class="btn btn-sm btn-outline-secondary flex-fill"
+                  | Edit
               a href="/transactions/new?wallet_id=#{wallet.id}" class="btn btn-sm btn-primary flex-fill"
                 | + Record

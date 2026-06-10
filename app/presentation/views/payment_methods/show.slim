@@ -1,9 +1,13 @@
 div class="d-flex align-items-center justify-content-between mb-4"
-  div class="d-flex align-items-center gap-2"
-    a href="/payment-methods" class="btn btn-sm btn-outline-secondary" ← Back
+  div
+    p.text-muted.small.mb-0
+      a href="/payment-methods" class="text-decoration-none" My Wallets
     h1.h3.mb-0 = wallet.name
-  a href="/transactions/new?wallet_id=#{wallet.id}" class="btn btn-primary"
-    | + Record Transaction
+  div class="d-flex gap-2"
+    - if wallet.can_edit?
+      a href="/payment-methods/#{wallet.id}/edit" class="btn btn-outline-secondary" Edit
+    a href="/transactions/new?wallet_id=#{wallet.id}" class="btn btn-primary"
+      | + Record Transaction
 
 div class="row g-4 mb-4"
   div class="col-md-6"
