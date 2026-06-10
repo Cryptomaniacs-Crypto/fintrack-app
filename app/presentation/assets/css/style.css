@@ -101,7 +101,7 @@
 
 body {
   font-family: var(--font-body);
-  background: var(--color-fog);
+  background: var(--color-pure-white);
   color: var(--color-ash);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -624,3 +624,146 @@ code, pre {
   max-height: 160px;
   border-radius: var(--r-img);
 }
+
+/* ── STEEP HERO (white canvas + warm radial peach glow) ──────── */
+.steep-hero {
+  background: var(--color-pure-white);
+  /* soft radial peach glow at 30% opacity per Steep spec */
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(251, 225, 209, 0.55) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 30% 90%, rgba(251, 225, 209, 0.20) 0%, transparent 60%);
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+  /* break out of container-xl's px-4 padding */
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+}
+
+
+.steep-eyebrow {
+  font-size: .8125rem;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--color-rust);
+  margin-bottom: 1.5rem;
+}
+
+/* Signifier-style large editorial headline */
+.steep-headline {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 6vw, 4rem);  /* 40–64px */
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -1.6px;
+  color: var(--color-ink);
+  margin-bottom: 1.25rem;
+}
+.steep-headline-sm {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -.66px;
+  color: var(--color-ink);
+}
+
+.steep-sub {
+  font-size: 1.125rem;  /* 18px */
+  font-weight: 400;
+  line-height: 1.55;
+  letter-spacing: -0.16px;
+  color: var(--color-ash);
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 2.5rem;
+}
+
+/* Secondary action: plain text link, right of filled CTA */
+.steep-text-link {
+  font-size: .9375rem;
+  font-weight: 450;
+  letter-spacing: -0.009em;
+  color: var(--color-graphite);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .5rem .75rem;
+  border-radius: var(--r-pill);
+  transition: color .15s, background .15s;
+}
+.steep-text-link:hover {
+  color: var(--color-ink);
+  background: var(--color-fog);
+  text-decoration: none;
+}
+
+/* Fog-tinted section band — breaks out of container px-4 */
+.steep-fog-section {
+  background: var(--color-fog);
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+}
+
+/* Stat card internals */
+.steep-stat-label {
+  font-size: .75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--color-graphite);
+  margin-bottom: .5rem;
+}
+.steep-stat-number {
+  font-size: 2rem;
+  font-weight: 480;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--color-ink);
+  margin-bottom: 0;
+}
+
+/* Ink CTA banner (replaces ft-hero at page bottom) */
+.steep-cta-banner {
+  background: linear-gradient(135deg, var(--color-ink) 0%, #2c2f35 100%);
+  border-radius: var(--r-xl);
+  padding: 3.5rem 2rem;
+  box-shadow: var(--sh-lg);
+  position: relative;
+  overflow: hidden;
+}
+.steep-cta-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 60% 20%, rgba(251, 225, 209, .15) 0%, transparent 55%);
+}
+.steep-cta-banner > * { position: relative; }
+.steep-cta-banner .steep-headline-sm { color: var(--color-pure-white) !important; }
+
+/* Welcome banner (logged-in top of dashboard) */
+.steep-welcome {
+  background: linear-gradient(135deg, var(--color-ink) 0%, #2c2f35 100%);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-card);
+  position: relative;
+  overflow: hidden;
+}
+.steep-welcome::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 75% 20%, rgba(251, 225, 209, .13) 0%, transparent 50%);
+}
+.steep-welcome > * { position: relative; }
+
+/* card-warm and card-cool on ft-quick (override white bg) */
+.ft-quick.card-warm { background: var(--color-apricot-wash) !important; }
+.ft-quick.card-cool { background: var(--color-sky-wash) !important; }
+
+/* Fog utility */
+.bg-fog { background: var(--color-fog) !important; }
