@@ -13,6 +13,11 @@ div class="row g-4 mb-4"
         dl.row.mb-0
           dt.col-sm-5 Type
           dd.col-sm-7 = method_type_label
+          - unless wallet.account_number.to_s.strip.empty?
+            dt.col-sm-5 Account No.
+            dd.col-sm-7
+              span class="font-monospace"
+                | ••••#{wallet.account_number.to_s.strip.chars.last(4).join}
           dt.col-sm-5 Opening Balance
           dd.col-sm-7
             span = sprintf('%.2f', opening_balance)

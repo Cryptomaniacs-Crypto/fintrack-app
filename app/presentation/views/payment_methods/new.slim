@@ -20,6 +20,13 @@ h1.mb-4 Add Wallet
               label.form-label for="input-method-name" Name
               input type="text" name="name" id="input-method-name" class="form-control" required="required" maxlength="200" value=values&.fetch('name', '')
 
+            div class="form-group mb-3" id="account-number-group" style="display:none"
+              label.form-label for="input-account-number"
+                | Card / Account No.
+                span.text-muted.fw-normal.ms-1 (encrypted &amp; stored securely)
+              input type="text" name="account_number" id="input-account-number" class="form-control" maxlength="100" placeholder="e.g. 1234567890" value=values&.fetch('account_number', '') autocomplete="off"
+              div class="form-text" Only the last 4 digits will be shown in the app.
+
             div class="form-group mb-4"
               label.form-label for="input-balance" Opening balance
               div class="input-group"
@@ -32,3 +39,18 @@ h1.mb-4 Add Wallet
 - else
   p.text-muted You are not allowed to add wallets.
   a class="btn btn-outline-secondary" href="/payment-methods" ← Back
+
+javascript:
+  (function () {
+    var NEEDS_ACCT = ['bank_account', 'credit_card', 'debit_card', 'e_wallet'];
+    var sel   = document.getElementById('input-method-type');
+    var grp   = document.getElementById('account-number-group');
+    var input = document.getElementById('input-account-number');
+    function toggle() {
+      var show = NEEDS_ACCT.includes(sel.value);
+      grp.style.display = show ? '' : 'none';
+      input.required = show;
+    }
+    sel.addEventListener('change', toggle);
+    toggle();
+  })();
