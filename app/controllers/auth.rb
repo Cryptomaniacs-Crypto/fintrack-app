@@ -56,7 +56,8 @@ module FinanceTracker
             SecureSession.set(session, 'account_api_token', account_api_token) if account_api_token
 
             flash[:notice] = "Welcome back #{account_info['username']}!"
-            routing.redirect "/account/#{account_info['username']}"
+            return_to = session.delete('return_to')
+            routing.redirect(return_to&.start_with?('/') ? return_to : "/account/#{account_info['username']}")
           rescue FinanceTracker::Services::AuthenticateAccount::UnauthorizedError
             flash.now[:error] = 'Username and password did not match our records'
             response.status = 400
@@ -86,7 +87,8 @@ module FinanceTracker
 
               username = account.username || account['username']
               flash[:notice] = "Welcome #{username}!"
-              routing.redirect "/account/#{username}"
+              return_to = session.delete('return_to')
+              routing.redirect(return_to&.start_with?('/') ? return_to : "/account/#{username}")
             rescue FinanceTracker::Services::AuthorizeGoogleAccount::AuthorizeError
               flash[:error] = 'Could not sign in with Google'
               response.status = 403

@@ -62,6 +62,11 @@ module FinanceTracker
     def require_login!(routing)
       return if @current_account
 
+      # Save the requested path so login can redirect back to it.
+      intended = routing.env['PATH_INFO'].to_s
+      intended += "?#{routing.env['QUERY_STRING']}" unless routing.env['QUERY_STRING'].to_s.empty?
+      session['return_to'] = intended if intended.start_with?('/')
+
       flash[:error] = 'Please log in to continue'
       routing.redirect '/auth/login'
     end

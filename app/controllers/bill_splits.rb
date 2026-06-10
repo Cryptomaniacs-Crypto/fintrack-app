@@ -32,7 +32,7 @@ module FinanceTracker
             categories = (FinanceTracker::Services::ListCategories.new(App.config).call(auth_token: auth_token) rescue [])
             view 'bill_splits/items', locals: { bill: bill, categories: categories }
           rescue FinanceTracker::Services::ApiClient::ApiError => e
-            flash[:error] = e.message
+            flash[:error] = bill_split_error_message(e)
             routing.redirect '/bill-splits'
           end
 
@@ -142,7 +142,7 @@ module FinanceTracker
             wallets = (FinanceTracker::Services::ListPaymentMethods.new(App.config).call(auth_token: auth_token) rescue [])
             view 'bill_splits/show', locals: { bill: bill, current_username: current_username, wallets: wallets }
           rescue FinanceTracker::Services::ApiClient::ApiError => e
-            flash[:error] = e.message
+            flash[:error] = bill_split_error_message(e)
             routing.redirect '/bill-splits'
           end
 
@@ -202,6 +202,17 @@ module FinanceTracker
       return [nil, nil] if bytes.to_s.empty?
 
       [Base64.strict_encode64(bytes), upload[:type]]
+    end
+
+    # Returns a user-friendly error message for bill split API errors, with extra
+    # guidance on 403 so users know to switch accounts if they clicked an email link.
+    def bill_split_error_message(api_error)
+      if api_error.status == 403
+        "You don't have access to this bill split. " \
+          "If you received this link by email, please log out and log in with the account it was sent to."
+      else
+        api_error.message
+      end
     end
 
     # Build the API `items` array from the dish editor's namespaced form fields:
