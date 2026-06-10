@@ -1,6 +1,7 @@
 .row.justify-content-center
   - bill ||= {}
   - current_username ||= nil
+  - intended_for ||= nil
   - participants = Array(bill['participants'])
   - items = Array(bill['items'])
   - status = bill['status'].to_s
@@ -10,6 +11,8 @@
   - status_class = settled ? 'bg-success' : (status == 'disputed' ? 'bg-danger' : (status == 'pending' ? 'bg-info' : 'bg-secondary'))
   - wallets ||= []
   - has_wallets = !wallets.empty?
+  / When arriving via another user's email link, block all actions
+  - actions_blocked = !intended_for.nil?
 
   .col-lg-9
     .card.shadow-sm.border-0
@@ -39,6 +42,18 @@
               .small.text-muted Category
               span.badge.bg-light.text-dark.border = bill['category_name']
 
+        / ── Wrong-account warning (blocks all actions) ────────
+        - if actions_blocked
+          .alert.alert-danger.d-flex.align-items-start.gap-3.mb-4
+            div style="font-size:1.3rem;line-height:1" ⚠
+            div
+              strong This link was sent to @#{intended_for}.
+              p.mb-2.mt-1
+                | You are currently logged in as
+                strong  @#{current_username}.
+                |  To respond to this bill split, please log in with the correct account.
+              a.btn.btn-sm.btn-dark href="/auth/logout" Log out and switch accounts
+
         / ── Item list (visible to everyone for verification) ───
         - unless items.empty?
           h2.h6.mb-2 Items
@@ -53,7 +68,7 @@
         / ════════════════════════════════════════════════════════
         / OWNER VIEW — full breakdown + management
         / ════════════════════════════════════════════════════════
-        - if is_creator
+        - if is_creator && !actions_blocked
 
           h2.h6.mb-2 Participant Breakdown
           .table-responsive.mb-4
@@ -147,7 +162,7 @@
         / ════════════════════════════════════════════════════════
         / PARTICIPANT VIEW — own share only, no other members' data
         / ════════════════════════════════════════════════════════
-        - elsif me && !me['is_owner']
+        - elsif me && !me['is_owner'] && !actions_blocked
           - my_status = me['status'].to_s
 
           / My share card

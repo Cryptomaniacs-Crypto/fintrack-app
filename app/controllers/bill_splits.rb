@@ -140,7 +140,14 @@ module FinanceTracker
           routing.get do
             bill = fetch_bill(api, split_id, auth_token, account_api_token)
             wallets = (FinanceTracker::Services::ListPaymentMethods.new(App.config).call(auth_token: auth_token) rescue [])
-            view 'bill_splits/show', locals: { bill: bill, current_username: current_username, wallets: wallets }
+            # ?for=USERNAME is added by notification emails so we can warn when
+            # the wrong account is logged in.
+            for_param = routing.params['for'].to_s.strip
+            intended_for = (!for_param.empty? && for_param != current_username) ? for_param : nil
+            view 'bill_splits/show', locals: {
+              bill: bill, current_username: current_username,
+              wallets: wallets, intended_for: intended_for
+            }
           rescue FinanceTracker::Services::ApiClient::ApiError => e
             flash[:error] = bill_split_error_message(e)
             routing.redirect '/bill-splits'
