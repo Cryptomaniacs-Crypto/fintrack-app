@@ -1,6 +1,6 @@
 /* ================================================================
    FINTRACK  —  Black & White Design System
-   Layered on Bootstrap 5 / Bootswatch Cerulean
+   Layered on Bootstrap 5 (vanilla)
 ================================================================ */
 
 /* ── TOKENS ─────────────────────────────────────────────────── */
@@ -17,6 +17,9 @@
   --danger:       #dc2626;
   --danger-bg:    #fef2f2;
   --danger-text:  #991b1b;
+  --warning:      #b45309;
+  --warning-bg:   #fffbeb;
+  --warning-text: #92400e;
 
   --bg:      #f7f7f7;
   --surface: #ffffff;
@@ -38,15 +41,28 @@
   --sh-md: 0 4px 16px rgba(0,0,0,.12), 0 1px 4px rgba(0,0,0,.06);
   --sh-lg: 0 12px 40px rgba(0,0,0,.15), 0 2px 8px rgba(0,0,0,.07);
 
-  /* Bootstrap CSS-var overrides */
-  --bs-primary:          #1a1a1a;
-  --bs-primary-rgb:      26, 26, 26;
-  --bs-link-color:       #1a1a1a;
-  --bs-link-hover-color: #000000;
-  --bs-link-color-rgb:   26, 26, 26;
-  --bs-body-bg:          #f7f7f7;
-  --bs-body-color:       #404040;
-  --bs-border-color:     #e5e5e5;
+  /* Override Bootstrap 5 CSS variables — applied before any component */
+  --bs-primary:              #1a1a1a;
+  --bs-primary-rgb:          26, 26, 26;
+  --bs-secondary:            #737373;
+  --bs-secondary-rgb:        115, 115, 115;
+  --bs-success:              #16a34a;
+  --bs-success-rgb:          22, 163, 74;
+  --bs-danger:               #dc2626;
+  --bs-danger-rgb:           220, 38, 38;
+  --bs-warning:              #b45309;
+  --bs-warning-rgb:          180, 83, 9;
+  --bs-info:                 #404040;
+  --bs-info-rgb:             64, 64, 64;
+  --bs-link-color:           #1a1a1a;
+  --bs-link-hover-color:     #000000;
+  --bs-link-color-rgb:       26, 26, 26;
+  --bs-link-hover-color-rgb: 0, 0, 0;
+  --bs-body-bg:              #f7f7f7;
+  --bs-body-color:           #404040;
+  --bs-border-color:         #e5e5e5;
+  --bs-emphasis-color:       #0a0a0a;
+  --bs-focus-ring-color:     rgba(26, 26, 26, 0.25);
 }
 
 /* ── BASE ────────────────────────────────────────────────────── */
@@ -186,27 +202,28 @@ main { max-width: 1240px; }
 .btn-primary {
   background: var(--tx);
   border-color: var(--tx);
-  color: #fff;
+  color: #fff !important;
   box-shadow: none;
 }
 .btn-primary:hover,
 .btn-primary:focus-visible {
   background: #000;
   border-color: #000;
-  color: #fff;
+  color: #fff !important;
   box-shadow: 0 3px 10px rgba(0,0,0,.25);
   transform: translateY(-1px);
 }
 .btn-primary:active { transform: translateY(0); }
+.btn-primary:focus-visible { box-shadow: 0 0 0 3px rgba(0,0,0,.2); }
 
 .btn-outline-primary {
-  color: var(--tx);
+  color: var(--tx) !important;
   border-color: var(--border2);
   background: var(--surface);
 }
 .btn-outline-primary:hover {
   background: var(--bg);
-  color: var(--tx);
+  color: var(--tx) !important;
   border-color: var(--tx);
 }
 
@@ -225,6 +242,11 @@ main { max-width: 1240px; }
   color: var(--success);
   border-color: var(--success);
 }
+.btn-outline-success:hover {
+  background: var(--success-bg);
+  color: var(--success);
+  border-color: var(--success);
+}
 .btn-outline-danger {
   color: var(--danger);
   border-color: var(--danger);
@@ -240,6 +262,28 @@ main { max-width: 1240px; }
   padding: .35rem .8rem;
   border-radius: 7px;
 }
+
+/* ── TYPE-SELECTOR (btn-group) ───────────────────────────────── */
+.btn-group[role="group"] .btn {
+  border-radius: 0 !important;
+  font-size: .875rem;
+}
+.btn-group[role="group"] .btn:first-of-type {
+  border-radius: var(--r-sm) 0 0 var(--r-sm) !important;
+}
+.btn-group[role="group"] .btn:last-of-type {
+  border-radius: 0 var(--r-sm) var(--r-sm) 0 !important;
+}
+.btn-check:checked + .btn-outline-success {
+  background: #15803d; border-color: #15803d; color: #fff; box-shadow: none;
+}
+.btn-check:checked + .btn-outline-danger {
+  background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: none;
+}
+.btn-check:checked + .btn-outline-primary {
+  background: var(--tx); border-color: var(--tx); color: #fff; box-shadow: none;
+}
+.btn-check:focus-visible + .btn { box-shadow: 0 0 0 3px rgba(0,0,0,.15); }
 
 /* ── FORMS ───────────────────────────────────────────────────── */
 .form-control,
@@ -262,6 +306,12 @@ main { max-width: 1240px; }
   color: var(--tx);
 }
 .form-control::placeholder { color: var(--txs); }
+.form-control:disabled,
+.form-select:disabled {
+  background: var(--bg);
+  color: var(--txs);
+  border-color: var(--border);
+}
 
 .form-label {
   font-weight: 600;
@@ -281,27 +331,6 @@ main { max-width: 1240px; }
 }
 .input-group .form-control { border-left: none; }
 .input-group:focus-within .input-group-text { border-color: var(--tx); }
-
-/* ── TYPE-SELECTOR (btn-group) ───────────────────────────────── */
-.btn-group[role="group"] .btn {
-  border-radius: 0 !important;
-  font-size: .875rem;
-}
-.btn-group[role="group"] .btn:first-of-type {
-  border-radius: var(--r-sm) 0 0 var(--r-sm) !important;
-}
-.btn-group[role="group"] .btn:last-of-type {
-  border-radius: 0 var(--r-sm) var(--r-sm) 0 !important;
-}
-.btn-check:checked + .btn-outline-success {
-  background: #15803d; border-color: #15803d; color: #fff; box-shadow: none;
-}
-.btn-check:checked + .btn-outline-danger {
-  background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: none;
-}
-.btn-check:checked + .btn-outline-primary {
-  background: var(--tx); border-color: var(--tx); color: #fff; box-shadow: none;
-}
 
 /* ── TABLES ──────────────────────────────────────────────────── */
 .table { font-size: .9rem; color: var(--tx2); }
@@ -340,6 +369,10 @@ main { max-width: 1240px; }
   padding: .3em .65em;
   letter-spacing: .02em;
 }
+.badge.bg-primary, .badge.text-bg-primary {
+  background: var(--tx) !important;
+  color: #fff !important;
+}
 
 /* ── ALERTS ──────────────────────────────────────────────────── */
 .alert {
@@ -351,6 +384,8 @@ main { max-width: 1240px; }
 }
 .alert-success { background: var(--success-bg); color: var(--success-text); }
 .alert-danger  { background: var(--danger-bg);  color: var(--danger-text); }
+.alert-warning { background: var(--warning-bg); color: var(--warning-text); }
+.alert-info    { background: #f5f5f5;           color: var(--tx2); }
 .alert ul { margin-bottom: 0; padding-left: 1.25rem; }
 
 /* ── LIST GROUP ──────────────────────────────────────────────── */
@@ -457,9 +492,28 @@ main { max-width: 1240px; }
   color: var(--txm);
 }
 
-/* ── MISC ────────────────────────────────────────────────────── */
+/* ── UTILITY OVERRIDES ───────────────────────────────────────── */
+/* Nuke any residual blue from Bootstrap defaults */
 .text-primary   { color: var(--tx) !important; }
+.text-info      { color: var(--tx2) !important; }
 .border-primary { border-color: var(--border2) !important; }
+.bg-primary     { background-color: var(--tx) !important; }
+
+/* Muted / secondary text */
+.text-muted { color: var(--txm) !important; }
+small, .small { font-size: .8125em; }
+
+/* Links inside tables and cards */
+.table a, .card a:not(.btn) { color: var(--tx2); }
+.table a:hover, .card a:not(.btn):hover { color: var(--tx); }
+
+/* Focus ring — black instead of blue */
+.form-control:focus-visible,
+.form-select:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--tx);
+  outline-offset: 2px;
+}
 
 code, pre {
   font-size: .875em;

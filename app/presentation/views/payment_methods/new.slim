@@ -7,10 +7,6 @@ h1.mb-4 Add Wallet
         div class="card-body p-4"
           form method="post" action="/payment-methods" accept-charset="UTF-8"
             div class="form-group mb-3"
-              label.form-label for="input-method-name" Name
-              input type="text" name="name" id="input-method-name" class="form-control" required="required" maxlength="200" value=values&.fetch('name', '')
-
-            div class="form-group mb-3"
               label.form-label for="input-method-type" Wallet type
               select name="method_type" id="input-method-type" class="form-select" required="required"
                 option value="" — Select type —
@@ -20,9 +16,14 @@ h1.mb-4 Add Wallet
                 option value="debit_card" selected=(values&.fetch('method_type','')=='debit_card') Debit Card
                 option value="e_wallet" selected=(values&.fetch('method_type','')=='e_wallet') E-Wallet
 
-            div class="form-group mb-3" id="account-number-group"
+            div class="form-group mb-3"
+              label.form-label for="input-method-name" Name
+              input type="text" name="name" id="input-method-name" class="form-control" required="required" maxlength="200" value=values&.fetch('name', '')
+
+            - show_account_no = values&.fetch('method_type','').to_s != '' && values&.fetch('method_type','') != 'cash'
+            div class="form-group mb-3" id="account-number-group" style=(show_account_no ? '' : 'display:none')
               label.form-label for="input-account-number" Card / account no.
-              input type="text" name="account_number" id="input-account-number" class="form-control" maxlength="100" value=values&.fetch('account_number', '')
+              input type="text" name="account_number" id="input-account-number" class="form-control" maxlength="100" value=values&.fetch('account_number', '') disabled=(!show_account_no)
 
             div class="form-group mb-4"
               label.form-label for="input-balance" Opening balance

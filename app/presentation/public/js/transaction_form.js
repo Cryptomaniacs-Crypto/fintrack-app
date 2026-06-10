@@ -11,4 +11,5 @@
   }
 
   radios.forEach(function (r) { r.addEventListener('change', toggle); });
+  toggle();
 })();
