@@ -1,5 +1,5 @@
 nav.navbar.navbar-expand-lg
-  .container-xl.px-4
+  div class="fold-nav-pill mx-auto"
     a.navbar-brand href="/" Fintrack
 
     button.navbar-toggler type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation"
@@ -35,7 +35,7 @@ nav.navbar.navbar-expand-lg
       ul.navbar-nav.ms-auto.gap-1.align-items-center
         - if @current_account
           li.nav-item
-            a.nav-link.nav-logout href="/auth/logout" Logout
+            a.nav-link.fold-nav-logout href="/auth/logout" Logout
         - else
           li.nav-item
             a.nav-link href="/auth/login" Log in
