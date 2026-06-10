@@ -1,4 +1,4 @@
-nav.navbar.navbar-expand-lg data-bs-theme="dark"
+nav.navbar.navbar-expand-lg
   .container-xl.px-4
     a.navbar-brand href="/" Fintrack
 
@@ -32,7 +32,7 @@ nav.navbar.navbar-expand-lg data-bs-theme="dark"
           li.nav-item
             a.nav-link href="/bill-splits" Bill Splits
 
-      ul.navbar-nav.ms-auto.gap-1
+      ul.navbar-nav.ms-auto.gap-1.align-items-center
         - if @current_account
           li.nav-item
             a.nav-link.nav-logout href="/auth/logout" Logout
@@ -40,4 +40,4 @@ nav.navbar.navbar-expand-lg data-bs-theme="dark"
           li.nav-item
             a.nav-link href="/auth/login" Log in
           li.nav-item
-            a.btn.btn-primary.btn-sm.my-1.ms-2 href="/auth/register" Get started
+            a.btn.btn-primary.btn-sm.ms-2 href="/auth/register" Get started

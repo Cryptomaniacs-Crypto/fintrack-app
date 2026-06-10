@@ -20,11 +20,6 @@ h1.mb-4 Add Wallet
               label.form-label for="input-method-name" Name
               input type="text" name="name" id="input-method-name" class="form-control" required="required" maxlength="200" value=values&.fetch('name', '')
 
-            - show_account_no = values&.fetch('method_type','').to_s != '' && values&.fetch('method_type','') != 'cash'
-            div class="form-group mb-3" id="account-number-group" style=(show_account_no ? '' : 'display:none')
-              label.form-label for="input-account-number" Card / account no.
-              input type="text" name="account_number" id="input-account-number" class="form-control" maxlength="100" value=values&.fetch('account_number', '') disabled=(!show_account_no)
-
             div class="form-group mb-4"
               label.form-label for="input-balance" Opening balance
               div class="input-group"
@@ -34,21 +29,6 @@ h1.mb-4 Add Wallet
             div class="d-flex gap-2"
               button type="submit" class="btn btn-primary" Save
               a class="btn btn-outline-secondary" href="/payment-methods" Cancel
-
-          script
-            |
-              (function () {
-                var sel = document.getElementById('input-method-type');
-                var grp = document.getElementById('account-number-group');
-                var inp = document.getElementById('input-account-number');
-                function sync() {
-                  var show = sel.value && sel.value !== 'cash';
-                  grp.style.display = show ? '' : 'none';
-                  inp.disabled = !show;
-                }
-                sel.addEventListener('change', sync);
-                sync();
-              })();
 - else
   p.text-muted You are not allowed to add wallets.
   a class="btn btn-outline-secondary" href="/payment-methods" ← Back
