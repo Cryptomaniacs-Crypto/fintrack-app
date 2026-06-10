@@ -1,5 +1,6 @@
 - if current_account
   - handle = current_account['username'] || current_account['email']
+  - stats ||= {}
 
   div class="ft-hero p-4 p-md-5 mb-5"
     p class="text-white fw-semibold small mb-1 opacity-50" style="letter-spacing:.08em;text-transform:uppercase" Welcome back
@@ -29,6 +30,81 @@
         div class="ft-quick-icon" C
         p.ft-quick-title Categories
         p.ft-quick-sub.mb-0 Organise your spending
+
+  / ── Dashboard stats ──────────────────────────────────────────────────
+  - unless stats.empty?
+    - income   = stats[:income].to_f
+    - expenses = stats[:expenses].to_f
+    - net      = stats[:net].to_f
+    - by_cat   = stats[:by_category] || {}
+    - monthly  = stats[:monthly] || []
+    - recent   = stats[:recent] || []
+
+    .mt-5
+      p.ft-section-title This month
+
+      .row.g-3.mb-4
+        .col-sm-4
+          .card.ft-stat.ft-stat-income
+            .ft-stat-label Income
+            .ft-stat-value style="color:var(--success)"
+              = "+#{'%.2f' % income}"
+
+        .col-sm-4
+          .card.ft-stat.ft-stat-expense
+            .ft-stat-label Expenses
+            .ft-stat-value style="color:var(--danger)"
+              = "-#{'%.2f' % expenses}"
+
+        .col-sm-4
+          .card.ft-stat.ft-stat-net
+            .ft-stat-label Net Balance
+            - net_color = net >= 0 ? 'var(--success)' : 'var(--danger)'
+            .ft-stat-value style="color:#{net_color}"
+              = "#{'%+.2f' % net}"
+
+      .row.g-3.mb-4
+        .col-lg-5
+          .card.p-4.h-100
+            p.ft-section-title Expenses by Category
+            - if by_cat.empty?
+              p.text-muted.small.text-center.py-4 No expense data this month
+            - else
+              div style="position:relative;height:240px"
+                canvas#categoryChart data-labels=by_cat.keys.to_json data-values=by_cat.values.to_json
+
+        .col-lg-7
+          .card.p-4.h-100
+            p.ft-section-title 6-Month Trend
+            div style="position:relative;height:240px"
+              canvas#monthlyChart data-labels=monthly.map{|m|m[:label]}.to_json data-income=monthly.map{|m|m[:income]}.to_json data-expenses=monthly.map{|m|m[:expenses]}.to_json
+
+      - unless recent.empty?
+        p.ft-section-title Recent Transactions
+        .card
+          .card-body.p-0
+            table.table.mb-0
+              thead.table-light
+                tr
+                  th Date
+                  th Transaction
+                  th Wallet
+                  th.text-end Amount
+              tbody
+                - recent.each do |t|
+                  tr
+                    td.text-muted.small = t.transaction_date
+                    td
+                      span.fw-medium = t.title
+                      - if t.category_name.to_s != ''
+                        span.badge.bg-light.text-dark.ms-2.small = t.category_name
+                    td.text-muted.small = t.wallet_name
+                    td.text-end
+                      - amt_color = t.income? ? 'var(--success)' : 'var(--danger)'
+                      span style="font-weight:600;color:#{amt_color}" = t.display_amount
+
+    script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
+    script src="/js/dashboard.js"
 
 - else
   / ── Hero ──────────────────────────────────────────────────────
