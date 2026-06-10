@@ -119,15 +119,25 @@ module FinanceTracker
           payment_methods = FinanceTracker::Services::ListPaymentMethods.new(App.config).call(
             auth_token: auth_token
           )
+          all_transactions = FinanceTracker::Services::ListTransactions.new(App.config).call(
+            auth_token: auth_token
+          )
+          tx_sums = all_transactions.group_by(&:wallet_id)
+                                    .transform_values { |txns| txns.sum { |t| t.amount.to_f } }
+          wallet_balances = payment_methods.each_with_object({}) do |w, h|
+            h[w.id] = w.balance.to_f + tx_sums.fetch(w.id.to_s, 0.0)
+          end
           view 'payment_methods/index', locals: {
-            payment_methods: payment_methods,
+            payment_methods:  payment_methods,
+            wallet_balances:  wallet_balances,
             can_create_payment_method: can_create,
             method_type_labels: METHOD_TYPE_LABELS
           }
         rescue StandardError => e
           flash[:error] = "Could not load payment methods: #{e.message}"
           view 'payment_methods/index', locals: {
-            payment_methods: [],
+            payment_methods:  [],
+            wallet_balances:  {},
             can_create_payment_method: can_create,
             method_type_labels: METHOD_TYPE_LABELS
           }

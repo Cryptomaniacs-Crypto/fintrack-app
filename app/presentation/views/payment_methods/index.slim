@@ -14,6 +14,7 @@ div class="d-flex justify-content-between align-items-center mb-4"
       - account_number = wallet.account_number.to_s
       - masked = account_number.empty? ? nil : "••••#{account_number[-4, 4]}"
       - label = method_type_labels.fetch(wallet.method_type.to_s, wallet.method_type.to_s)
+      - current_bal = (wallet_balances || {})[wallet.id] || wallet.balance.to_f
       div class="col-md-6 col-lg-4"
         div class="card card-lift wallet-card h-100"
           div class="card-body p-4"
@@ -22,8 +23,8 @@ div class="d-flex justify-content-between align-items-center mb-4"
               - if masked
                 span class="text-muted small" = masked
             h5.card-title.mb-1 = wallet.name
-            p class="h4 fw-bold mb-3 #{wallet.balance.to_f >= 0 ? 'text-success' : 'text-danger'}"
-              = sprintf('%.2f', wallet.balance.to_f)
+            p class="h4 fw-bold mb-3 #{current_bal >= 0 ? 'text-success' : 'text-danger'}"
+              = sprintf('%.2f', current_bal)
             div class="d-flex gap-2 flex-wrap"
               a href="/payment-methods/#{wallet.id}" class="btn btn-sm btn-outline-primary flex-fill"
                 | View

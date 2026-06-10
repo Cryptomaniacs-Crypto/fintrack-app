@@ -28,6 +28,10 @@
           .col-sm-4
             .small.text-muted Tax / Service
             .fw-semibold #{bill['tax_percent']}% / #{bill['service_percent']}%
+          - if bill['category_name'].to_s != ''
+            .col-sm-4
+              .small.text-muted Category
+              span.badge.bg-light.text-dark.border = bill['category_name']
 
         / Per-person breakdown
         h2.h6.mb-2 Who owes what
@@ -67,9 +71,9 @@
                 strong #{p['username']} rejected:
                 = " #{p['reject_note']}"
 
-        / Dishes
+        / Items
         - unless items.empty?
-          h2.h6.mb-2 Dishes
+          h2.h6.mb-2 Items
           ul.list-group.mb-4
             - items.each do |item|
               li.list-group-item.d-flex.justify-content-between.align-items-start
@@ -87,7 +91,7 @@
           h2.h6.mb-3 Owner Actions
           .d-flex.flex-wrap.gap-2.mb-3
             - if %w[draft disputed].include?(status)
-              a.btn.btn-outline-secondary href="/bill-splits/#{bill['id']}/items" Edit Dishes
+              a.btn.btn-outline-secondary href="/bill-splits/#{bill['id']}/items" Edit Items
             form method="post" action="/bill-splits/#{bill['id']}" data-confirm="Delete this bill split?"
               input type="hidden" name="_method" value="DELETE"
               button.btn.btn-outline-danger type="submit" Delete

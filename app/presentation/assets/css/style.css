@@ -170,7 +170,11 @@ a:hover { color: var(--p-dark); text-decoration: underline; }
 }
 
 /* ── LAYOUT ──────────────────────────────────────────────────── */
-main { max-width: 1240px; }
+main.container-xl {
+  max-width: 1200px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
 
 /* ── CARDS ───────────────────────────────────────────────────── */
 .card {

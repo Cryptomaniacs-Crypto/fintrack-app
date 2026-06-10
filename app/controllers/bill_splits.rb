@@ -4,6 +4,7 @@ require 'base64'
 require_relative 'app'
 require_relative '../services/fintrack_api'
 require_relative '../services/list_payment_methods'
+require_relative '../services/list_categories'
 require_relative '../models/current_session'
 
 module FinanceTracker
@@ -28,26 +29,30 @@ module FinanceTracker
         routing.on 'items' do
           routing.get do
             bill = fetch_bill(api, split_id, auth_token, account_api_token)
-            view 'bill_splits/items', locals: { bill: bill }
+            categories = (FinanceTracker::Services::ListCategories.new(App.config).call(auth_token: auth_token) rescue [])
+            view 'bill_splits/items', locals: { bill: bill, categories: categories }
           rescue FinanceTracker::Services::ApiClient::ApiError => e
             flash[:error] = e.message
             routing.redirect '/bill-splits'
           end
 
           routing.post do
+            raw_cat = routing.params['category_id'].to_s.strip
             payload = {
               title:           routing.params['title'],
               tax_percent:     routing.params['tax_percent'].to_s.strip,
               service_percent: routing.params['service_percent'].to_s.strip,
+              category_id:     raw_cat.empty? ? nil : raw_cat,
               items:           build_bill_split_items(routing.params)
             }
             api.update_bill_split(split_id, payload, auth_token: auth_token, account_api_token: account_api_token)
-            flash[:notice] = 'Dishes saved.'
+            flash[:notice] = 'Items saved.'
             routing.redirect "/bill-splits/#{split_id}"
           rescue FinanceTracker::Services::ApiClient::ApiError => e
             flash.now[:error] = e.message
             bill = (fetch_bill(api, split_id, auth_token, account_api_token) rescue nil)
-            view 'bill_splits/items', locals: { bill: bill }
+            categories = (FinanceTracker::Services::ListCategories.new(App.config).call(auth_token: auth_token) rescue [])
+            view 'bill_splits/items', locals: { bill: bill, categories: categories }
           end
         end
 
