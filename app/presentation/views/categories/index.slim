@@ -37,8 +37,11 @@ div class="row g-4"
                   - unless cat.description.to_s.strip.empty?
                     p class="text-muted small mb-0 mt-1" = cat.description
                 div class="flex-shrink-0 d-flex gap-1"
-                  - if cat.can_edit?
-                    a href="/categories/#{cat.id}/edit" class="btn btn-sm btn-outline-secondary" Edit
-                  - if cat.can_delete?
-                    form method="post" action="/categories/#{cat.id}/delete"
-                      button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete \"#{cat.name}\"?')" Delete
+                  - if cat.is_default?
+                    span class="badge text-bg-light text-muted border" Default
+                  - else
+                    - if cat.can_edit?
+                      a href="/categories/#{cat.id}/edit" class="btn btn-sm btn-outline-secondary" Edit
+                    - if cat.can_delete?
+                      form method="post" action="/categories/#{cat.id}/delete"
+                        button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this category?')" Delete

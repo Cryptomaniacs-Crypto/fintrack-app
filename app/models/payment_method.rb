@@ -31,8 +31,13 @@ module FinanceTracker
       @method_type = attrs['method_type'] || attrs[:method_type]
       @account_number = attrs['account_number'] || attrs[:account_number]
       @balance = attrs['balance'] || attrs[:balance]
+      @policies = envelope.is_a?(Hash) ? (envelope['policies'] || envelope[:policies] || {}) : {}
     end
     # rubocop:enable Metrics/AbcSize, Metrics/CyclomaticComplexity
+
+    def can_view?   = @policies['can_view']   || @policies[:can_view]   || false
+    def can_edit?   = @policies['can_edit']   || @policies[:can_edit]   || false
+    def can_delete? = @policies['can_delete'] || @policies[:can_delete] || false
 
     private_class_method :new
   end
