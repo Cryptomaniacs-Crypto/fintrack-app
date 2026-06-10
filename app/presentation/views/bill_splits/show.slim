@@ -105,14 +105,22 @@
               form method="post" action="/bill-splits/#{bill['id']}/send"
                 .row.g-2.align-items-end
                   .col-sm-7
-                    label.form-label.small Record your upfront payment from (optional)
+                    label.form-label.small Record payment from (optional)
                     select.form-select name="wallet_id"
                       option value="" — don't record it —
                       - wallets.each do |w|
                         option value=w.id = w.name
                   .col-sm-5.d-grid
                     button.btn.btn-primary type="submit" Send to Participants
-                .form-text You fronted $#{bill['grand_total']}; repayments come back as income.
+                - owner_share_f = me ? me['total'].to_f.round(2) : 0.0
+                - others_f      = (bill['grand_total'].to_f - owner_share_f).round(2)
+                - if owner_share_f > 0
+                  .form-text
+                    | Your share ($#{'%.2f' % owner_share_f}) will be recorded as an expense.
+                    - if others_f > 0
+                      |  You also fronted $#{'%.2f' % others_f} for others — repayments come back as income.
+                - else
+                  .form-text You fronted $#{bill['grand_total']}; repayments come back as income.
 
           / Owner: confirm incoming payments
           - if %w[pending disputed].include?(status)
