@@ -9,14 +9,10 @@ div class="row g-4 mb-4"
   div class="col-md-6"
     div class="card shadow-sm border-0 h-100"
       div class="card-body p-4"
-        p.text-uppercase.text-primary.fw-semibold.small.mb-3 Wallet Details
+        p.ft-section-title Wallet Details
         dl.row.mb-0
           dt.col-sm-5 Type
           dd.col-sm-7 = method_type_label
-          - unless wallet.account_number.to_s.empty?
-            dt.col-sm-5 Card / Account No.
-            dd.col-sm-7
-              | ••••#{wallet.account_number.to_s[-4, 4]}
           dt.col-sm-5 Opening Balance
           dd.col-sm-7
             span = sprintf('%.2f', opening_balance)

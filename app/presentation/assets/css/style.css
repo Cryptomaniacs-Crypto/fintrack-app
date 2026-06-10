@@ -524,3 +524,26 @@ code, pre {
   max-height: 160px;
   border-radius: var(--r-sm);
 }
+
+/* ── WALLET CARDS ────────────────────────────────────────────── */
+.wallet-card {
+  border-top: 3px solid var(--border2) !important;
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+}
+.wallet-card:hover { border-top-color: var(--tx) !important; }
+
+/* ── FORM LABEL — optional hint ──────────────────────────────── */
+.form-label .text-muted { font-size: .75em; letter-spacing: 0; }
+
+/* ── MIN-WIDTH UTILITY ───────────────────────────────────────── */
+.min-w-0 { min-width: 0; }
+
+/* ── PAGE SECTION DIVIDER ────────────────────────────────────── */
+.ft-section-title {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--txm);
+  margin-bottom: .75rem;
+}

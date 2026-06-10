@@ -53,8 +53,9 @@ module FinanceTracker
           end
 
           FinanceTracker::Services::CreateCategory.new(App.config).call(
-            auth_token: auth_token,
-            name:       validation[:name]
+            auth_token:  auth_token,
+            name:        validation[:name],
+            description: validation[:description]
           )
           flash[:notice] = 'Category added'
           routing.redirect '/categories'
