@@ -7,7 +7,7 @@ module FinanceTracker
     class RevokeSystemRole
       class InvalidInput < StandardError; end
 
-      VALID_ROLES = %w[admin creator member].freeze
+      VALID_ROLES = %w[admin member].freeze
 
       def initialize(config = nil)
         @client = ApiClient.new(config)

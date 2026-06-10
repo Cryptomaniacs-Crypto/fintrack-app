@@ -48,7 +48,7 @@
         .card-body.p-4
           h2.h5.mb-3 Manage System Roles
           .d-flex.flex-wrap.gap-2
-            - %w[admin creator member].each do |role_name|
+            - %w[admin member].each do |role_name|
               - if Array(account['system_roles']).include?(role_name)
                 form method="post" action="/account/#{account['username']}/roles/#{role_name}"
                   input type="hidden" name="_method" value="delete"

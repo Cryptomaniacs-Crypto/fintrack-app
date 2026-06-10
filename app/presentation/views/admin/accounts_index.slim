@@ -1,4 +1,4 @@
-- filter_options = [['All', nil], ['admin', 'admin'], ['creator', 'creator'], ['member', 'member'], ['No roles', 'none']]
+- filter_options = [['All', nil], ['admin', 'admin'], ['member', 'member'], ['No roles', 'none']]
 - query_for = ->(role, sort_by) { [role ? "role=#{role}" : nil, sort_by ? "sort=#{sort_by}" : nil].compact.join('&') }
 - path_for  = ->(role, sort_by) { q = query_for.call(role, sort_by); q.empty? ? '/admin/accounts' : "/admin/accounts?#{q}" }
 
