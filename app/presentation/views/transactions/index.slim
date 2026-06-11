@@ -1,0 +1,125 @@
+- transactions ||= []
+- categories   ||= []
+- wallets      ||= []
+- filters      ||= {}
+- total_count  = defined?(total_count) ? total_count : transactions.size
+
+/ Totals reflect what's shown, excluding internal transfers (net-zero movements).
+- real          = transactions.reject(&:transfer?)
+- total_income  = real.reject(&:expense?).sum { |t| t.amount.to_f }
+- total_expense = real.select(&:expense?).sum { |t| t.amount.to_f.abs }
+- net           = total_income - total_expense
+- any_filter    = filters.values.any? { |v| !v.to_s.empty? }
+- export_qs     = Rack::Utils.build_query(filters.reject { |_, v| v.to_s.empty? })
+
+div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4"
+  h1.h3.mb-0 My Transactions
+  div class="d-flex gap-2"
+    - if total_count.positive?
+      a href="/transactions/export#{export_qs.empty? ? '' : "?#{export_qs}"}" class="btn btn-outline-secondary" Export CSV
+    a href="/transactions/new" class="btn btn-primary" + Record Transaction
+
+- if total_count.positive?
+  / ── Search + filters ─────────────────────────────────────────────
+  div class="card border-0 shadow-sm mb-4"
+    div class="card-body"
+      form method="get" action="/transactions"
+        div class="row g-3 align-items-end"
+          div class="col-lg-4 col-md-6"
+            label.form-label.small for="f-q" Search
+            input#f-q.form-control type="text" name="q" value=filters['q'] placeholder="Description or note…"
+          div class="col-lg-2 col-md-3 col-6"
+            label.form-label.small for="f-type" Type
+            select#f-type.form-select name="type"
+              option value="" selected=(filters['type'].to_s.empty?) All
+              option value="income"   selected=(filters['type'] == 'income')   Income
+              option value="expense"  selected=(filters['type'] == 'expense')  Expense
+              option value="transfer" selected=(filters['type'] == 'transfer') Transfer
+          div class="col-lg-3 col-md-3 col-6"
+            label.form-label.small for="f-cat" Category
+            select#f-cat.form-select name="category_id"
+              option value="" selected=(filters['category_id'].to_s.empty?) All
+              - categories.each do |c|
+                option value=c.id selected=(filters['category_id'].to_s == c.id.to_s) = c.name
+          div class="col-lg-3 col-md-6"
+            label.form-label.small for="f-wallet" Wallet
+            select#f-wallet.form-select name="wallet_id"
+              option value="" selected=(filters['wallet_id'].to_s.empty?) All
+              - wallets.each do |w|
+                option value=w.id selected=(filters['wallet_id'].to_s == w.id.to_s) = w.name
+          div class="col-lg-3 col-md-4 col-6"
+            label.form-label.small for="f-from" From
+            input#f-from.form-control type="date" name="date_from" value=filters['date_from']
+          div class="col-lg-3 col-md-4 col-6"
+            label.form-label.small for="f-to" To
+            input#f-to.form-control type="date" name="date_to" value=filters['date_to']
+          div class="col-lg-6 col-md-4 d-flex gap-2"
+            button type="submit" class="btn btn-primary" Apply
+            - if any_filter
+              a href="/transactions" class="btn btn-outline-secondary" Clear
+
+  / ── Totals — one tidy strip ──────────────────────────────────────
+  div class="ft-strip mb-4"
+    div class="ft-stat ft-stat-income"
+      p.ft-stat-label Total Income
+      p class="ft-stat-value text-success mb-0" = sprintf('+%.2f', total_income)
+    div class="ft-stat ft-stat-expense"
+      p.ft-stat-label Total Expenses
+      p class="ft-stat-value text-danger mb-0" = sprintf('-%.2f', total_expense)
+    div class="ft-stat ft-stat-net"
+      p.ft-stat-label Net
+      p class="ft-stat-value mb-0 #{net >= 0 ? 'text-success' : 'text-danger'}"
+        = sprintf('%+.2f', net)
+
+- if total_count.zero?
+  div class="card border-0 shadow-sm"
+    div class="card-body text-center py-5"
+      p.text-muted.mb-3 No transactions yet. Start by recording one.
+      a href="/transactions/new" class="btn btn-primary" + Record Transaction
+- elsif transactions.empty?
+  div class="card border-0 shadow-sm"
+    div class="card-body text-center py-5"
+      p.text-muted.mb-3 No transactions match your filters.
+      a href="/transactions" class="btn btn-outline-secondary" Clear filters
+- else
+  div class="d-flex justify-content-between align-items-center mb-2"
+    p.text-muted.small.mb-0
+      = "Showing #{transactions.size} of #{total_count} transaction#{total_count == 1 ? '' : 's'}"
+  div class="card border-0 shadow-sm"
+    div class="table-responsive"
+      table class="table table-hover align-middle mb-0"
+        thead class="table-light"
+          tr
+            th class="ps-4" Date
+            th Description
+            th Wallet
+            th Category
+            th class="text-end" Amount
+            th class="text-end pe-4" Actions
+        tbody
+          - transactions.each do |txn|
+            tr
+              td class="ps-4 text-muted small text-nowrap" = txn.transaction_date
+              td
+                a href="/transactions/#{txn.id}" class="text-decoration-none fw-medium text-dark"
+                  = txn.title
+                - unless txn.note.to_s.empty?
+                  br
+                  small class="text-muted" = txn.note
+              td class="text-muted small"
+                - if txn.wallet_id
+                  a href="/payment-methods/#{txn.wallet_id}" class="text-decoration-none text-muted"
+                    = txn.wallet_name.to_s
+                - else
+                  = txn.wallet_name.to_s
+              td
+                - if txn.category_name
+                  span class="badge text-bg-light text-dark border" = txn.category_name
+                - else
+                  span.text-muted —
+              td class="text-end fw-semibold #{txn.expense? ? 'text-danger' : 'text-success'}"
+                = txn.display_amount
+              td class="text-end text-nowrap pe-4"
+                a href="/transactions/#{txn.id}/edit" class="btn btn-sm btn-outline-secondary me-1" Edit
+                form method="post" action="/transactions/#{txn.id}/delete" class="d-inline"
+                  button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this transaction?')" Delete

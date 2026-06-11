@@ -1,51 +1,61 @@
 # frozen_string_literal: true
 
 module FinanceTracker
-  # App-side wrapper for a transaction returned by the API.
-  # Owns all knowledge of the API JSON shape so callers don't index into raw hashes.
+  # Parser model that wraps Transaction API envelopes.
   class Transaction
-    def self.from_api(transaction_info)
-      new(transaction_info)
+    def self.from_api(envelope)
+      new(envelope)
     end
 
-    def self.list_from_api(api_response)
-      Array(api_response.is_a?(Hash) ? api_response['data'] : api_response).map do |entry|
-        new(entry)
-      end
+    def self.list_from_api(list)
+      Array(list).map { |envelope| from_api(envelope) }
     end
 
-    def initialize(transaction_info)
-      @transaction_info = transaction_info || {}
+    def initialize(envelope)
+      root = envelope.is_a?(Hash) ? envelope : {}
+      data = root['data'] || root[:data] || root
+      data = {} unless data.is_a?(Hash)
+      attrs = data['attributes'] || data[:attributes] || root['attributes'] || root[:attributes] || data
+      attrs = {} unless attrs.is_a?(Hash)
+
+      @id               = data['id'] || data[:id] || attrs['id'] || attrs[:id]
+      @title            = attrs['title'] || attrs[:title]
+      @amount           = attrs['amount'] || attrs[:amount]
+      @transaction_date = attrs['transaction_date'] || attrs[:transaction_date]
+      @note             = attrs['note'] || attrs[:note]
+      @wallet_id        = attrs['wallet_id'] || attrs[:wallet_id]
+      @wallet_name      = attrs['wallet_name'] || attrs[:wallet_name]
+      @category_id      = attrs['category_id'] || attrs[:category_id]
+      @category_name    = attrs['category_name'] || attrs[:category_name]
     end
+
+    attr_reader :id, :title, :amount, :transaction_date, :note,
+                :wallet_id, :wallet_name, :category_id, :category_name
 
     def [](key)
-      attribute(key.to_s) || @transaction_info[key.to_s] || @transaction_info[key.to_sym]
+      send(key.to_s) rescue nil
     end
 
-    def id = attribute('id')
-    def title = attribute('title')
-    def amount = attribute('amount')
-    def transaction_date = attribute('transaction_date')
-    def note = attribute('note')
-    def wallet_id = attribute('wallet_id')
-    def category_id = attribute('category_id')
-
-    def policies = @transaction_info['policies'] || @transaction_info[:policies] || {}
-
-    def can_view? = policies['can_view'] || policies[:can_view] || false
-    def can_edit? = policies['can_edit'] || policies[:can_edit] || false
-    def can_delete? = policies['can_delete'] || policies[:can_delete] || false
-
-    def to_h = @transaction_info
-
-    private
-
-    def attributes
-      @transaction_info['data'] ? @transaction_info['data']['attributes'] : (@transaction_info['attributes'] || {})
+    def expense?
+      amount.to_f.negative?
     end
 
-    def attribute(name)
-      attributes[name] || attributes[name.to_sym]
+    def income?
+      !expense?
     end
+
+    # Transfers are internal money movements between the user's own wallets,
+    # stored as two legs ("Transfer → " expense + "Transfer ← " income). They
+    # are NOT real income or expense and must be excluded from those totals.
+    def transfer?
+      title.to_s.start_with?('Transfer')
+    end
+
+    def display_amount
+      value = amount.to_f
+      format('%+.2f', value)
+    end
+
+    private_class_method :new
   end
 end

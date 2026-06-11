@@ -58,4 +58,25 @@ describe 'CreateAccount service' do
       FinanceTracker::Services::CreateAccount.new(nil).call(**@new_account)
     }).must_raise FinanceTracker::Services::CreateAccount::InvalidAccount
   end
+
+  it 'HAPPY: persists account_api_token to session when provided' do
+    # setup secure message for session encryption
+    ENV['MSG_KEY'] ||= FinanceTracker::SecureMessage.generate_key
+    FinanceTracker::SecureMessage.setup(ENV.fetch('MSG_KEY'))
+
+    session = {}
+    current_session = FinanceTracker::CurrentSession.new(session)
+
+    WebMock.stub_request(:post, "#{API_URL}/api/v1/accounts")
+           .with(body: @new_account.to_json)
+           .to_return(
+             status: 201,
+             body: { message: 'Account created', data: { username: 'new_user' }, account_api_token: 'TOKEN123' }.to_json,
+             headers: { 'content-type' => 'application/json' }
+           )
+
+    FinanceTracker::Services::CreateAccount.new(nil, current_session: current_session).call(**@new_account)
+
+    _(current_session.account_api_token).must_equal 'TOKEN123'
+  end
 end

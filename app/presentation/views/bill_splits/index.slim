@@ -1,0 +1,43 @@
+.row.justify-content-center
+  - splits ||= []
+  - current_username ||= nil
+  .col-lg-9
+    .card.shadow-sm.border-0
+      .card-body.p-4.p-md-5
+        .d-flex.justify-content-between.align-items-start.mb-4
+          .me-3
+            p.text-uppercase.text-primary.fw-semibold.mb-2 Bill Splits
+            h1.h3.mb-0 My Bill Splits
+          a.btn.btn-primary href="/bill-splits/new" + New Bill Split
+
+        - if splits.empty?
+          .alert.alert-info.mb-0 No bill splits yet.
+        - else
+          .table-responsive
+            table.table.table-sm.align-middle
+              thead
+                tr
+                  th Title
+                  th Role
+                  th.text-end Your Share
+                  th.text-end Total
+                  th Status
+                  th.text-end
+              tbody
+                - splits.each do |s|
+                  - attrs = s.is_a?(Hash) && s['title'] ? s : (s['attributes'] || s)
+                  - is_creator = attrs['creator_username'].to_s == current_username.to_s
+                  - me = Array(attrs['participants']).find { |p| p['username'].to_s == current_username.to_s }
+                  - status = attrs['status'].to_s
+                  - badge = status == 'settled' ? 'bg-success' : (status == 'disputed' ? 'bg-danger' : (status == 'pending' ? 'bg-info' : 'bg-secondary'))
+                  tr
+                    td
+                      = attrs['title']
+                    td
+                      span.badge.bg-light.text-dark = is_creator ? 'owner' : 'participant'
+                    td.text-end = me ? "$#{me['total']}" : '—'
+                    td.text-end $#{attrs['grand_total']}
+                    td
+                      span class="badge #{badge}" = status.capitalize
+                    td.text-end
+                      a.btn.btn-outline-primary.btn-sm href="/bill-splits/#{attrs['id']}" View

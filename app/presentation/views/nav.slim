@@ -1,26 +1,47 @@
-nav.navbar.navbar-expand-sm.navbar-dark.bg-primary
-  .container-fluid
-    a.navbar-brand href="/" Fintrack
+nav.navbar.navbar-expand-lg
+  .container-xl.px-4
+    a.navbar-brand.d-flex.align-items-center.gap-2 href="/"
+      img src="/favicon.png" alt="" width="26" height="26"
+      span Fintrack
+
     button.navbar-toggler type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation"
       span.navbar-toggler-icon
 
     .collapse.navbar-collapse#mainNavbar
-      ul.navbar-nav.me-auto
-        li.nav-item
-          a.nav-link href="/" Home
+      ul.navbar-nav.me-auto.gap-1
         - if @current_account
+          - if system_admin?
+            li.nav-item
+              a.nav-link href="/admin/accounts" Members
           li.nav-item
-            a.nav-link href="/payment-methods" Payment Methods
+            a.nav-link href="/account/#{@current_account['username']}" Account
           li.nav-item.dropdown
             a.nav-link.dropdown-toggle href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
-              = @current_account['username']
+              | Money Tracker
             ul.dropdown-menu
               li
-                a.dropdown-item href="/account/#{@current_account['username']}" Account
+                a.dropdown-item href="/transactions" My Transactions
               li
-                a.dropdown-item href="/auth/logout" Logout
+                a.dropdown-item href="/transactions/new" + Record Transaction
+              li: hr.dropdown-divider
+              li
+                a.dropdown-item href="/payment-methods" My Wallets
+              li
+                a.dropdown-item href="/payment-methods/new" + Add Wallet
+              li: hr.dropdown-divider
+              li
+                a.dropdown-item href="/categories" Manage Categories
+          li.nav-item
+            a.nav-link href="/bill-splits" Bill Splits
+          li.nav-item
+            a.nav-link href="/friends" Friends
+
+      ul.navbar-nav.ms-auto.gap-1
+        - if @current_account
+          li.nav-item
+            a.nav-link.nav-logout href="/auth/logout" Logout
         - else
           li.nav-item
-            a.nav-link href="/auth/login" Login
+            a.nav-link href="/auth/login" Log in
           li.nav-item
-            a.nav-link href="/auth/register" Register
+            a.btn.btn-primary.btn-sm.my-1.ms-2 href="/auth/register" Sign up

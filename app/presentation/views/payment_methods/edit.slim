@@ -1,0 +1,36 @@
+div class="d-flex justify-content-between align-items-center mb-4"
+  div
+    p.text-muted.small.mb-0
+      a href="/payment-methods" class="text-decoration-none" My Wallets
+      |  /
+      a href="/payment-methods/#{wallet.id}" class="text-decoration-none"  = wallet.name
+      |  / Edit
+    h1.h3.mb-0 Edit Wallet
+  a href="/payment-methods/#{wallet.id}" class="btn btn-outline-secondary" Cancel
+
+div class="row justify-content-center"
+  div class="col-md-6"
+    div class="card shadow-sm border-0"
+      div class="card-body p-4"
+        p.ft-section-title = method_type_label
+
+        form method="post" action="/payment-methods/#{wallet.id}" accept-charset="UTF-8"
+
+          div class="form-group mb-3"
+            label.form-label for="input-method-name" Name
+            input type="text" name="name" id="input-method-name" class="form-control" required="required" maxlength="200" value=values['name']
+
+          - unless wallet.account_number.to_s.strip.empty? && !%w[bank_account credit_card debit_card e_wallet].include?(wallet.method_type.to_s)
+            div class="form-group mb-4"
+              label.form-label for="input-account-number"
+                | Card / Account No.
+                span.text-muted.fw-normal.ms-1 (leave blank to keep current)
+              input type="text" name="account_number" id="input-account-number" class="form-control font-monospace" maxlength="100" placeholder="Enter new number to update" autocomplete="off"
+              - unless wallet.account_number.to_s.strip.empty?
+                div class="form-text"
+                  | Current:&nbsp;
+                  span.font-monospace ••••#{wallet.account_number.to_s.strip.chars.last(4).join}
+
+          div class="d-flex gap-2"
+            button type="submit" class="btn btn-primary" Save Changes
+            a class="btn btn-outline-secondary" href="/payment-methods/#{wallet.id}" Cancel

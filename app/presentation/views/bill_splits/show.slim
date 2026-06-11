@@ -1,0 +1,301 @@
+.row.justify-content-center
+  - bill ||= {}
+  - current_username ||= nil
+  - participants = Array(bill['participants'])
+  - items = Array(bill['items'])
+  - status = bill['status'].to_s
+  - is_creator = bill['creator_username'].to_s == current_username.to_s
+  - me = participants.find { |p| p['username'].to_s == current_username.to_s }
+  - settled = status == 'settled'
+  - status_class = settled ? 'bg-success' : (status == 'disputed' ? 'bg-danger' : (status == 'pending' ? 'bg-info' : 'bg-secondary'))
+  - wallets ||= []
+  - has_wallets = !wallets.empty?
+
+  .col-lg-9
+    .card.shadow-sm.border-0
+      .card-body.p-4.p-md-5
+
+        / ── Header ──────────────────────────────────────────────
+        .d-flex.justify-content-between.align-items-start.mb-4
+          .me-3
+            p.text-uppercase.text-primary.fw-semibold.mb-2 Bill Splits
+            h1.h3.mb-1 = bill['title']
+            span class="badge #{status_class}" = status.capitalize
+          a.btn.btn-outline-secondary href="/bill-splits" Back
+
+        / ── Bill summary (visible to everyone) ─────────────────
+        .row.g-3.mb-4
+          .col-sm-4
+            .small.text-muted Created by
+            .fw-semibold = bill['creator_username']
+          .col-sm-4
+            .small.text-muted Grand total
+            .fw-semibold $#{bill['grand_total']}
+          .col-sm-4
+            .small.text-muted Tax / Service
+            .fw-semibold #{bill['tax_percent']}% / #{bill['service_percent']}%
+          - if bill['category_name'].to_s != ''
+            .col-sm-4
+              .small.text-muted Category
+              span.badge.bg-light.text-dark.border = bill['category_name']
+
+        / ── Original receipt (visible to everyone, for price verification) ──
+        - if bill['has_receipt']
+          .mb-4
+            p.ft-section-title.mb-2 Bill receipt
+            a href="/bill-splits/#{bill['id']}/receipt" target="_blank" rel="noopener"
+              img.img-thumbnail src="/bill-splits/#{bill['id']}/receipt" alt="Photo of the original bill" style="max-height:220px"
+            p.small.text-muted.mt-1.mb-0 Uploaded by #{bill['creator_username']}. Tap to enlarge and compare the entered prices against the real bill.
+
+        / ════════════════════════════════════════════════════════
+        / OWNER VIEW — full breakdown + management
+        / ════════════════════════════════════════════════════════
+        - if is_creator
+
+          / Item list with sharers — owner only (reveals who shared what)
+          - unless items.empty?
+            h2.h6.mb-2 Items
+            ul.list-group.mb-4
+              - items.each do |item|
+                li.list-group-item.d-flex.justify-content-between.align-items-start
+                  .me-2
+                    .fw-semibold = item['name']
+                    .small.text-muted shared by #{Array(item['sharer_usernames']).join(', ')}
+                  span.badge.bg-light.text-dark.rounded-pill $#{item['amount']}
+
+          h2.h6.mb-2 Participant Breakdown
+          .table-responsive.mb-4
+            table.table.table-sm.align-middle
+              thead
+                tr
+                  th Person
+                  th.text-end Subtotal
+                  th.text-end Tax
+                  th.text-end Service
+                  th.text-end Total
+                  th Status
+              tbody
+                - participants.each do |p|
+                  tr
+                    td
+                      = p['username']
+                      - if p['username'].to_s == bill['creator_username'].to_s
+                        span.badge.bg-light.text-dark.ms-1.small owner
+                    td.text-end $#{p['subtotal']}
+                    td.text-end $#{p['tax']}
+                    td.text-end $#{p['service']}
+                    td.text-end.fw-semibold $#{p['total']}
+                    - pstatus = p['status'].to_s
+                    - pbadge = pstatus == 'agreed' ? 'bg-success' : (pstatus == 'rejected' ? 'bg-danger' : (pstatus == 'settled' ? 'bg-secondary' : 'bg-warning text-dark'))
+                    td
+                      span class="badge #{pbadge}" = pstatus.capitalize
+
+          / Rejection notes — owner only
+          - rejections = participants.select { |p| p['reject_note'].to_s != '' }
+          - unless rejections.empty?
+            .mb-4
+              - rejections.each do |p|
+                .alert.alert-warning.py-2.mb-2
+                  strong #{p['username']} rejected:
+                  = " #{p['reject_note']}"
+
+          / Owner: attach the real receipt so participants can verify prices
+          hr.my-4
+          h2.h6.mb-3 Source receipt
+          - if bill['has_receipt']
+            p.small.text-muted.mb-2 Participants can compare the entered prices against this image.
+            .d-flex.flex-wrap.gap-2
+              a.btn.btn-outline-secondary.btn-sm href="/bill-splits/#{bill['id']}/receipt" target="_blank" rel="noopener" View receipt
+              form method="post" action="/bill-splits/#{bill['id']}/receipt" data-confirm="Remove the receipt?"
+                input type="hidden" name="_method" value="DELETE"
+                button.btn.btn-outline-danger.btn-sm type="submit" Remove
+          - else
+            p.small.text-muted.mb-2 Optionally attach a photo of the real bill so participants can verify the amounts.
+            form method="post" action="/bill-splits/#{bill['id']}/receipt" enctype="multipart/form-data"
+              .d-flex.flex-wrap.gap-2.align-items-center
+                input.form-control.form-control-sm type="file" name="receipt" accept="image/png,image/jpeg" style="max-width:320px"
+                button.btn.btn-outline-primary.btn-sm type="submit" Upload receipt
+
+          / Owner: edit / delete / send
+          - unless settled
+            hr.my-4
+            h2.h6.mb-3 Manage Bill
+            .d-flex.flex-wrap.gap-2.mb-3
+              - if %w[draft disputed].include?(status)
+                a.btn.btn-outline-secondary href="/bill-splits/#{bill['id']}/items" Edit Items
+              form method="post" action="/bill-splits/#{bill['id']}" data-confirm="Delete this bill split?"
+                input type="hidden" name="_method" value="DELETE"
+                button.btn.btn-outline-danger type="submit" Delete
+            - if status == 'draft'
+              form method="post" action="/bill-splits/#{bill['id']}/send"
+                .row.g-2.align-items-end
+                  .col-sm-7
+                    label.form-label.small Record payment from (optional)
+                    select.form-select name="wallet_id"
+                      option value="" — don't record it —
+                      - wallets.each do |w|
+                        option value=w.id = w.name
+                  .col-sm-5.d-grid
+                    button.btn.btn-primary type="submit" Send to Participants
+                - owner_share_f = me ? me['total'].to_f.round(2) : 0.0
+                - others_f      = (bill['grand_total'].to_f - owner_share_f).round(2)
+                - if owner_share_f > 0
+                  .form-text
+                    | Your share ($#{'%.2f' % owner_share_f}) will be recorded as an expense.
+                    - if others_f > 0
+                      |  You also fronted $#{'%.2f' % others_f} for others — repayments come back as income.
+                - else
+                  .form-text You fronted $#{bill['grand_total']}; repayments come back as income.
+
+          / Owner: confirm incoming payments
+          - if %w[pending disputed].include?(status)
+            - payers = participants.reject { |p| p['is_owner'] }
+            hr.my-4
+            h2.h6.mb-3 Payments Received
+            .list-group
+              - payers.each do |p|
+                - pstatus = p['status'].to_s
+                .list-group-item
+                  .d-flex.justify-content-between.align-items-center
+                    div
+                      strong = p['username']
+                      span.text-muted.small &nbsp;owes $#{p['total']}
+                      - if p['has_proof']
+                        a.ms-2.small href="/bill-splits/#{bill['id']}/participants/#{p['participant_id']}/proof" target="_blank" view proof
+                    - pbadge = pstatus == 'settled' ? 'bg-success' : (pstatus == 'paid' ? 'bg-info' : (pstatus == 'rejected' ? 'bg-danger' : 'bg-warning text-dark'))
+                    span class="badge #{pbadge}" = pstatus.capitalize
+                  - if pstatus == 'paid'
+                    form method="post" action="/bill-splits/#{bill['id']}/participants/#{p['participant_id']}/confirm" class="mt-2"
+                      - if has_wallets
+                        .input-group.input-group-sm
+                          select.form-select name="wallet_id"
+                            - wallets.each do |w|
+                              option value=w.id = w.name
+                          button.btn.btn-success type="submit" Confirm received
+                      - else
+                        .alert.alert-warning.py-2.small.mb-0
+                          | You need a payment method to receive this money.
+                          a.ms-1 href="/payment-methods/new" Add one
+
+        / ════════════════════════════════════════════════════════
+        / PARTICIPANT VIEW — own share only, no other members' data
+        / ════════════════════════════════════════════════════════
+        - elsif me && !me['is_owner']
+          - my_status = me['status'].to_s
+
+          / My share card
+          .card.mb-4 style="border-top:3px solid var(--p) !important"
+            .card-body.p-4
+              p.ft-section-title Your Share
+              .d-flex.justify-content-between.align-items-center.mb-3
+                div
+                  .small.text-muted Subtotal
+                  .fw-semibold $#{me['subtotal']}
+                div
+                  .small.text-muted Tax
+                  .fw-semibold $#{me['tax']}
+                div
+                  .small.text-muted Service
+                  .fw-semibold $#{me['service']}
+                div
+                  .small.text-muted Total due
+                  p.h4.fw-bold.mb-0 $#{me['total']}
+              - my_badge = my_status == 'agreed' ? 'bg-success' : (my_status == 'rejected' ? 'bg-danger' : (my_status == 'settled' ? 'bg-secondary' : (my_status == 'paid' ? 'bg-info' : 'bg-warning text-dark')))
+              span class="badge #{my_badge}" = my_status.capitalize
+
+          / Itemized own-share receipt — lets the participant verify their number
+          / without exposing anyone else's items, amounts, or identity.
+          - unless items.empty?
+            h2.h6.mb-2 Verify your share
+            p.small.text-muted.mb-2
+              | These are the items you're on. Each price is split equally among everyone who shared it.
+            .table-responsive.mb-3
+              table.table.table-sm.align-middle.mb-0
+                thead
+                  tr
+                    th Item
+                    th.text-end Price
+                    th.text-end Split
+                    th.text-end Your share
+                tbody
+                  - items.each do |item|
+                    tr
+                      td = item['name']
+                      td.text-end $#{item['amount']}
+                      td.text-end ÷ #{item['shared_by_count']}
+                      td.text-end.fw-semibold $#{item['your_share']}
+                tfoot
+                  tr
+                    td colspan="3" class="text-end text-muted" Subtotal
+                    td.text-end.fw-semibold $#{me['subtotal']}
+                  tr
+                    td colspan="3" class="text-end text-muted" Tax #{bill['tax_percent']}%
+                    td.text-end $#{me['tax']}
+                  tr
+                    td colspan="3" class="text-end text-muted" Service #{bill['service_percent']}%
+                    td.text-end $#{me['service']}
+                  tr
+                    td colspan="3" class="text-end fw-semibold" Your total
+                    td.text-end.fw-bold $#{me['total']}
+            - if bill['participant_count']
+              p.small.text-muted
+                | For reference, the full bill is <strong>$#{bill['grand_total']}</strong> split among #{bill['participant_count']} #{bill['participant_count'].to_i == 1 ? 'person' : 'people'}. You only ever pay for the items you shared.
+
+          / Participant: status-based actions
+          - if status == 'draft'
+            .alert.alert-info.py-2.small Waiting for the owner to finalise and send this bill.
+
+          - elsif my_status == 'settled'
+            .alert.alert-success.py-2 Settled — your share of $#{me['total']} has been confirmed.
+
+          - elsif my_status == 'paid'
+            .alert.alert-info.py-2
+              | You paid $#{me['total']}. Waiting for #{bill['creator_username']} to confirm.
+            - if me['has_proof']
+              img.img-thumbnail.mt-2.proof-thumb src="/bill-splits/#{bill['id']}/participants/#{me['participant_id']}/proof" alt="Your payment proof"
+
+          - elsif my_status == 'rejected'
+            .alert.alert-danger.py-2
+              | You rejected this bill split.
+              - if me['reject_note'].to_s != ''
+                = " (#{me['reject_note']})"
+            - unless settled
+              p.small.text-muted.mt-2 The owner may revise the bill and re-send it.
+
+          - else
+            hr.my-4
+            h2.h6.mb-3 Your Response
+            .text-muted.small.mb-3 Your share is $#{me['total']}. Please review the items above and respond.
+            .d-flex.flex-wrap.gap-2.mb-3
+              - unless my_status == 'agreed'
+                form method="post" action="/bill-splits/#{bill['id']}/agree"
+                  button.btn.btn-primary type="submit" Agree to $#{me['total']}
+              form method="post" action="/bill-splits/#{bill['id']}/reject" class="d-flex gap-2"
+                input.form-control type="text" name="reason" placeholder="Reason for rejecting…"
+                button.btn.btn-outline-danger type="submit" Reject
+            - if my_status == 'agreed'
+              hr.my-3
+              h2.h6.mb-3 Record Payment
+              - if has_wallets
+                form method="post" action="/bill-splits/#{bill['id']}/pay" enctype="multipart/form-data"
+                  .row.g-2.align-items-end
+                    .col-sm-5
+                      label.form-label.small Pay from
+                      select.form-select name="wallet_id"
+                        - wallets.each do |w|
+                          option value=w.id = w.name
+                    .col-sm-5
+                      label.form-label.small Proof image (optional)
+                      input.form-control type="file" name="proof" accept="image/png,image/jpeg"
+                    .col-sm-2.d-grid
+                      button.btn.btn-primary type="submit" I Paid
+              - else
+                .alert.alert-warning.py-2.small
+                  | Add a payment method before paying.
+                  a.ms-1 href="/payment-methods/new" Add one
+
+        / ── Settled banner (all roles) ──────────────────────────
+        - if settled
+          .alert.alert-success.mt-4.mb-0 This bill split is settled and locked.
+
+  script src="/js/confirm.js"

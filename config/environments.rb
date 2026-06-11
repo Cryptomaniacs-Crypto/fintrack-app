@@ -11,11 +11,9 @@ require_relative '../require_app'
 require_app('lib')
 
 module FinanceTracker
-  # Configuration for the FinanceTracker Web App
   class App < Roda
     plugin :environments
 
-    # Environment variables setup
     Figaro.application = Figaro::Application.new(
       environment: environment,
       path: File.expand_path('config/secrets.yml')
@@ -35,21 +33,7 @@ module FinanceTracker
     # Session configuration
     ONE_MONTH = 30 * 24 * 60 * 60
 
-    # Redis URL: support both add-on flavors. Redis Cloud (free tier)
-    # exposes REDISCLOUD_URL; Heroku Redis (paid) exposes REDIS_URL.
-    # Read whichever is set; check Redis Cloud first because it matches
-    # the slide-deck convention.
-    @redis_url = ENV['REDISCLOUD_URL'] || ENV.fetch('REDIS_URL', nil)
-
-    # Heroku Redis (and most managed Redis providers) uses self-signed
-    # certificates for `rediss://` -- the TLS is there for confidentiality
-    # over the provider's private network, not server authentication. The
-    # Ruby Redis client verifies certs by default, so we set
-    # verify_mode: VERIFY_NONE to keep the encryption while skipping the
-    # CA-chain check. Encrypted-but-unauthenticated Redis is acceptable
-    # because the traffic stays on the Heroku private network and never
-    # crosses the public internet. Plain `redis://` URLs (e.g. local dev)
-    # don't go through TLS at all, so no ssl_params are passed.
+    @redis_url = ENV.delete('REDISCLOUD_URL') || ENV.delete('REDIS_URL')
     @redis_server =
       if @redis_url&.start_with?('rediss://')
         { url: @redis_url, ssl_params: { verify_mode: OpenSSL::SSL::VERIFY_NONE } }
@@ -57,47 +41,40 @@ module FinanceTracker
         @redis_url
       end
 
-    SecureMessage.setup(ENV.fetch('MSG_KEY', nil))
+    SecureMessage.setup(ENV.delete('MSG_KEY'))
+    SignedMessage.setup(ENV.delete('SIGNING_KEY')) # signs unauthenticated API requests
     SecureSession.setup(@redis_server) # used by `rake session:wipe`
 
     configure :development, :test do
       # Suppresses log info/warning outputs in dev/test environments
       logger.level = Logger::ERROR
 
-      # Previous approach (rack-session 2.x AES-256-GCM cookie only --
-      # superseded by the Pool/Redis split below):
-      # use Rack::Session::Cookie,
-      #     expire_after: ONE_MONTH, secret: config.SESSION_SECRET
-
+      # Session cookie hardening: httponly blocks XSS exfiltration via document.cookie;
+      # SameSite=Lax stops cross-site requests from carrying the session (CSRF mitigation).
+      # No `secure:` in dev/test — rack-session refuses to commit a Secure cookie over
+      # plain HTTP, which would break http://localhost logins.
       use Rack::Session::Pool,
-          expire_after: ONE_MONTH
-
-      # Uncomment to test the production Redis path locally
-      # (requires `brew services start redis` or equivalent):
-      # use Rack::Session::Redis,
-      #     expire_after: ONE_MONTH,
-      #     redis_server: @redis_url
-
-      # Allows binding.pry to be used in development
+          expire_after: ONE_MONTH,
+          httponly: true,
+          same_site: :lax
       require 'pry'
 
-      # Allows running reload! in pry to restart entire app
       def self.reload!
         exec 'pry -r ./spec/test_load_all'
       end
     end
 
     configure :production do
-      # Roda native HTTPS enforcement. `redirect_http_to_https` issues
-      # a 301 for HTTP requests; `hsts` adds the Strict-Transport-Security
-      # response header so subsequent visits go straight to HTTPS without a
-      # round-trip.
       plugin :redirect_http_to_https
       plugin :hsts
 
+      # Production: add Secure so the cookie is TLS-only (always behind HTTPS on Heroku).
       use Rack::Session::Redis,
           expire_after: ONE_MONTH,
-          redis_server: @redis_server
+          redis_server: @redis_server,
+          secure: true,
+          httponly: true,
+          same_site: :lax
     end
   end
 end

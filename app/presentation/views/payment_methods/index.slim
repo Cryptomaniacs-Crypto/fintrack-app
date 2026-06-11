@@ -1,28 +1,35 @@
-h1 Payment Methods
-
-div class="d-flex justify-content-end mb-3"
+div class="d-flex justify-content-between align-items-center mb-4"
+  h1.h3.mb-0 My Wallets
   - if can_create_payment_method
-    a class="btn btn-primary" href="/payment-methods/new" Add Payment Method
-  - else
-    span class="text-muted" You cannot add payment methods.
+    a class="btn btn-primary" href="/payment-methods/new" + Add Wallet
 
 - if payment_methods.empty?
-  p class="text-muted" No payment methods yet.
+  div class="text-center py-5"
+    p.text-muted.mb-3 No wallets yet. Add one to start tracking your money.
+    - if can_create_payment_method
+      a.btn.btn-primary href="/payment-methods/new" + Add Wallet
 - else
-  div class="table-responsive"
-    table class="table table-striped"
-      thead
-        tr
-          th Name
-          th Type
-          th Account/Card
-          th Opening Balance
-      tbody
-        - payment_methods.each do |wallet|
-          - account_number = wallet.account_number.to_s
-          - masked_account = account_number.empty? ? '-' : "••••#{account_number[-4, 4]}"
-          tr
-            td = wallet.name
-            td = 'Wallet'
-            td = masked_account
-            td = wallet.balance
+  div class="row g-4"
+    - payment_methods.each do |wallet|
+      - account_number = wallet.account_number.to_s
+      - masked = account_number.empty? ? nil : "••••#{account_number[-4, 4]}"
+      - label = method_type_labels.fetch(wallet.method_type.to_s, wallet.method_type.to_s)
+      - current_bal = (wallet_balances || {})[wallet.id] || wallet.balance.to_f
+      div class="col-md-6 col-lg-4"
+        div class="card card-lift wallet-card h-100"
+          div class="card-body p-4"
+            div class="d-flex justify-content-between align-items-start mb-2"
+              span class="badge text-bg-secondary" = label
+              - if masked
+                span class="text-muted small" = masked
+            h5.card-title.mb-1 = wallet.name
+            p class="h4 fw-bold mb-3 #{current_bal >= 0 ? 'text-success' : 'text-danger'}"
+              = sprintf('%.2f', current_bal)
+            div class="d-flex gap-2 flex-wrap"
+              a href="/payment-methods/#{wallet.id}" class="btn btn-sm btn-outline-primary flex-fill"
+                | View
+              - if wallet.can_edit?
+                a href="/payment-methods/#{wallet.id}/edit" class="btn btn-sm btn-outline-secondary flex-fill"
+                  | Edit
+              a href="/transactions/new?wallet_id=#{wallet.id}" class="btn btn-sm btn-primary flex-fill"
+                | + Record

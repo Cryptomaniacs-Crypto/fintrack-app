@@ -16,11 +16,11 @@ module FinanceTracker
         'e_wallet' => 'E-Wallet'
       }.freeze
 
-      def initialize(base_url: ENV.fetch('FINTRACK_API_URL', 'http://localhost:9292'))
-        @client = ApiClient.new(base_url: base_url)
+      def initialize(config = nil)
+        @client = ApiClient.new(config)
       end
 
-      def call(auth_token:, name:, method_type:, account_number: nil, balance: nil)
+      def call(auth_token:, name:, method_type:, account_number: nil, balance: nil, account_api_token: nil)
         payload = build_payload(
           name: name,
           method_type: method_type,
@@ -28,7 +28,7 @@ module FinanceTracker
           balance: balance
         )
 
-        @client.authenticated_post('/api/v1/wallets', payload, auth_token: auth_token)
+        @client.post('/api/v1/wallets', payload, auth_token: auth_token, account_api_token: account_api_token)
       end
 
       private
@@ -70,3 +70,4 @@ module FinanceTracker
     end
   end
 end
+

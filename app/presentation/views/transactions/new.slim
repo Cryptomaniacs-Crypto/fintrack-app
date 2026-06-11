@@ -1,0 +1,79 @@
+- is_transfer = values['transaction_type'] == 'transfer'
+
+div class="d-flex justify-content-between align-items-center mb-4"
+  h1.h3.mb-0 Record Transaction
+
+div class="row justify-content-center"
+  div class="col-xl-9 col-lg-10"
+    div class="card shadow-sm border-0"
+      div class="card-body p-4 p-lg-5"
+        form method="post" action="/transactions"
+
+          div class="row g-4"
+
+            div class="col-md-6"
+
+              - if wallets.any?
+                div class="form-group mb-3"
+                  label.form-label.fw-semibold for="input-wallet" Wallet
+                  select name="wallet_id" id="input-wallet" class="form-select"
+                    option value="" — Select wallet —
+                    - wallets.each do |w|
+                      option value=w.id selected=(preselect_wallet_id.to_s == w.id.to_s) = w.name
+              - else
+                div class="alert alert-warning mb-3"
+                  | No wallets yet.
+                  a href="/payment-methods/new" Add one first.
+
+              div class="form-group mb-3"
+                label.form-label.fw-semibold Transaction Type
+                div class="btn-group w-100" role="group"
+                  input class="btn-check" type="radio" name="transaction_type" id="type-income" value="income" checked=(values['transaction_type'].to_s.empty? || values['transaction_type'] == 'income')
+                  label class="btn btn-outline-success" for="type-income" + Income
+                  input class="btn-check" type="radio" name="transaction_type" id="type-expense" value="expense" checked=(values['transaction_type'] == 'expense')
+                  label class="btn btn-outline-danger" for="type-expense" − Expense
+                  input class="btn-check" type="radio" name="transaction_type" id="type-transfer" value="transfer" checked=(values['transaction_type'] == 'transfer')
+                  label class="btn btn-outline-primary" for="type-transfer" ⇄ Transfer
+
+              div id="transfer-fields" class="form-group mb-3" style=(is_transfer ? '' : 'display:none')
+                label.form-label.fw-semibold for="input-to-wallet" To Wallet
+                select name="to_wallet_id" id="input-to-wallet" class="form-select"
+                  option value="" — Select destination —
+                  - wallets.each do |w|
+                    option value=w.id selected=(values['to_wallet_id'].to_s == w.id.to_s) = w.name
+
+              div class="row g-2 mb-3"
+                div class="col-7"
+                  label.form-label.fw-semibold for="input-amount" Amount
+                  div class="input-group"
+                    span class="input-group-text" $
+                    input type="number" step="0.01" min="0.01" name="amount" id="input-amount" class="form-control" required="required" placeholder="0.00" value=values['amount'].to_s
+                div class="col-5"
+                  label.form-label.fw-semibold for="input-date" Date
+                  input type="date" name="transaction_date" id="input-date" class="form-control" required="required" value=(values['transaction_date'] || Time.now.strftime('%Y-%m-%d'))
+
+            div class="col-md-6 d-flex flex-column"
+
+              div class="form-group mb-3"
+                label.form-label.fw-semibold for="input-title" Description
+                input type="text" name="title" id="input-title" class="form-control" required="required" maxlength="200" placeholder="What was this for?" value=values['title'].to_s
+
+              div id="category-fields" class="form-group mb-3" style=(is_transfer ? 'display:none' : '')
+                div class="d-flex justify-content-between align-items-center mb-1"
+                  label.form-label.fw-semibold.mb-0 for="input-category" Category
+                  a href="/categories" class="small text-muted" target="_blank" Manage
+                select name="category_id" id="input-category" class="form-select"
+                  option value="" — None —
+                  - categories.each do |cat|
+                    option value=cat.id selected=(values['category_id'].to_s == cat.id.to_s) = cat.name
+
+              div class="form-group mb-4"
+                label.form-label.fw-semibold for="input-note" Note
+                span.text-muted.small.ms-1 (optional)
+                input type="text" name="note" id="input-note" class="form-control" maxlength="300" placeholder="Any extra details…" value=values['note'].to_s
+
+              div class="d-flex gap-2 mt-auto"
+                button type="submit" class="btn btn-primary flex-fill" Save Transaction
+                a class="btn btn-outline-secondary" href="/transactions" Cancel
+
+script src="/js/transaction_form.js"

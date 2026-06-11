@@ -1,103 +1,132 @@
 # frozen_string_literal: true
 
 module FinanceTracker
-  class Account
-    def self.from_api(account_info)
-      return nil if account_info.nil?
-      return nil if account_info.respond_to?(:empty?) && account_info.empty?
+	# Parser model that wraps Account API envelopes.
+	# Use Account.from_api(envelope_hash) — `new` is private so the named
+	# factory is the only entry point and the parsing role stays explicit.
+	class Account
+		attr_reader :account_info, :auth_token, :account_api_token
 
-      new(account_info)
-    end
+		def self.from_api(envelope)
+			return nil if envelope.nil?
 
-    def initialize(account_info)
-      @account_info = account_info || {}
-    end
+			new(envelope)
+		end
 
-    def [](key)
-      return id if key.to_s == 'id'
-      return username if key.to_s == 'username'
-      return email if key.to_s == 'email'
-      return system_roles if key.to_s == 'system_roles'
-      return policies if key.to_s == 'policies'
-      return capabilities if key.to_s == 'capabilities'
+		def self.from_auth(envelope)
+			new(envelope)
+		end
 
-      @account_info[key] || @account_info[key.to_sym]
-    end
+		def self.from_session(account_info, auth_token = nil)
+			envelope = {
+				'attributes' => account_info,
+				'auth_token' => auth_token
+			}
+			new(envelope)
+		end
 
-    def dig(*keys)
-      keys.reduce(@account_info) do |value, key|
-        next nil unless value.respond_to?(:[])
+		# rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity
+		def initialize(envelope)
+			root = envelope.is_a?(Hash) ? envelope : {}
+			data = root['data'] || root[:data] || root
+			data = {} unless data.is_a?(Hash)
 
-        value[key] || value[key.to_s] || value[key.to_sym]
-      end
-    end
+			attrs = data['attributes'] || data[:attributes] || root['attributes'] || root[:attributes] || data
+			attrs = {} unless attrs.is_a?(Hash)
 
-    def to_h
-      @account_info
-    end
+			included = root['included'] || root[:included] || data['include'] || data[:include] || root['include'] || root[:include] || {}
+			included = {} unless included.is_a?(Hash)
 
-    def id
-      attributes&.dig('id') || attributes&.dig(:id)
-    end
+			meta = root['meta'] || root[:meta] || {}
+			meta = {} unless meta.is_a?(Hash)
 
-    def username
-      attributes&.dig('username') || attributes&.dig(:username)
-    end
+			roles =
+				if attrs.key?('system_roles') || attrs.key?(:system_roles)
+					Array(attrs['system_roles'] || attrs[:system_roles])
+				elsif included.key?('system_roles') || included.key?(:system_roles)
+					Array(included['system_roles'] || included[:system_roles]).map do |role|
+						role.is_a?(Hash) ? (role['name'] || role[:name]) : role
+					end
+				else
+					[]
+				end
+			roles = roles.compact.map(&:to_s)
 
-    def email
-      attributes&.dig('email') || attributes&.dig(:email)
-    end
+			@auth_token =
+				attrs['auth_token'] || attrs[:auth_token] ||
+				meta['auth_token'] || meta[:auth_token] ||
+				root['auth_token'] || root[:auth_token]
 
-    def system_roles
-      raw = dig('included', 'system_roles') ||
-            dig(:included, :system_roles) ||
-            dig('system_roles') ||
-            dig(:system_roles)
-      Array(raw).map do |role|
-        role.is_a?(Hash) ? role['name'] || role[:name] : role.to_s
-      end
-    end
+			@account_api_token =
+				attrs['account_api_token'] || attrs[:account_api_token] ||
+				meta['account_api_token'] || meta[:account_api_token] ||
+				root['account_api_token'] || root[:account_api_token]
 
-    def policies
-      dig('policies') || dig(:policies) || {}
-    end
+			@capabilities =
+				root['capabilities'] || root[:capabilities] ||
+				data['capabilities'] || data[:capabilities] ||
+				attrs['capabilities'] || attrs[:capabilities] || {}
+			@capabilities = {} unless @capabilities.is_a?(Hash)
 
-    def capabilities
-      dig('capabilities') || dig(:capabilities) || {}
-    end
+			@policies =
+				root['policies'] || root[:policies] ||
+				data['policies'] || data[:policies] ||
+				attrs['policies'] || attrs[:policies] || {}
+			@policies = {} unless @policies.is_a?(Hash)
 
-    def admin?
-      capabilities['is_admin'] || capabilities[:is_admin] || false
-    end
+			@account_info = attrs.dup
+			@account_info.delete('auth_token')
+			@account_info.delete(:auth_token)
+			@account_info['system_roles'] = roles
+			@account_info['capabilities'] = @capabilities
+			@account_info['policies'] = @policies
+		end
+		# rubocop:enable Metrics/AbcSize, Metrics/CyclomaticComplexity
 
-    def can_manage_system_roles?
-      capabilities['can_manage_system_roles'] || capabilities[:can_manage_system_roles] || false
-    end
+		def id = fetch_field('id')
+		def username = fetch_field('username')
+		def email = fetch_field('email')
+		def system_roles = Array(fetch_field('system_roles'))
+		def capabilities = @capabilities
+		def policies = @policies
 
-    def can_create_wallet?
-      capabilities['can_create_wallet'] || capabilities[:can_create_wallet] || false
-    end
+		def admin?
+			@capabilities['is_admin'] || @capabilities[:is_admin] || system_roles.include?('admin')
+		end
 
-    def can_create_transaction?
-      capabilities['can_create_transaction'] || capabilities[:can_create_transaction] || false
-    end
+		def can_manage_system_roles?
+			@capabilities['can_manage_system_roles'] || @capabilities[:can_manage_system_roles] || false
+		end
 
-    def auth_token
-      dig('auth_token') || dig(:auth_token) || id
-    end
+		def can_create_wallet?
+			@capabilities['can_create_wallet'] || @capabilities[:can_create_wallet] || false
+		end
 
-    private
+		def can_create_transaction?
+			@capabilities['can_create_transaction'] || @capabilities[:can_create_transaction] || false
+		end
 
-    def attributes
-      return @account_info unless @account_info.is_a?(Hash)
+		def [](key)
+			fetch_field(key)
+		end
 
-      if @account_info['data'].is_a?(Hash)
-        @account_info['data']['attributes'] || @account_info['data']
-      elsif @account_info['attributes'].is_a?(Hash)
-        @account_info['attributes']
-      else
-        @account_info
-      end
-    end
-  end
+		def dig(*keys)
+			keys.reduce(@account_info) do |value, key|
+				next nil unless value.respond_to?(:[])
+
+				value[key.to_s] || value[key.to_sym]
+			end
+		end
+
+		private
+
+		def fetch_field(key)
+			return nil if @account_info.nil?
+
+			str_key = key.to_s
+			@account_info[str_key] || @account_info[str_key.to_sym]
+		end
+
+		private_class_method :new
+	end
 end

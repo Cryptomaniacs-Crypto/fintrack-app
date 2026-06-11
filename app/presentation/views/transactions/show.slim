@@ -1,0 +1,49 @@
+- type_label = txn.expense? ? 'Expense' : 'Income'
+- type_class  = txn.expense? ? 'text-danger' : 'text-success'
+- type_badge  = txn.expense? ? 'text-bg-danger' : 'text-bg-success'
+
+div class="d-flex justify-content-between align-items-center mb-4"
+  div
+    p.text-muted.small.mb-0
+      a href="/transactions" class="text-decoration-none" My Transactions
+    h1.h3.mb-0 = txn.title
+  div class="d-flex gap-2"
+    a href="/transactions/#{txn.id}/edit" class="btn btn-outline-secondary" Edit
+    form method="post" action="/transactions/#{txn.id}/delete" class="d-inline"
+      button type="submit" class="btn btn-outline-danger" onclick="return confirm('Delete this transaction?')" Delete
+
+div class="row justify-content-center"
+  div class="col-lg-6 col-md-8"
+    div class="card border-0 shadow-sm"
+      div class="card-body p-4"
+
+        p.ft-section-title.text-center Transaction Details
+
+        div class="text-center mb-4 pb-3 border-bottom"
+          p class="display-5 fw-bold mb-2 #{type_class}"
+            = txn.display_amount
+          span class="badge #{type_badge} px-3 py-2" = type_label
+
+        dl.row.mb-0
+          dt.col-sm-4.text-muted.fw-normal Description
+          dd.col-sm-8.fw-semibold = txn.title
+
+          dt.col-sm-4.text-muted.fw-normal Wallet
+          dd.col-sm-8
+            - if txn.wallet_name
+              a href="/payment-methods/#{txn.wallet_id}" class="text-decoration-none fw-semibold"
+                = txn.wallet_name
+            - else
+              span.fw-semibold = txn.wallet_id
+
+          dt.col-sm-4.text-muted.fw-normal Date
+          dd.col-sm-8.fw-semibold = txn.transaction_date
+
+          - if txn.category_name
+            dt.col-sm-4.text-muted.fw-normal Category
+            dd.col-sm-8
+              span class="badge text-bg-light text-dark border px-2 py-1" = txn.category_name
+
+          - unless txn.note.to_s.empty?
+            dt.col-sm-4.text-muted.fw-normal Note
+            dd.col-sm-8.text-muted = txn.note

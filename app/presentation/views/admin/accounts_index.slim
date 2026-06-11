@@ -1,0 +1,42 @@
+- filter_options = [['All', nil], ['admin', 'admin'], ['member', 'member'], ['No roles', 'none']]
+- query_for = ->(role, sort_by) { [role ? "role=#{role}" : nil, sort_by ? "sort=#{sort_by}" : nil].compact.join('&') }
+- path_for  = ->(role, sort_by) { q = query_for.call(role, sort_by); q.empty? ? '/admin/accounts' : "/admin/accounts?#{q}" }
+
+.d-flex.justify-content-between.align-items-center.mb-4
+  h1.h3.mb-0 Members
+  .d-flex.gap-2.align-items-center
+    .btn-group role="group" aria-label="Filter by role"
+      - filter_options.each do |label, value|
+        a.btn.btn-sm class=("#{value == role_filter ? 'btn-primary' : 'btn-outline-primary'}") href=path_for.call(value, sort)
+          = label
+    .btn-group role="group" aria-label="Sort"
+      a.btn.btn-sm class=("#{sort == 'username' ? 'btn-secondary' : 'btn-outline-secondary'}") href=path_for.call(role_filter, 'username')
+        | Username
+      a.btn.btn-sm class=("#{sort == 'role' ? 'btn-secondary' : 'btn-outline-secondary'}") href=path_for.call(role_filter, 'role')
+        | Role
+
+.card.shadow-sm.border-0
+  .card-body.p-0
+    table.table.table-hover.align-middle.mb-0
+      thead.table-light
+        tr
+          th.px-4 Username
+          th Email
+          th System Roles
+      tbody
+        - if accounts.empty?
+          tr
+            td.px-4.text-muted.text-center colspan="3" No accounts match this filter
+        - accounts.each do |account|
+          tr
+            td.px-4
+              a href="/account/#{account['username']}"
+                = account['username']
+            td = account['email']
+            td
+              - roles = Array(account['system_roles'])
+              - if roles.empty?
+                span.text-muted.small no roles
+              - else
+                - roles.each do |role|
+                  span.badge.text-bg-dark.me-1 = role

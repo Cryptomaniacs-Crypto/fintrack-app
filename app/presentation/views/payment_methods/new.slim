@@ -1,29 +1,56 @@
-h1 Add Payment Method
+h1.mb-4 Add Wallet
+
 - if can_create_payment_method
-  form method='post' action='/payment-methods' accept-charset='UTF-8'
-    div class="form-group mb-3"
-      label for='input-method-name' Name
-      input type='text' name='name' id='input-method-name' class="form-control" required='required' maxlength='200'
+  div class="row justify-content-center"
+    div class="col-md-6"
+      div class="card shadow-sm border-0"
+        div class="card-body p-4"
+          form method="post" action="/payment-methods" accept-charset="UTF-8"
+            div class="form-group mb-3"
+              label.form-label for="input-method-type" Wallet type
+              select name="method_type" id="input-method-type" class="form-select" required="required"
+                option value="" — Select type —
+                option value="cash" selected=(values&.fetch('method_type','')=='cash') Cash
+                option value="bank_account" selected=(values&.fetch('method_type','')=='bank_account') Bank Account
+                option value="credit_card" selected=(values&.fetch('method_type','')=='credit_card') Credit Card
+                option value="debit_card" selected=(values&.fetch('method_type','')=='debit_card') Debit Card
+                option value="e_wallet" selected=(values&.fetch('method_type','')=='e_wallet') E-Wallet
 
-    div class="form-group mb-3"
-      label for='input-method-type' Method type
-      select name='method_type' id='input-method-type' class="form-control" required='required'
-        option value='cash' Cash
-        option value='bank_account' Bank Account
-        option value='credit_card' Credit Card
-        option value='debit_card' Debit Card
-        option value='e_wallet' E-Wallet
+            div class="form-group mb-3"
+              label.form-label for="input-method-name" Name
+              input type="text" name="name" id="input-method-name" class="form-control" required="required" maxlength="200" value=values&.fetch('name', '')
 
-    div class="form-group mb-3"
-      label for='input-account-number' Account/card number (optional for cash)
-      input type='text' name='account_number' id='input-account-number' class="form-control" maxlength='100'
+            div class="form-group mb-3" id="account-number-group" style="display:none"
+              label.form-label for="input-account-number"
+                | Card / Account No.
+                span.text-muted.fw-normal.ms-1 (encrypted &amp; stored securely)
+              input type="text" name="account_number" id="input-account-number" class="form-control" maxlength="100" placeholder="e.g. 1234567890" value=values&.fetch('account_number', '') autocomplete="off"
+              div class="form-text" Only the last 4 digits will be shown in the app.
 
-    div class="form-group mb-3"
-      label for='input-balance' Opening balance
-      input type='number' step='0.01' name='balance' id='input-balance' class="form-control" placeholder='0.00'
+            div class="form-group mb-4"
+              label.form-label for="input-balance" Opening balance
+              div class="input-group"
+                span class="input-group-text" $
+                input type="number" step="0.01" name="balance" id="input-balance" class="form-control" placeholder="0.00" value=values&.fetch('balance', '')
 
-    button type='submit' class="btn btn-primary" Save payment method
-    a class="btn btn-link" href="/payment-methods" Cancel
+            div class="d-flex gap-2"
+              button type="submit" class="btn btn-primary" Save
+              a class="btn btn-outline-secondary" href="/payment-methods" Cancel
 - else
-  p.text-muted You are not allowed to create payment methods.
-  a class="btn btn-link" href="/payment-methods" Back
+  p.text-muted You are not allowed to add wallets.
+  a class="btn btn-outline-secondary" href="/payment-methods" ← Back
+
+javascript:
+  (function () {
+    var NEEDS_ACCT = ['bank_account', 'credit_card', 'debit_card', 'e_wallet'];
+    var sel   = document.getElementById('input-method-type');
+    var grp   = document.getElementById('account-number-group');
+    var input = document.getElementById('input-account-number');
+    function toggle() {
+      var show = NEEDS_ACCT.includes(sel.value);
+      grp.style.display = show ? '' : 'none';
+      input.required = show;
+    }
+    sel.addEventListener('change', toggle);
+    toggle();
+  })();

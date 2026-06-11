@@ -1,33 +1,35 @@
 # frozen_string_literal: true
 
 require_relative 'api_client'
+require_relative '../lib/signed_message'
+require_relative '../models/account'
 
 module FinanceTracker
   module Services
     class AuthenticateAccount
       class UnauthorizedError < StandardError; end
 
-      def initialize(config = nil)
+      def initialize(config = nil, current_session: nil)
         @client = ApiClient.new(config)
+        @current_session = current_session
       end
 
       def call(username:, password:)
         raise UnauthorizedError, 'Username and password required' if username.to_s.strip.empty? || password.to_s.empty?
 
-        response = @client.post('/api/v1/auth/authentication', { username: username, password: password })
+        # Sign the credentials: this POST carries no auth_token, so the API
+        # requires a valid signature before it will process the body.
+        signed = FinanceTracker::SignedMessage.sign({ username: username, password: password })
+        response = @client.post('/api/v1/auth/authentication', signed)
 
-        account = response.fetch('data', {}).fetch('attributes', {})
-        included = response['included'] || {}
-        system_roles_array = included['system_roles'] || []
-        policies = response['policies'] || response.fetch('data', {}).fetch('policies', {})
-        capabilities = response['capabilities'] || response.fetch('data', {}).fetch('capabilities', {})
+        account = FinanceTracker::Account.from_auth(response)
+        @current_session.current_account = account if @current_session
 
-        account.merge(
-          'auth_token' => account['id'],
-          'system_roles' => system_roles_array.map { |role| role['name'] },
-          'policies' => policies,
-          'capabilities' => capabilities
-        )
+        {
+          account: account.account_info,
+          auth_token: account.auth_token,
+          account_api_token: account.account_api_token
+        }
       rescue ApiClient::ApiError => e
         raise UnauthorizedError, "Authentication failed: #{e.message}" if [401, 403].include?(e.status)
 

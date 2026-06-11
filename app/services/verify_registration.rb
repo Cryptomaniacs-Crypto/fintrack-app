@@ -1,0 +1,36 @@
+# frozen_string_literal: true
+
+require_relative 'api_client'
+require_relative '../lib/registration_token'
+require_relative '../lib/signed_message'
+
+module FinanceTracker
+  module Services
+    # Initiates two-step registration by sending a verification email via the API.
+    class VerifyRegistration
+      class VerificationError < StandardError; end
+      class ApiServerError < StandardError; end
+
+      def initialize(config)
+        @config = config
+        @client = ApiClient.new(config)
+      end
+
+      def call(email:, username:)
+        registration_token = RegistrationToken.new(email: email, username: username).to_s
+        verification_url = "#{@config.APP_URL}/auth/register/#{registration_token}"
+        registration_data = { email: email, username: username, verification_url: verification_url }
+
+        # No auth_token on registration, so the API requires a signed body.
+        # The API sends the verification email via Mailgun.
+        @client.post('/api/v1/auth/register', FinanceTracker::SignedMessage.sign(registration_data))
+
+        registration_data
+      rescue ApiClient::ApiError => e
+        raise ApiServerError, e.message if e.status >= 500
+
+        raise VerificationError, e.message
+      end
+    end
+  end
+end

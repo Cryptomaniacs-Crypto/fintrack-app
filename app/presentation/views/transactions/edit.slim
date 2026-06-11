@@ -1,0 +1,67 @@
+div class="d-flex justify-content-between align-items-center mb-4"
+  div
+    p.text-muted.small.mb-0
+      a href="/transactions" class="text-decoration-none" My Transactions
+      |  / Edit
+    h1.h3.mb-0 Edit Transaction
+  div class="d-flex gap-2"
+    a href="/transactions/#{txn.id}" class="btn btn-outline-secondary" Cancel
+    form method="post" action="/transactions/#{txn.id}/delete" class="d-inline"
+      button type="submit" class="btn btn-outline-danger" onclick="return confirm('Delete this transaction?')" Delete
+
+div class="row justify-content-center"
+  div class="col-xl-9 col-lg-10"
+    div class="card shadow-sm border-0"
+      div class="card-body p-4 p-lg-5"
+
+        p class="text-muted small mb-4"
+          | Wallet:&nbsp;
+          a href="/payment-methods/#{txn.wallet_id}" class="fw-semibold text-decoration-none"
+            = txn.wallet_name || txn.wallet_id
+
+        form method="post" action="/transactions/#{txn.id}"
+
+          div class="row g-4"
+
+            div class="col-md-6"
+
+              div class="form-group mb-3"
+                label.form-label.fw-semibold Transaction Type
+                div class="btn-group w-100" role="group"
+                  input class="btn-check" type="radio" name="transaction_type" id="type-income" value="income" checked=(values['transaction_type'] != 'expense')
+                  label class="btn btn-outline-success" for="type-income" + Income
+                  input class="btn-check" type="radio" name="transaction_type" id="type-expense" value="expense" checked=(values['transaction_type'] == 'expense')
+                  label class="btn btn-outline-danger" for="type-expense" − Expense
+
+              div class="row g-2 mb-3"
+                div class="col-7"
+                  label.form-label.fw-semibold for="input-amount" Amount
+                  div class="input-group"
+                    span class="input-group-text" $
+                    input type="number" step="0.01" min="0.01" name="amount" id="input-amount" class="form-control" required="required" placeholder="0.00" value=values['amount'].to_s
+                div class="col-5"
+                  label.form-label.fw-semibold for="input-date" Date
+                  input type="date" name="transaction_date" id="input-date" class="form-control" required="required" value=values['transaction_date'].to_s
+
+            div class="col-md-6 d-flex flex-column"
+
+              div class="form-group mb-3"
+                label.form-label.fw-semibold for="input-title" Description
+                input type="text" name="title" id="input-title" class="form-control" required="required" maxlength="200" value=values['title'].to_s
+
+              div class="form-group mb-3"
+                div class="d-flex justify-content-between align-items-center mb-1"
+                  label.form-label.fw-semibold.mb-0 for="input-category" Category
+                  a href="/categories" class="small text-muted" target="_blank" Manage
+                select name="category_id" id="input-category" class="form-select"
+                  option value="" — None —
+                  - categories.each do |cat|
+                    option value=cat.id selected=(values['category_id'].to_s == cat.id.to_s) = cat.name
+
+              div class="form-group mb-4"
+                label.form-label.fw-semibold for="input-note" Note
+                span.text-muted.small.ms-1 (optional)
+                input type="text" name="note" id="input-note" class="form-control" maxlength="300" value=values['note'].to_s
+
+              div class="mt-auto"
+                button type="submit" class="btn btn-primary w-100" Save Changes

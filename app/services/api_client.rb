@@ -24,53 +24,53 @@ module FinanceTracker
                      elsif config.is_a?(Hash)
                        config[:API_URL] || config['API_URL']
                      end
-        @base_url = configured.to_s.empty? ? base_url : configured
+        @base_url = (configured.to_s.empty? ? base_url : configured).to_s.chomp('/')
       end
 
-      def get(path, params: {}, headers: {})
+      def get(path, params: {}, auth_token: nil, account_api_token: nil)
         full_path = params.empty? ? path : "#{path}?#{URI.encode_www_form(params)}"
-        parse(HTTP.headers(headers).get(url(full_path)))
+        parse(http(auth_token: auth_token, account_api_token: account_api_token).get(url(full_path)))
       end
 
-      def post(path, body, headers: {})
-        parse(HTTP.headers(headers).post(url(path), json: body))
+      def post(path, body, auth_token: nil, account_api_token: nil)
+        parse(http(auth_token: auth_token, account_api_token: account_api_token).post(url(path), json: body))
       end
 
-      def put(path, body, headers: {})
-        parse(HTTP.headers(headers).put(url(path), json: body))
+      def put(path, body, auth_token: nil, account_api_token: nil)
+        parse(http(auth_token: auth_token, account_api_token: account_api_token).put(url(path), json: body))
       end
 
-      def delete(path, body = nil, headers: {})
-        request = HTTP.headers(headers)
+      def patch(path, body, auth_token: nil, account_api_token: nil)
+        parse(http(auth_token: auth_token, account_api_token: account_api_token).patch(url(path), json: body))
+      end
+
+      def delete(path, body = nil, auth_token: nil, account_api_token: nil)
+        request = http(auth_token: auth_token, account_api_token: account_api_token).headers('Content-Type' => 'application/json')
         response = body ? request.delete(url(path), body: body.to_json) : request.delete(url(path))
         parse(response)
       end
 
-      def authenticated_post(path, body, auth_token:)
-        post(path, body, headers: auth_headers(auth_token))
-      end
-
-      def authenticated_put(path, body, auth_token:)
-        put(path, body, headers: auth_headers(auth_token))
-      end
-
-      def authenticated_delete(path, auth_token:)
-        delete(path, nil, headers: auth_headers(auth_token))
-      end
-
       private
 
-      def auth_headers(auth_token)
-        return {} if auth_token.to_s.empty?
+      def http(auth_token: nil, account_api_token: nil)
+        headers = {}
+        token = auth_token.to_s
+        headers['Authorization'] = "Bearer #{token}" unless token.empty?
+        acct_token = account_api_token.to_s
+        headers['Account-Api-Token'] = acct_token unless acct_token.empty?
+        return HTTP if headers.empty?
 
-        { 'Authorization' => "Bearer #{auth_token}" }
+        HTTP.headers(headers)
       end
 
       def url(path)
         path_str = path.to_s
+        path_str = "/#{path_str}" unless path_str.start_with?('/')
+
         if @base_url.end_with?('/api/v1') && path_str.start_with?('/api/v1')
           path_str = path_str.sub(%r{\A/api/v1}, '')
         end
+
         "#{@base_url}#{path_str}"
       end
 

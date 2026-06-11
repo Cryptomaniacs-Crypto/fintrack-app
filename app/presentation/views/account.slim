@@ -18,6 +18,29 @@
               - Array(account['system_roles']).each do |role_name|
                 span.badge.text-bg-dark.me-1 = role_name
 
+    - if viewer && viewer['username'] == account['username']
+      .card.shadow-sm.border-0.mb-4
+        .card-body.p-4
+          h2.h5.mb-1 Change Username
+          p.text-muted.small.mb-3
+            | Pick the handle others see and use to split bills with you. 4–50 characters: letters, digits, dots, or underscores.
+          form method="post" action="/account/#{account['username']}/username"
+            .input-group
+              input.form-control type="text" name="username" value=account['username'] required=true minlength="4" maxlength="50" pattern="[A-Za-z0-9._]+" autocomplete="off" aria-label="New username"
+              button.btn.btn-primary type="submit" Save
+
+  - if account_api_token && !account_api_token.to_s.empty? && viewer && viewer['username'] == account['username']
+    .card.shadow-sm.border-0.mb-4
+      .card-body.p-4
+        h2.h5.mb-1 API Access
+        p.text-muted.small.mb-3
+          | Read-only API key (valid for one month). Hand this to a tool or deputy that should be able to read your data but never change it.
+        a.btn.btn-sm.btn-outline-secondary data-bs-toggle="collapse" href="#api_key" role="button" aria-expanded="false" aria-controls="api_key"
+          | Show key
+        #api_key.collapse.mt-2
+          .card.card-body
+            pre.text-wrap.mb-0 = account_api_token
+
 
   .col-lg-5
     - if account.dig('policies', 'can_assign_role')
@@ -25,12 +48,12 @@
         .card-body.p-4
           h2.h5.mb-3 Manage System Roles
           .d-flex.flex-wrap.gap-2
-            - %w[admin creator member].each do |role_name|
+            - %w[admin member].each do |role_name|
               - if Array(account['system_roles']).include?(role_name)
-                form method="post" action="/account/#{account['username']}/system_roles/#{role_name}"
+                form method="post" action="/account/#{account['username']}/roles/#{role_name}"
                   input type="hidden" name="_method" value="delete"
                   button.btn.btn-outline-danger.btn-sm type="submit" Revoke #{role_name}
               - else
-                form method="post" action="/account/#{account['username']}/system_roles/#{role_name}"
+                form method="post" action="/account/#{account['username']}/roles/#{role_name}"
                   input type="hidden" name="_method" value="put"
                   button.btn.btn-outline-primary.btn-sm type="submit" Grant #{role_name}

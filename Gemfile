@@ -16,6 +16,7 @@ gem 'figaro', '~>1.2'
 
 # Encoding
 gem 'base64'
+gem 'csv' # CSV export (no longer a default gem in Ruby 3.4+)
 
 # Communication
 gem 'http', '~>5.1'
@@ -23,6 +24,10 @@ gem 'redis', '~>5.0'
 
 # Security
 gem 'rbnacl', '~>7.1'
+gem 'secure_headers'
+
+# Form validation
+gem 'dry-validation', '~>1.10'
 
 # Form validation
 gem 'dry-validation', '~>1.10'
