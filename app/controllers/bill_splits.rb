@@ -136,6 +136,45 @@ module FinanceTracker
           end
         end
 
+        # /bill-splits/:id/receipt — the bill's source-receipt photo
+        routing.on 'receipt' do
+          # GET — stream the receipt image (any participant)
+          routing.get do
+            data = api.bill_split_receipt(split_id, auth_token: auth_token, account_api_token: account_api_token)
+            response['Content-Type'] = data['content_type'] || 'application/octet-stream'
+            Base64.strict_decode64(data['image_base64'].to_s)
+          rescue FinanceTracker::Services::ApiClient::ApiError
+            response.status = 404
+            ''
+          end
+
+          # POST — owner uploads (multipart 'receipt' file)
+          routing.post do
+            image64, ctype = read_proof_upload(routing.params['receipt'])
+            if image64.nil?
+              flash[:error] = 'Please choose an image to upload.'
+              routing.redirect "/bill-splits/#{split_id}"
+            end
+            api.upload_bill_split_receipt(split_id, image_base64: image64, content_type: ctype,
+                                          auth_token: auth_token, account_api_token: account_api_token)
+            flash[:notice] = 'Receipt uploaded.'
+            routing.redirect "/bill-splits/#{split_id}"
+          rescue FinanceTracker::Services::ApiClient::ApiError => e
+            flash[:error] = e.message
+            routing.redirect "/bill-splits/#{split_id}"
+          end
+
+          # DELETE — owner removes
+          routing.delete do
+            api.delete_bill_split_receipt(split_id, auth_token: auth_token, account_api_token: account_api_token)
+            flash[:notice] = 'Receipt removed.'
+            routing.redirect "/bill-splits/#{split_id}"
+          rescue FinanceTracker::Services::ApiClient::ApiError => e
+            flash[:error] = e.message
+            routing.redirect "/bill-splits/#{split_id}"
+          end
+        end
+
         routing.is do
           # GET /bill-splits/:id — breakdown + actions
           routing.get do

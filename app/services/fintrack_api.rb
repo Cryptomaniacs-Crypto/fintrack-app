@@ -108,6 +108,30 @@ module FinanceTracker
           auth_token: auth_token, account_api_token: account_api_token
         )
       end
+
+      # Owner uploads the bill's source-receipt photo.
+      def upload_bill_split_receipt(id, image_base64:, content_type:, auth_token:, account_api_token: nil)
+        @client.post(
+          "/api/v1/bill-splits/#{id}/receipt",
+          { image_base64: image_base64, content_type: content_type },
+          auth_token: auth_token, account_api_token: account_api_token
+        )
+      end
+
+      # Any participant fetches the receipt as { content_type, image_base64 }.
+      def bill_split_receipt(id, auth_token:, account_api_token: nil)
+        @client.get(
+          "/api/v1/bill-splits/#{id}/receipt",
+          auth_token: auth_token, account_api_token: account_api_token
+        )
+      end
+
+      def delete_bill_split_receipt(id, auth_token:, account_api_token: nil)
+        @client.delete(
+          "/api/v1/bill-splits/#{id}/receipt",
+          auth_token: auth_token, account_api_token: account_api_token
+        )
+      end
     end
   end
 end
