@@ -9,7 +9,7 @@ div class="d-flex justify-content-between align-items-center mb-4"
     - if can_create_payment_method
       a.btn.btn-primary href="/payment-methods/new" + Add Wallet
 - else
-  div class="row g-3"
+  div class="row g-4"
     - payment_methods.each do |wallet|
       - account_number = wallet.account_number.to_s
       - masked = account_number.empty? ? nil : "••••#{account_number[-4, 4]}"
