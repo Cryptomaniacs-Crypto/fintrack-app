@@ -12,6 +12,14 @@ BS_API = begin
   base.end_with?('/api/v1') ? base : "#{base}/api/v1"
 end
 
+# Bill-split calls go through FintrackApi (FINTRACK_API_URL → BS_API above), but
+# wallets/categories are fetched via ApiClient(App.config), which uses the
+# configured API_URL. In the test env these differ, so stub each at its own host.
+APP_API = begin
+  raw = FinanceTracker::App.config.API_URL.to_s.chomp('/')
+  raw.end_with?('/api/v1') ? raw : "#{raw}/api/v1"
+end
+
 BS_ID = 'bs-1'
 PART_TESTER = 'p-tester'
 PART_BOB = 'p-bob'
@@ -53,8 +61,13 @@ def stub_bs_get
 end
 
 def stub_bs_wallets
-  stub_request(:get, "#{BS_API}/wallets")
+  stub_request(:get, "#{APP_API}/wallets")
     .to_return(status: 200, body: WALLETS_ENVELOPE.to_json, headers: { 'content-type' => 'application/json' })
+end
+
+def stub_bs_categories
+  stub_request(:get, "#{APP_API}/categories")
+    .to_return(status: 200, body: { 'data' => [] }.to_json, headers: { 'content-type' => 'application/json' })
 end
 
 def stub_bs_list
@@ -143,9 +156,10 @@ describe 'Bill split routes' do
 
   it 'shows the dishes editor with participants' do
     stub_bs_get
+    stub_bs_categories  # items editor fetches categories for the dropdown
     get "/bill-splits/#{BS_ID}/items", {}, @auth_env
     _(last_response.status).must_equal 200
-    _(last_response.body).must_include 'Add Dishes'
+    _(last_response.body).must_include 'Add Items'
     _(last_response.body).must_include 'Tax %'
   end
 
@@ -165,7 +179,7 @@ describe 'Bill split routes' do
     stub_bs_wallets
     get "/bill-splits/#{BS_ID}", {}, @auth_env
     _(last_response.status).must_equal 200
-    _(last_response.body).must_include 'Who owes what'
+    _(last_response.body).must_include 'Participant Breakdown'
     _(last_response.body).must_include 'Payments'        # owner confirm section
     _(last_response.body).must_include 'Confirm received' # carol is 'paid'
     _(last_response.body).must_include 'view proof'        # carol has_proof

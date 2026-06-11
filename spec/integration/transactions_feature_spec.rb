@@ -222,7 +222,7 @@ describe 'Transaction routes' do
       amount: '15', transaction_date: '2026-06-07'
     }, @auth_env
     _(last_response.status).must_equal 200
-    _(last_response.body).must_include 'Please select an account'
+    _(last_response.body).must_include 'Please select a wallet'
   end
 
   it 'shows validation error when amount is invalid' do
