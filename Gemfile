@@ -16,6 +16,7 @@ gem 'figaro', '~>1.2'
 
 # Encoding
 gem 'base64'
+gem 'csv' # CSV export (no longer a default gem in Ruby 3.4+)
 
 # Communication
 gem 'http', '~>5.1'

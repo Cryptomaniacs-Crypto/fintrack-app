@@ -74,7 +74,11 @@ module FinanceTracker
     def build_dashboard_stats(transactions)
       today = Date.today
 
-      month_txns = transactions.select { |t|
+      # Transfers are internal wallet-to-wallet movements (two net-zero legs),
+      # not real income or expense — exclude them from every money aggregate.
+      real_txns = transactions.reject(&:transfer?)
+
+      month_txns = real_txns.select { |t|
         d = (Date.parse(t.transaction_date.to_s) rescue nil)
         d && d.year == today.year && d.month == today.month
       }
@@ -83,7 +87,7 @@ module FinanceTracker
       expenses = month_txns.select(&:expense?).sum { |t| t.amount.to_f.abs }
 
       by_category = month_txns
-        .select { |t| t.expense? && !t.title.to_s.start_with?('Transfer') }
+        .select(&:expense?)
         .group_by { |t| t.category_name.to_s.empty? ? 'Uncategorized' : t.category_name }
         .transform_values { |ts| ts.sum { |t| t.amount.to_f.abs }.round(2) }
         .sort_by { |_, v| -v }
@@ -91,7 +95,7 @@ module FinanceTracker
 
       monthly = 5.downto(0).map { |i|
         d = today << i
-        m = transactions.select { |t|
+        m = real_txns.select { |t|
           dt = (Date.parse(t.transaction_date.to_s) rescue nil)
           dt && dt.year == d.year && dt.month == d.month
         }

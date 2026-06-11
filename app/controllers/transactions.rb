@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'csv'
+require 'date'
 require_relative 'app'
 require_relative '../forms/form_base'
 require_relative '../forms/create_transaction'
@@ -33,15 +35,38 @@ module FinanceTracker
         end
       end
 
+      # GET /transactions/export — download the (optionally filtered) list as CSV
+      routing.get 'export' do
+        transactions = FinanceTracker::Services::ListTransactions.new(App.config)
+                         .call(auth_token: auth_token)
+        rows = filter_transactions(transactions, routing.params)
+        response['Content-Type'] = 'text/csv; charset=utf-8'
+        response['Content-Disposition'] = %(attachment; filename="transactions-#{Date.today}.csv")
+        transactions_to_csv(rows)
+      rescue StandardError => e
+        flash[:error] = "Could not export transactions: #{e.message}"
+        routing.redirect '/transactions'
+      end
+
       routing.is do
-        # GET /transactions — My Transactions list
+        # GET /transactions — My Transactions list (with search + filters)
         routing.get do
           transactions = FinanceTracker::Services::ListTransactions.new(App.config)
                            .call(auth_token: auth_token)
-          view 'transactions/index', locals: { transactions: transactions }
+          categories = (FinanceTracker::Services::ListCategories.new(App.config).call(auth_token: auth_token) rescue [])
+          wallets    = (FinanceTracker::Services::ListPaymentMethods.new(App.config).call(auth_token: auth_token) rescue [])
+          view 'transactions/index', locals: {
+            transactions: filter_transactions(transactions, routing.params),
+            total_count:  transactions.size,
+            categories:   categories,
+            wallets:      wallets,
+            filters:      extract_filters(routing.params)
+          }
         rescue StandardError => e
           flash.now[:error] = "Could not load transactions: #{e.message}"
-          view 'transactions/index', locals: { transactions: [] }
+          view 'transactions/index', locals: {
+            transactions: [], total_count: 0, categories: [], wallets: [], filters: extract_filters(routing.params)
+          }
         end
 
         # POST /transactions — create (wallet_id + optional to_wallet_id in body)
@@ -185,6 +210,78 @@ module FinanceTracker
             flash[:error] = "Could not update transaction: #{e.message}"
             routing.redirect "/transactions/#{transaction_id}/edit"
           end
+        end
+      end
+    end
+
+    private
+
+    # The filter values currently in effect, echoed back to the view so the
+    # form stays populated and the export link can carry them.
+    def extract_filters(params)
+      {
+        'q'           => params['q'].to_s,
+        'type'        => params['type'].to_s,
+        'category_id' => params['category_id'].to_s,
+        'wallet_id'   => params['wallet_id'].to_s,
+        'date_from'   => params['date_from'].to_s,
+        'date_to'     => params['date_to'].to_s
+      }
+    end
+
+    # Apply search + filters to a list of Transaction models. All criteria are
+    # AND-combined; blank criteria are ignored.
+    def filter_transactions(transactions, params)
+      f         = extract_filters(params)
+      q         = f['q'].strip.downcase
+      type      = f['type'].strip
+      cat       = f['category_id'].strip
+      wallet    = f['wallet_id'].strip
+      date_from = parse_filter_date(f['date_from'])
+      date_to   = parse_filter_date(f['date_to'])
+
+      transactions.select do |t|
+        next false if !q.empty? && !"#{t.title} #{t.note}".downcase.include?(q)
+
+        case type
+        when 'income'   then next false unless t.income?  && !t.transfer?
+        when 'expense'  then next false unless t.expense? && !t.transfer?
+        when 'transfer' then next false unless t.transfer?
+        end
+
+        next false if !cat.empty?    && t.category_id.to_s != cat
+        next false if !wallet.empty? && t.wallet_id.to_s != wallet
+
+        if date_from || date_to
+          d = parse_filter_date(t.transaction_date)
+          next false if d.nil?
+          next false if date_from && d < date_from
+          next false if date_to   && d > date_to
+        end
+
+        true
+      end
+    end
+
+    def parse_filter_date(value)
+      str = value.to_s.strip
+      return nil if str.empty?
+
+      Date.parse(str)
+    rescue ArgumentError
+      nil
+    end
+
+    # Render the given transactions as a CSV string.
+    def transactions_to_csv(transactions)
+      CSV.generate do |csv|
+        csv << %w[Date Description Note Wallet Category Type Amount]
+        transactions.each do |t|
+          type = t.transfer? ? 'transfer' : (t.income? ? 'income' : 'expense')
+          csv << [
+            t.transaction_date, t.title, t.note, t.wallet_name, t.category_name,
+            type, format('%.2f', t.amount.to_f)
+          ]
         end
       end
     end

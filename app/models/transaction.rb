@@ -44,6 +44,13 @@ module FinanceTracker
       !expense?
     end
 
+    # Transfers are internal money movements between the user's own wallets,
+    # stored as two legs ("Transfer → " expense + "Transfer ← " income). They
+    # are NOT real income or expense and must be excluded from those totals.
+    def transfer?
+      title.to_s.start_with?('Transfer')
+    end
+
     def display_amount
       value = amount.to_f
       format('%+.2f', value)

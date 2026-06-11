@@ -132,6 +132,8 @@ describe 'Transaction routes' do
 
   it 'shows My Transactions list for logged-in user' do
     stub_txn_list
+    stub_wallets     # filter dropdown data
+    stub_categories  # filter dropdown data
     get '/transactions', {}, @auth_env
     _(last_response.status).must_equal 200
     _(last_response.body).must_include 'My Transactions'
@@ -139,10 +141,31 @@ describe 'Transaction routes' do
     _(last_response.body).must_include 'Cash'
   end
 
+  it 'filters transactions by search query' do
+    stub_txn_list
+    stub_wallets
+    stub_categories
+    get '/transactions', { 'q' => 'nonexistent' }, @auth_env
+    _(last_response.status).must_equal 200
+    _(last_response.body).must_include 'No transactions match your filters'
+  end
+
+  it 'exports transactions as CSV' do
+    stub_txn_list
+    get '/transactions/export', {}, @auth_env
+    _(last_response.status).must_equal 200
+    _(last_response.headers['Content-Type']).must_include 'text/csv'
+    _(last_response.headers['Content-Disposition']).must_include 'attachment'
+    _(last_response.body).must_include 'Date,Description,Note,Wallet,Category,Type,Amount'
+    _(last_response.body).must_include 'Coffee'
+  end
+
   it 'shows empty state when no transactions' do
     stub_request(:get, "#{FEAT_API}/transactions")
       .to_return(status: 200, body: { 'data' => [] }.to_json,
                  headers: { 'content-type' => 'application/json' })
+    stub_wallets
+    stub_categories
     get '/transactions', {}, @auth_env
     _(last_response.status).must_equal 200
     _(last_response.body).must_include 'No transactions yet'
