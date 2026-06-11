@@ -571,7 +571,8 @@ main.container-xl {
   border-radius: var(--r-xl);
   box-shadow: var(--sh-lg);
   position: relative;
-  overflow: hidden;
+  /* No overflow:hidden — the cover dropdown must be able to escape the panel.
+     The image + overlay layers round themselves via border-radius:inherit. */
   color: #fff;
 }
 .ft-hero::before {
@@ -579,6 +580,7 @@ main.container-xl {
   position: absolute;
   inset: 0;
   z-index: 1;
+  border-radius: inherit;
   /* Dark wash keeps "Welcome back" readable over any uploaded cover photo. */
   background:
     linear-gradient(180deg, rgba(11,17,33,.30) 0%, rgba(11,17,33,.62) 100%),
@@ -596,15 +598,10 @@ main.container-xl {
   object-fit: cover;
   z-index: 0;
   border: 0;
+  border-radius: inherit;
 }
-.ft-cover-controls {
-  margin-top: 1.25rem;
-  display: flex;
-  gap: .5rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.ft-cover-file { max-width: 240px; background: rgba(255, 255, 255, .94); }
+.ft-cover-controls { margin-top: 1.25rem; }
+.ft-cover-menu { min-width: 250px; }
 .ft-hero h1, .ft-hero h2, .ft-hero h3 {
   color: #fff;
   letter-spacing: -.045em;

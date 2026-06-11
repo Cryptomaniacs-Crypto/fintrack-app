@@ -7,12 +7,16 @@
     div class="ft-hero-content"
       p class="text-white fw-semibold small mb-1 opacity-50" style="letter-spacing:.08em;text-transform:uppercase" Welcome back
       h1 class="display-6 fw-bold text-white mb-0" = handle
-      div class="ft-cover-controls"
-        form method="post" action="/account/banner" enctype="multipart/form-data" class="d-inline-flex align-items-center gap-2"
-          input type="file" name="banner" accept="image/png,image/jpeg" required=true class="form-control form-control-sm ft-cover-file"
-          button type="submit" class="btn btn-sm btn-light" Upload cover
-        form method="post" action="/account/banner/remove" class="d-inline"
-          button type="submit" class="btn btn-sm btn-outline-light" Remove
+      div class="ft-cover-controls dropdown"
+        button type="button" class="btn btn-sm btn-light dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" Change bg
+        div class="dropdown-menu p-3 ft-cover-menu"
+          form method="post" action="/account/banner" enctype="multipart/form-data" class="mb-0"
+            label class="form-label small fw-semibold text-dark mb-1" Cover photo
+            input type="file" name="banner" accept="image/png,image/jpeg" required=true class="form-control form-control-sm mb-2"
+            button type="submit" class="btn btn-sm btn-primary w-100" Upload
+          div class="dropdown-divider"
+          form method="post" action="/account/banner/remove" class="mb-0"
+            button type="submit" class="btn btn-sm btn-outline-danger w-100" Remove cover
 
   div class="row g-4"
     div class="col-sm-6 col-lg-3"
