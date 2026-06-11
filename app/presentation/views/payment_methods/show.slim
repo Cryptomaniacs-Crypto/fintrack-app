@@ -1,22 +1,27 @@
 div class="d-flex align-items-center justify-content-between mb-4"
-  div class="d-flex align-items-center gap-2"
-    a href="/payment-methods" class="btn btn-sm btn-outline-secondary" ← Back
+  div
+    p.text-muted.small.mb-0
+      a href="/payment-methods" class="text-decoration-none" My Wallets
     h1.h3.mb-0 = wallet.name
-  a href="/transactions/new?wallet_id=#{wallet.id}" class="btn btn-primary"
-    | + Record Transaction
+  div class="d-flex gap-2"
+    - if wallet.can_edit?
+      a href="/payment-methods/#{wallet.id}/edit" class="btn btn-outline-secondary" Edit
+    a href="/transactions/new?wallet_id=#{wallet.id}" class="btn btn-primary"
+      | + Record Transaction
 
 div class="row g-4 mb-4"
   div class="col-md-6"
     div class="card shadow-sm border-0 h-100"
       div class="card-body p-4"
-        p.text-uppercase.text-primary.fw-semibold.small.mb-3 Wallet Details
+        p.ft-section-title Wallet Details
         dl.row.mb-0
           dt.col-sm-5 Type
           dd.col-sm-7 = method_type_label
-          - unless wallet.account_number.to_s.empty?
-            dt.col-sm-5 Account / Card
+          - unless wallet.account_number.to_s.strip.empty?
+            dt.col-sm-5 Account No.
             dd.col-sm-7
-              | ••••#{wallet.account_number.to_s[-4, 4]}
+              span class="font-monospace"
+                | ••••#{wallet.account_number.to_s.strip.chars.last(4).join}
           dt.col-sm-5 Opening Balance
           dd.col-sm-7
             span = sprintf('%.2f', opening_balance)

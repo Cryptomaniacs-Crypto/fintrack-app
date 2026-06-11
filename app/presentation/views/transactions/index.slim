@@ -1,6 +1,26 @@
+- total_income  = transactions.reject(&:expense?).sum { |t| t.amount.to_f }
+- total_expense = transactions.select(&:expense?).sum { |t| t.amount.to_f.abs }
+- net           = total_income - total_expense
+
 div class="d-flex justify-content-between align-items-center mb-4"
   h1.h3.mb-0 My Transactions
   a href="/transactions/new" class="btn btn-primary" + Record Transaction
+
+- unless transactions.empty?
+  div class="row g-3 mb-4"
+    div class="col-md-4"
+      div class="card ft-stat ft-stat-income"
+        p.ft-stat-label Total Income
+        p class="ft-stat-value text-success mb-0" = sprintf('+%.2f', total_income)
+    div class="col-md-4"
+      div class="card ft-stat ft-stat-expense"
+        p.ft-stat-label Total Expenses
+        p class="ft-stat-value text-danger mb-0" = sprintf('-%.2f', total_expense)
+    div class="col-md-4"
+      div class="card ft-stat ft-stat-net"
+        p.ft-stat-label Net
+        p class="ft-stat-value mb-0 #{net >= 0 ? 'text-success' : 'text-danger'}"
+          = sprintf('%+.2f', net)
 
 - if transactions.empty?
   div class="card border-0 shadow-sm"
@@ -13,16 +33,16 @@ div class="d-flex justify-content-between align-items-center mb-4"
       table class="table table-hover align-middle mb-0"
         thead class="table-light"
           tr
-            th Date
+            th class="ps-4" Date
             th Description
-            th Account
+            th Wallet
             th Category
             th class="text-end" Amount
-            th class="text-end" Actions
+            th class="text-end pe-4" Actions
         tbody
           - transactions.each do |txn|
             tr
-              td class="text-muted small text-nowrap" = txn.transaction_date
+              td class="ps-4 text-muted small text-nowrap" = txn.transaction_date
               td
                 a href="/transactions/#{txn.id}" class="text-decoration-none fw-medium text-dark"
                   = txn.title
@@ -30,7 +50,11 @@ div class="d-flex justify-content-between align-items-center mb-4"
                   br
                   small class="text-muted" = txn.note
               td class="text-muted small"
-                = txn.wallet_name.to_s
+                - if txn.wallet_id
+                  a href="/payment-methods/#{txn.wallet_id}" class="text-decoration-none text-muted"
+                    = txn.wallet_name.to_s
+                - else
+                  = txn.wallet_name.to_s
               td
                 - if txn.category_name
                   span class="badge text-bg-light text-dark border" = txn.category_name
@@ -38,7 +62,7 @@ div class="d-flex justify-content-between align-items-center mb-4"
                   span.text-muted —
               td class="text-end fw-semibold #{txn.expense? ? 'text-danger' : 'text-success'}"
                 = txn.display_amount
-              td class="text-end text-nowrap"
+              td class="text-end text-nowrap pe-4"
                 a href="/transactions/#{txn.id}/edit" class="btn btn-sm btn-outline-secondary me-1" Edit
                 form method="post" action="/transactions/#{txn.id}/delete" class="d-inline"
                   button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this transaction?')" Delete

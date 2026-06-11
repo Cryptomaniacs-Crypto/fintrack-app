@@ -1,16 +1,182 @@
-.row.align-items-center.g-4
-  .col-lg-7
-    .p-4.p-md-5.mb-4.rounded.text-bg-dark.hero-panel
-      p.text-uppercase.fw-semibold.opacity-75.mb-2 Fintrack
-      h1.display-5.fw-bold.mb-3 Track your transactions
-      p.lead.mb-4 
-      - if current_account
-        - handle = current_account['username'] || current_account['email']
-        p.mb-2 You are signed in as #{handle}.
-        - if current_account['system_roles'] && !current_account['system_roles'].empty?
-          p.mb-3 System roles: #{current_account['system_roles'].join(', ')}
-        a.btn.btn-light.btn-lg href="/account/#{current_account['username']}" View account
-      - else
-        .d-flex.flex-wrap.gap-2
-          a.btn.btn-light.btn-lg href="/auth/login" Log in
-          a.btn.btn-outline-light.btn-lg href="/auth/register" Create account
+- if current_account
+  - handle = current_account['username'] || current_account['email']
+  - stats ||= {}
+
+  div class="ft-hero p-4 p-md-5 mb-5"
+    p class="text-white fw-semibold small mb-1 opacity-50" style="letter-spacing:.08em;text-transform:uppercase" Welcome back
+    h1 class="display-6 fw-bold text-white mb-0" = handle
+
+  div class="row g-3"
+    div class="col-sm-6 col-lg-3"
+      a href="/transactions" class="ft-quick"
+        div class="ft-quick-icon" $
+        p.ft-quick-title Transactions
+        p.ft-quick-sub.mb-0 Record &amp; browse activity
+
+    div class="col-sm-6 col-lg-3"
+      a href="/payment-methods" class="ft-quick"
+        div class="ft-quick-icon" W
+        p.ft-quick-title My Wallets
+        p.ft-quick-sub.mb-0 View balances &amp; history
+
+    div class="col-sm-6 col-lg-3"
+      a href="/bill-splits" class="ft-quick"
+        div class="ft-quick-icon" B
+        p.ft-quick-title Bill Splits
+        p.ft-quick-sub.mb-0 Split expenses with others
+
+    div class="col-sm-6 col-lg-3"
+      a href="/categories" class="ft-quick"
+        div class="ft-quick-icon" C
+        p.ft-quick-title Categories
+        p.ft-quick-sub.mb-0 Organise your spending
+
+  / ── Dashboard stats ──────────────────────────────────────────────────
+  - unless stats.empty?
+    - income   = stats[:income].to_f
+    - expenses = stats[:expenses].to_f
+    - net      = stats[:net].to_f
+    - by_cat   = stats[:by_category] || {}
+    - monthly  = stats[:monthly] || []
+    - recent   = stats[:recent] || []
+
+    .mt-5
+      p.ft-section-title This month
+
+      .row.g-3.mb-4
+        .col-sm-4
+          .card.ft-stat.ft-stat-income
+            .ft-stat-label Income
+            .ft-stat-value style="color:var(--success)"
+              = "+#{'%.2f' % income}"
+
+        .col-sm-4
+          .card.ft-stat.ft-stat-expense
+            .ft-stat-label Expenses
+            .ft-stat-value style="color:var(--danger)"
+              = "-#{'%.2f' % expenses}"
+
+        .col-sm-4
+          .card.ft-stat.ft-stat-net
+            .ft-stat-label Net Balance
+            - net_color = net >= 0 ? 'var(--success)' : 'var(--danger)'
+            .ft-stat-value style="color:#{net_color}"
+              = "#{'%+.2f' % net}"
+
+      .row.g-3.mb-4
+        .col-lg-5
+          .card.p-4.h-100
+            p.ft-section-title Expenses by Category
+            - if by_cat.empty?
+              p.text-muted.small.text-center.py-4 No expense data this month
+            - else
+              div style="position:relative;height:240px"
+                canvas#categoryChart data-labels=by_cat.keys.to_json data-values=by_cat.values.to_json
+
+        .col-lg-7
+          .card.p-4.h-100
+            p.ft-section-title 6-Month Trend
+            div style="position:relative;height:240px"
+              canvas#monthlyChart data-labels=monthly.map{|m|m[:label]}.to_json data-income=monthly.map{|m|m[:income]}.to_json data-expenses=monthly.map{|m|m[:expenses]}.to_json
+
+      - unless recent.empty?
+        p.ft-section-title Recent Transactions
+        .card
+          .card-body.p-0
+            table.table.mb-0
+              thead.table-light
+                tr
+                  th Date
+                  th Transaction
+                  th Wallet
+                  th.text-end Amount
+              tbody
+                - recent.each do |t|
+                  tr
+                    td.text-muted.small = t.transaction_date
+                    td
+                      span.fw-medium = t.title
+                      - if t.category_name.to_s != ''
+                        span.badge.bg-light.text-dark.ms-2.small = t.category_name
+                    td.text-muted.small = t.wallet_name
+                    td.text-end
+                      - amt_color = t.income? ? 'var(--success)' : 'var(--danger)'
+                      span style="font-weight:600;color:#{amt_color}" = t.display_amount
+
+    script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
+    script src="/js/dashboard.js"
+
+- else
+  / ── Hero ──────────────────────────────────────────────────────
+  div class="row align-items-center g-5 py-4"
+    div class="col-lg-6"
+      p class="fw-bold small mb-3" style="color:var(--txm);letter-spacing:.1em;text-transform:uppercase" Personal Finance Tracker
+      h1 class="display-4 fw-bold mb-4" style="letter-spacing:-.03em;color:var(--tx)"
+        | Track every dollar,
+        br
+        | effortlessly.
+      p class="lead mb-5" style="color:var(--txm);max-width:440px"
+        | Fintrack helps you record spending, manage multiple wallets, and split bills with friends — all in one clean dashboard.
+      div class="d-flex gap-3 flex-wrap"
+        a href="/auth/register" class="btn btn-primary btn-lg px-4" Get started free
+        a href="/auth/login" class="btn btn-outline-secondary btn-lg px-4" Log in
+
+    div class="col-lg-6 d-none d-lg-block"
+      div class="ft-hero p-5"
+        p class="text-white opacity-50 small fw-bold mb-4" style="letter-spacing:.1em;text-transform:uppercase" This month
+        div class="row g-3 text-white"
+          div class="col-6"
+            div class="rounded-3 p-3" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)"
+              p.small.mb-1 style="opacity:.6" Income
+              p class="h4 fw-bold mb-0" +2,450.00
+          div class="col-6"
+            div class="rounded-3 p-3" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)"
+              p.small.mb-1 style="opacity:.6" Expenses
+              p class="h4 fw-bold mb-0" −1,180.00
+          div class="col-12"
+            div class="rounded-3 p-4" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15)"
+              p.small.mb-1 style="opacity:.6" Net balance
+              p class="h3 fw-bold mb-0" +1,270.00
+
+  / ── What is Fintrack ───────────────────────────────────────────
+  div class="row g-4 mt-2 mb-5"
+    div class="col-12"
+      h2 class="h4 fw-bold mb-1" style="color:var(--tx)" What is Fintrack?
+      p style="color:var(--txm);max-width:620px"
+        | Fintrack is a personal finance tracker built for students and young professionals. Stay on top of your money without the clutter.
+
+  / ── Feature cards ──────────────────────────────────────────────
+  div class="row g-3 mb-5"
+    div class="col-sm-6 col-lg-3"
+      div class="card h-100 p-4"
+        div class="ft-quick-icon mb-3" $
+        h5 class="fw-bold mb-1" style="color:var(--tx)" Track Transactions
+        p class="mb-0" style="color:var(--txm);font-size:.875rem"
+          | Log income and expenses across multiple wallets. Filter by date, category, or type at a glance.
+
+    div class="col-sm-6 col-lg-3"
+      div class="card h-100 p-4"
+        div class="ft-quick-icon mb-3" W
+        h5 class="fw-bold mb-1" style="color:var(--tx)" Manage Wallets
+        p class="mb-0" style="color:var(--txm);font-size:.875rem"
+          | Keep separate balances for cash, bank accounts, or cards. Transfer money between them instantly.
+
+    div class="col-sm-6 col-lg-3"
+      div class="card h-100 p-4"
+        div class="ft-quick-icon mb-3" B
+        h5 class="fw-bold mb-1" style="color:var(--tx)" Split Bills
+        p class="mb-0" style="color:var(--txm);font-size:.875rem"
+          | Split restaurant bills or shared expenses with friends. Everyone sees exactly what they owe.
+
+    div class="col-sm-6 col-lg-3"
+      div class="card h-100 p-4"
+        div class="ft-quick-icon mb-3" C
+        h5 class="fw-bold mb-1" style="color:var(--tx)" Custom Categories
+        p class="mb-0" style="color:var(--txm);font-size:.875rem"
+          | Organise spending your way with categories you define. See where your money actually goes.
+
+  / ── CTA banner ─────────────────────────────────────────────────
+  div class="ft-hero p-4 p-md-5 mb-2 text-center"
+    h2 class="h3 fw-bold text-white mb-2" Ready to take control of your finances?
+    p class="text-white mb-4" style="opacity:.7" Free to use. No credit card required.
+    a href="/auth/register" class="btn btn-light btn-lg px-5 fw-bold" style="color:var(--tx)" Create your account

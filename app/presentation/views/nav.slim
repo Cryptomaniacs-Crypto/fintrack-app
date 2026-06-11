@@ -1,11 +1,12 @@
-nav.navbar.navbar-expand-sm.navbar-dark.bg-primary
-  .container-fluid
+nav.navbar.navbar-expand-lg data-bs-theme="dark"
+  .container-xl.px-4
     a.navbar-brand href="/" Fintrack
+
     button.navbar-toggler type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation"
       span.navbar-toggler-icon
 
     .collapse.navbar-collapse#mainNavbar
-      ul.navbar-nav.me-auto
+      ul.navbar-nav.me-auto.gap-1
         - if @current_account
           - if system_admin?
             li.nav-item
@@ -22,15 +23,21 @@ nav.navbar.navbar-expand-sm.navbar-dark.bg-primary
                 a.dropdown-item href="/transactions/new" + Record Transaction
               li: hr.dropdown-divider
               li
-                a.dropdown-item href="/payment-methods" My Accounts
+                a.dropdown-item href="/payment-methods" My Wallets
               li
-                a.dropdown-item href="/payment-methods/new" + Add Account
+                a.dropdown-item href="/payment-methods/new" + Add Wallet
+              li: hr.dropdown-divider
+              li
+                a.dropdown-item href="/categories" Manage Categories
           li.nav-item
             a.nav-link href="/bill-splits" Bill Splits
+
+      ul.navbar-nav.ms-auto.gap-1
+        - if @current_account
           li.nav-item
-            a.nav-link href="/auth/logout" Logout
+            a.nav-link.nav-logout href="/auth/logout" Logout
         - else
           li.nav-item
-            a.nav-link href="/auth/login" Login
+            a.nav-link href="/auth/login" Log in
           li.nav-item
-            a.nav-link href="/auth/register" Register
+            a.btn.btn-primary.btn-sm.my-1.ms-2 href="/auth/register" Get started

@@ -1,16 +1,18 @@
 .row.justify-content-center
   - bill ||= {}
+  - categories ||= []
   - participants = Array(bill['participants'])
   - usernames = participants.map { |p| p['username'].to_s }
   - existing = Array(bill['items'])
   - existing = [nil] if existing.empty?
+  - selected_cat = bill['category_id'].to_s
   .col-lg-9
     .card.shadow-sm.border-0
       .card-body.p-4.p-md-5
         .d-flex.justify-content-between.align-items-start.mb-4
           .me-3
             p.text-uppercase.text-primary.fw-semibold.mb-2 Bill Splits
-            h1.h3.mb-1 Add Dishes
+            h1.h3.mb-1 Add Items
             .text-muted = bill['title']
           a.btn.btn-outline-secondary href="/bill-splits/#{bill['id']}" Back
 
@@ -29,8 +31,16 @@
               label.form-label.small for="service_percent" Service charge %
               input.form-control#service_percent type="number" step="0.01" min="0" name="service_percent" value=(bill['service_percent'] || '0').to_s
 
-          h2.h6.mb-1 Dishes
-          p.form-text.mt-0 Enter each dish's price and tick everyone who shared it. The price is split equally among them.
+          - unless categories.empty?
+            .mb-4
+              label.form-label.small for="category_id" Category
+              select.form-select#category_id name="category_id"
+                option value="" — No category —
+                - categories.each do |cat|
+                  option value=cat.id selected=(cat.id.to_s == selected_cat) = cat.name
+
+          h2.h6.mb-1 Items
+          p.form-text.mt-0 Enter each item's price and tick everyone who shared it. The price is split equally among them.
 
           #dish-list data-dish-list=true
             - existing.each_with_index do |item, idx|
@@ -39,8 +49,8 @@
               .card.card-body.mb-3.dish-row
                 .row.g-2.align-items-end
                   .col-sm-6
-                    label.form-label.small Dish
-                    input.form-control type="text" name="items[#{idx}][name]" placeholder="e.g. Pizza" value=item['name'].to_s
+                    label.form-label.small Item
+                    input.form-control type="text" name="items[#{idx}][name]" placeholder="e.g. Coffee" value=item['name'].to_s
                   .col-sm-4
                     label.form-label.small Price
                     input.form-control type="number" step="0.01" min="0" name="items[#{idx}][amount]" placeholder="0.00" value=item['amount'].to_s
@@ -58,8 +68,8 @@
             .card.card-body.mb-3.dish-row
               .row.g-2.align-items-end
                 .col-sm-6
-                  label.form-label.small Dish
-                  input.form-control type="text" name="items[__INDEX__][name]" placeholder="e.g. Pizza"
+                  label.form-label.small Item
+                  input.form-control type="text" name="items[__INDEX__][name]" placeholder="e.g. Coffee"
                 .col-sm-4
                   label.form-label.small Price
                   input.form-control type="number" step="0.01" min="0" name="items[__INDEX__][amount]" placeholder="0.00"
@@ -74,10 +84,10 @@
                       label.form-check-label.small for="dish__INDEX___#{u}" = u
 
           .mb-4
-            button.btn.btn-outline-secondary.btn-sm type="button" data-add-dish=true data-next-index=existing.size + Add dish
+            button.btn.btn-outline-secondary.btn-sm type="button" data-add-dish=true data-next-index=existing.size + Add item
 
           .d-flex.gap-2
-            button.btn.btn-primary type="submit" Save Dishes
+            button.btn.btn-primary type="submit" Save Items
             a.btn.btn-outline-secondary href="/bill-splits/#{bill['id']}" Cancel
 
   script src="/js/bill_split_form.js"

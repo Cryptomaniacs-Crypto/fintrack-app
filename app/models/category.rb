@@ -24,6 +24,7 @@ module FinanceTracker
     def id = attribute('id')
     def name = attribute('name')
     def description = attribute('description')
+    def is_default? = attribute('is_default') == true || attribute('is_default') == 'true'
 
     def policies = @category_info['policies'] || @category_info[:policies] || {}
 

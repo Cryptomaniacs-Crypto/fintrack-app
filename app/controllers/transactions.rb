@@ -53,7 +53,7 @@ module FinanceTracker
           if wallet_id.empty? || validation.failure?
             categories = FinanceTracker::Services::ListCategories.new(App.config).call(auth_token: auth_token)
             wallets    = FinanceTracker::Services::ListPaymentMethods.new(App.config).call(auth_token: auth_token)
-            flash.now[:error] = wallet_id.empty? ? 'Please select an account' : FinanceTracker::Form.validation_errors(validation)
+            flash.now[:error] = wallet_id.empty? ? 'Please select a wallet' : FinanceTracker::Form.validation_errors(validation)
             next view 'transactions/new', locals: {
               wallet:              nil,
               wallets:             wallets,

@@ -6,6 +6,8 @@ require_relative '../services/get_account'
 require_relative '../services/create_account'
 require_relative '../services/assign_system_role'
 require_relative '../services/revoke_system_role'
+require_relative '../services/update_username'
+require_relative '../forms/change_username'
 require_relative '../lib/registration_token'
 require_relative '../lib/secure_session'
 
@@ -24,6 +26,51 @@ module FinanceTracker
       end
 
       routing.on String do |username_or_token|
+        # POST /account/[username]/username -- owner changes their handle.
+        # Must come BEFORE the bare `routing.post` below, which would otherwise
+        # match any POST under /account/[x] and swallow this one.
+        routing.on 'username' do
+          routing.post do
+            require_login!(routing)
+            sess = FinanceTracker::CurrentSession.new(session)
+
+            unless username_or_token == @current_account['username']
+              flash[:error] = 'You can only change your own username'
+              routing.redirect "/account/#{@current_account['username']}"
+            end
+
+            new_username = routing.params['username'].to_s.strip
+            validation = FinanceTracker::Form::ChangeUsername.call(username: new_username)
+            if validation.failure?
+              flash[:error] = "Invalid username: #{validation.errors[:username]&.first}"
+              routing.redirect "/account/#{username_or_token}"
+            end
+
+            FinanceTracker::Services::UpdateUsername.new(App.config).call(
+              current_username: username_or_token, new_username: new_username,
+              auth_token: sess.auth_token, account_api_token: sess.account_api_token
+            )
+
+            # Reflect the new handle in the session without touching the auth token.
+            info = FinanceTracker::SecureSession.get(session, 'current_account') || {}
+            info['username'] = new_username
+            FinanceTracker::SecureSession.set(session, 'current_account', info)
+
+            flash[:notice] = "Username changed to #{new_username}"
+            routing.redirect "/account/#{new_username}"
+          rescue FinanceTracker::Services::UpdateUsername::UsernameTaken
+            flash[:error] = "Username '#{routing.params['username']}' is already taken"
+            routing.redirect "/account/#{username_or_token}"
+          rescue FinanceTracker::Services::UpdateUsername::InvalidUsername => e
+            flash[:error] = "Invalid username: #{e.message}"
+            routing.redirect "/account/#{username_or_token}"
+          rescue StandardError => e
+            App.logger.error "USERNAME CHANGE ERROR: #{e.inspect}"
+            flash[:error] = 'Could not change username -- please try again'
+            routing.redirect "/account/#{username_or_token}"
+          end
+        end
+
         routing.post do
           token = RegistrationToken.load(username_or_token)
           password = routing.params['password'].to_s

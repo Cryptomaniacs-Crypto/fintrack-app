@@ -18,6 +18,17 @@
               - Array(account['system_roles']).each do |role_name|
                 span.badge.text-bg-dark.me-1 = role_name
 
+    - if viewer && viewer['username'] == account['username']
+      .card.shadow-sm.border-0.mb-4
+        .card-body.p-4
+          h2.h5.mb-1 Change Username
+          p.text-muted.small.mb-3
+            | Pick the handle others see and use to split bills with you. 4–50 characters: letters, digits, dots, or underscores.
+          form method="post" action="/account/#{account['username']}/username"
+            .input-group
+              input.form-control type="text" name="username" value=account['username'] required=true minlength="4" maxlength="50" pattern="[A-Za-z0-9._]+" autocomplete="off" aria-label="New username"
+              button.btn.btn-primary type="submit" Save
+
   - if account_api_token && !account_api_token.to_s.empty? && viewer && viewer['username'] == account['username']
     .card.shadow-sm.border-0.mb-4
       .card-body.p-4
@@ -37,7 +48,7 @@
         .card-body.p-4
           h2.h5.mb-3 Manage System Roles
           .d-flex.flex-wrap.gap-2
-            - %w[admin creator member].each do |role_name|
+            - %w[admin member].each do |role_name|
               - if Array(account['system_roles']).include?(role_name)
                 form method="post" action="/account/#{account['username']}/roles/#{role_name}"
                   input type="hidden" name="_method" value="delete"
