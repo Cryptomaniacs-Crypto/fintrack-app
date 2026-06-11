@@ -3,8 +3,16 @@
   - stats ||= {}
 
   div class="ft-hero p-4 p-md-5 mb-5"
-    p class="text-white fw-semibold small mb-1 opacity-50" style="letter-spacing:.08em;text-transform:uppercase" Welcome back
-    h1 class="display-6 fw-bold text-white mb-0" = handle
+    img class="ft-hero-bg" src="/account/banner/image" alt="" aria-hidden="true"
+    div class="ft-hero-content"
+      p class="text-white fw-semibold small mb-1 opacity-50" style="letter-spacing:.08em;text-transform:uppercase" Welcome back
+      h1 class="display-6 fw-bold text-white mb-0" = handle
+      div class="ft-cover-controls"
+        form method="post" action="/account/banner" enctype="multipart/form-data" class="d-inline-flex align-items-center gap-2"
+          input type="file" name="banner" accept="image/png,image/jpeg" required=true class="form-control form-control-sm ft-cover-file"
+          button type="submit" class="btn btn-sm btn-light" Upload cover
+        form method="post" action="/account/banner/remove" class="d-inline"
+          button type="submit" class="btn btn-sm btn-outline-light" Remove
 
   div class="row g-4"
     div class="col-sm-6 col-lg-3"

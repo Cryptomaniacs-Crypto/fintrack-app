@@ -578,11 +578,33 @@ main.container-xl {
   content: '';
   position: absolute;
   inset: 0;
+  z-index: 1;
+  /* Dark wash keeps "Welcome back" readable over any uploaded cover photo. */
   background:
+    linear-gradient(180deg, rgba(11,17,33,.30) 0%, rgba(11,17,33,.62) 100%),
     radial-gradient(circle at 82% 18%, rgba(69,154,248,.18) 0%, transparent 45%),
     radial-gradient(circle at 12% 88%, rgba(120,141,186,.14) 0%, transparent 42%);
 }
-.ft-hero > * { position: relative; }
+.ft-hero > * { position: relative; z-index: 2; }
+/* User's cover photo sits behind the overlay + text (declared after the rule
+   above so it wins and the image stays at the back). */
+.ft-hero-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  border: 0;
+}
+.ft-cover-controls {
+  margin-top: 1.25rem;
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.ft-cover-file { max-width: 240px; background: rgba(255, 255, 255, .94); }
 .ft-hero h1, .ft-hero h2, .ft-hero h3 {
   color: #fff;
   letter-spacing: -.045em;

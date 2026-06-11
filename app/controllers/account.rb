@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'base64'
 require_relative 'app'
 require_relative '../services/fintrack_api'
 require_relative '../services/get_account'
@@ -7,6 +8,7 @@ require_relative '../services/create_account'
 require_relative '../services/assign_system_role'
 require_relative '../services/revoke_system_role'
 require_relative '../services/update_username'
+require_relative '../services/banner_image'
 require_relative '../forms/change_username'
 require_relative '../lib/registration_token'
 require_relative '../lib/secure_session'
@@ -22,6 +24,56 @@ module FinanceTracker
           return routing.redirect '/auth/login' unless @current_account && @current_account['username']
 
           routing.redirect "/account/#{@current_account['username']}"
+        end
+      end
+
+      # Home-banner cover photo for the logged-in user. Literal 'banner' segment
+      # must come before the String matcher below so it isn't read as a username.
+      routing.on 'banner' do
+        require_login!(routing)
+        uname = @current_account['username']
+        sess = FinanceTracker::CurrentSession.new(session)
+        auth_token = sess.auth_token
+        account_api_token = sess.account_api_token
+        banner = FinanceTracker::Services::BannerImage.new(App.config)
+
+        # GET /account/banner/image -- stream the user's cover (or a transparent pixel)
+        routing.get 'image' do
+          data = banner.fetch(username: uname, auth_token: auth_token, account_api_token: account_api_token)
+          response['Content-Type'] = data['content_type'] || 'image/png'
+          response['Cache-Control'] = 'no-cache'
+          Base64.strict_decode64(data['image_base64'].to_s)
+        rescue FinanceTracker::Services::ApiClient::ApiError
+          response['Content-Type'] = 'image/png'
+          Base64.strict_decode64(TRANSPARENT_PNG)
+        end
+
+        # POST /account/banner -- upload/replace the cover
+        routing.is do
+          routing.post do
+            image_base64, content_type = read_banner_upload(routing.params['banner'])
+            if image_base64.nil?
+              flash[:error] = 'Please choose a PNG or JPEG image to upload'
+              routing.redirect '/'
+            end
+            banner.upload(username: uname, image_base64: image_base64, content_type: content_type,
+                          auth_token: auth_token, account_api_token: account_api_token)
+            flash[:notice] = 'Cover photo updated'
+            routing.redirect '/'
+          rescue FinanceTracker::Services::ApiClient::ApiError => e
+            flash[:error] = "Could not update cover photo: #{e.message}"
+            routing.redirect '/'
+          end
+        end
+
+        # POST /account/banner/remove -- clear the cover
+        routing.post 'remove' do
+          banner.remove(username: uname, auth_token: auth_token, account_api_token: account_api_token)
+          flash[:notice] = 'Cover photo removed'
+          routing.redirect '/'
+        rescue FinanceTracker::Services::ApiClient::ApiError => e
+          flash[:error] = "Could not remove cover photo: #{e.message}"
+          routing.redirect '/'
         end
       end
 
@@ -181,6 +233,21 @@ module FinanceTracker
     end
 
     private
+
+    # 1x1 transparent PNG — shown when the user has no cover (banner falls back
+    # to the default navy panel behind it).
+    TRANSPARENT_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+
+    # Read a multipart image upload (Rack gives a Hash with :tempfile/:type) and
+    # return [base64, content_type], or [nil, nil] when nothing was uploaded.
+    def read_banner_upload(upload)
+      return [nil, nil] unless upload.is_a?(Hash) && upload[:tempfile]
+
+      bytes = upload[:tempfile].read
+      return [nil, nil] if bytes.to_s.empty?
+
+      [Base64.strict_encode64(bytes), upload[:type]]
+    end
 
     def load_account(username, account_api_token: nil)
       return @current_account if username == @current_account['username']
