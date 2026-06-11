@@ -29,26 +29,16 @@
 
     list.querySelectorAll('.participant-row').forEach(bindRemove);
 
-    // Friend dropdown: picking a friend adds a pre-filled participant row,
-    // skipping usernames already present in the list (case-insensitive), then
-    // resets the select back to its placeholder.
-    function hasUsername(username) {
-      var target = username.toLowerCase();
-      var inputs = list.querySelectorAll('input[name="participant_username[]"]');
-      for (var i = 0; i < inputs.length; i++) {
-        if (inputs[i].value.trim().toLowerCase() === target) return true;
-      }
-      return false;
-    }
-
-    var friendSelect = document.querySelector('[data-friend-select]');
-    if (friendSelect) {
-      friendSelect.addEventListener('change', function () {
-        var username = friendSelect.value || '';
-        if (username && !hasUsername(username)) addRow(username);
-        friendSelect.value = '';
-      });
-    }
+    // Per-row friend dropdown: picking a friend from a row's ▾ menu fills that
+    // row's username input. Delegated so dynamically-added rows work too.
+    list.addEventListener('click', function (event) {
+      var option = event.target.closest('[data-friend-option]');
+      if (!option) return;
+      var row = option.closest('.participant-row');
+      if (!row) return;
+      var input = row.querySelector('input[name="participant_username[]"]');
+      if (input) input.value = option.getAttribute('data-username') || '';
+    });
   }
 
   // Step 2: add/remove item rows. Each new row gets a unique index spliced into

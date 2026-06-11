@@ -20,7 +20,14 @@ module FinanceTracker
       # GET /bill-splits/new — Step 1: name the bill and add participants
       routing.is 'new' do
         routing.get do
-          friends = (api.list_friends(auth_token: auth_token, account_api_token: account_api_token)['data'] rescue [])
+          # Friends are a nice-to-have for the picker; degrade gracefully if the
+          # API call fails, but only swallow an actual API error -- not bugs.
+          friends =
+            begin
+              api.list_friends(auth_token: auth_token, account_api_token: account_api_token)['data'] || []
+            rescue FinanceTracker::Services::ApiClient::ApiError
+              []
+            end
           view 'bill_splits/new', locals: { values: {}, friends: friends }
         end
       end

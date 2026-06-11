@@ -17,26 +17,36 @@
             input.form-control#title type="text" name="title" placeholder="e.g. Dinner at Nobu" value=values['title'].to_s required=true autofocus=true
 
           label.form-label.mb-1 Participants
-          p.form-text.mt-0 Add everyone splitting this bill by username. You're included automatically.
-
-          - unless friends.empty?
-            .mb-3 data-friend-picker=true
-              label.form-label.mb-1 Add from your friends
-              select.form-select data-friend-select=true
-                option value="" selected=true Choose a friend…
-                - friends.each do |f|
-                  - uname = (f['attributes'] || f)['username'].to_s
-                  option value=uname = "@#{uname}"
+          - if friends.empty?
+            p.form-text.mt-0 Add everyone splitting this bill by username. You're included automatically.
+          - else
+            p.form-text.mt-0 Type a username, or use the ▾ button to pick from your friends. You're included automatically.
 
           #participant-list data-participant-list=true
             - entered.each do |username|
               .input-group.mb-2.participant-row
                 input.form-control type="text" name="participant_username[]" placeholder="username" value=username
+                - unless friends.empty?
+                  button.btn.btn-outline-secondary.dropdown-toggle type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                    span.visually-hidden Pick a friend
+                  ul.dropdown-menu.dropdown-menu-end
+                    - friends.each do |f|
+                      - uname = (f['attributes'] || f)['username'].to_s
+                      li
+                        button.dropdown-item type="button" data-friend-option=true data-username=uname = "@#{uname}"
                 button.btn.btn-outline-danger type="button" data-remove-participant=true Remove
 
           template#participant-template
             .input-group.mb-2.participant-row
               input.form-control type="text" name="participant_username[]" placeholder="username"
+              - unless friends.empty?
+                button.btn.btn-outline-secondary.dropdown-toggle type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                  span.visually-hidden Pick a friend
+                ul.dropdown-menu.dropdown-menu-end
+                  - friends.each do |f|
+                    - uname = (f['attributes'] || f)['username'].to_s
+                    li
+                      button.dropdown-item type="button" data-friend-option=true data-username=uname = "@#{uname}"
               button.btn.btn-outline-danger type="button" data-remove-participant=true Remove
 
           .mb-4

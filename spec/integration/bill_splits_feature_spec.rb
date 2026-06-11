@@ -139,11 +139,11 @@ describe 'Bill split routes' do
     _(last_response.body).must_include 'participant_username[]'
   end
 
-  it 'renders the friend dropdown on the new bill split form' do
+  it 'renders the per-row friend dropdown on the new bill split form' do
     stub_bs_friends([{ 'attributes' => { 'username' => 'bob' } }])
     get '/bill-splits/new', {}, @auth_env
     _(last_response.status).must_equal 200
-    _(last_response.body).must_include 'data-friend-select'
+    _(last_response.body).must_include 'data-friend-option'
     _(last_response.body).must_include '@bob'
   end
 
