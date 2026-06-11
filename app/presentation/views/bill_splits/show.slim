@@ -39,21 +39,21 @@
               .small.text-muted Category
               span.badge.bg-light.text-dark.border = bill['category_name']
 
-        / ── Item list (visible to everyone for verification) ───
-        - unless items.empty?
-          h2.h6.mb-2 Items
-          ul.list-group.mb-4
-            - items.each do |item|
-              li.list-group-item.d-flex.justify-content-between.align-items-start
-                .me-2
-                  .fw-semibold = item['name']
-                  .small.text-muted shared by #{Array(item['sharer_usernames']).join(', ')}
-                span.badge.bg-light.text-dark.rounded-pill $#{item['amount']}
-
         / ════════════════════════════════════════════════════════
         / OWNER VIEW — full breakdown + management
         / ════════════════════════════════════════════════════════
         - if is_creator
+
+          / Item list with sharers — owner only (reveals who shared what)
+          - unless items.empty?
+            h2.h6.mb-2 Items
+            ul.list-group.mb-4
+              - items.each do |item|
+                li.list-group-item.d-flex.justify-content-between.align-items-start
+                  .me-2
+                    .fw-semibold = item['name']
+                    .small.text-muted shared by #{Array(item['sharer_usernames']).join(', ')}
+                  span.badge.bg-light.text-dark.rounded-pill $#{item['amount']}
 
           h2.h6.mb-2 Participant Breakdown
           .table-responsive.mb-4
@@ -177,6 +177,44 @@
                   p.h4.fw-bold.mb-0 $#{me['total']}
               - my_badge = my_status == 'agreed' ? 'bg-success' : (my_status == 'rejected' ? 'bg-danger' : (my_status == 'settled' ? 'bg-secondary' : (my_status == 'paid' ? 'bg-info' : 'bg-warning text-dark')))
               span class="badge #{my_badge}" = my_status.capitalize
+
+          / Itemized own-share receipt — lets the participant verify their number
+          / without exposing anyone else's items, amounts, or identity.
+          - unless items.empty?
+            h2.h6.mb-2 Verify your share
+            p.small.text-muted.mb-2
+              | These are the items you're on. Each price is split equally among everyone who shared it.
+            .table-responsive.mb-3
+              table.table.table-sm.align-middle.mb-0
+                thead
+                  tr
+                    th Item
+                    th.text-end Price
+                    th.text-end Split
+                    th.text-end Your share
+                tbody
+                  - items.each do |item|
+                    tr
+                      td = item['name']
+                      td.text-end $#{item['amount']}
+                      td.text-end ÷ #{item['shared_by_count']}
+                      td.text-end.fw-semibold $#{item['your_share']}
+                tfoot
+                  tr
+                    td colspan="3" class="text-end text-muted" Subtotal
+                    td.text-end.fw-semibold $#{me['subtotal']}
+                  tr
+                    td colspan="3" class="text-end text-muted" Tax #{bill['tax_percent']}%
+                    td.text-end $#{me['tax']}
+                  tr
+                    td colspan="3" class="text-end text-muted" Service #{bill['service_percent']}%
+                    td.text-end $#{me['service']}
+                  tr
+                    td colspan="3" class="text-end fw-semibold" Your total
+                    td.text-end.fw-bold $#{me['total']}
+            - if bill['participant_count']
+              p.small.text-muted
+                | For reference, the full bill is <strong>$#{bill['grand_total']}</strong> split among #{bill['participant_count']} #{bill['participant_count'].to_i == 1 ? 'person' : 'people'}. You only ever pay for the items you shared.
 
           / Participant: status-based actions
           - if status == 'draft'
