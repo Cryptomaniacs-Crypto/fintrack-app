@@ -1,26 +1,30 @@
 .row.g-4
   .col-lg-7
-    .card.shadow-sm.border-0.mb-4
+    .card.border-0.mb-4
       .card-body.p-4.p-md-5
-        p.text-uppercase.text-primary.fw-semibold.mb-2 Account
+        p.ft-section-title.mb-2 Profile
         h1.h2.mb-4 Account Overview
 
-        dl.row.mb-0
-          dt.col-sm-4 Username
-          dd.col-sm-8 = account['username'] || account['email']
-          dt.col-sm-4 Email
-          dd.col-sm-8 = account['email']
-          dt.col-sm-4 System roles
-          dd.col-sm-8
+        .d-flex.flex-column.gap-3
+          div
+            p.text-uppercase.text-muted.small.fw-semibold.mb-1 Username
+            p.h6.mb-0 = account['username'] || account['email']
+          div
+            p.text-uppercase.text-muted.small.fw-semibold.mb-1 Email
+            p.mb-0 = account['email']
+          div
+            p.text-uppercase.text-muted.small.fw-semibold.mb-2 System roles
             - if Array(account['system_roles']).empty?
               span.text-muted None
             - else
-              - Array(account['system_roles']).each do |role_name|
-                span.badge.text-bg-dark.me-1 = role_name
+              .d-flex.flex-wrap.gap-1
+                - Array(account['system_roles']).each do |role_name|
+                  span.badge.text-bg-dark = role_name
 
     - if viewer && viewer['username'] == account['username']
-      .card.shadow-sm.border-0.mb-4
-        .card-body.p-4
+      .card.border-0.mb-4
+        .card-body.p-4.p-md-5
+          p.ft-section-title.mb-2 Settings
           h2.h5.mb-1 Change Username
           p.text-muted.small.mb-3
             | Pick the handle others see and use to split bills with you. 4–50 characters: letters, digits, dots, or underscores.
@@ -29,23 +33,26 @@
               input.form-control type="text" name="username" value=account['username'] required=true minlength="4" maxlength="50" pattern="[A-Za-z0-9._]+" autocomplete="off" aria-label="New username"
               button.btn.btn-primary type="submit" Save
 
-  - if account_api_token && !account_api_token.to_s.empty? && viewer && viewer['username'] == account['username']
-    .card.shadow-sm.border-0.mb-4
-      .card-body.p-4
-        h2.h5.mb-1 API Access
-        p.text-muted.small.mb-3
-          | Read-only API key (valid for one month). Hand this to a tool or deputy that should be able to read your data but never change it.
-        a.btn.btn-sm.btn-outline-secondary data-bs-toggle="collapse" href="#api_key" role="button" aria-expanded="false" aria-controls="api_key"
-          | Show key
-        #api_key.collapse.mt-2
-          .card.card-body
-            pre.text-wrap.mb-0 = account_api_token
-
+      - if account_api_token && !account_api_token.to_s.empty?
+        .card.border-0.mb-4
+          .card-body.p-4.p-md-5
+            p.ft-section-title.mb-2 Developer
+            h2.h5.mb-1 API Access
+            p.text-muted.small.mb-3
+              | Read-only API key (valid for one month). Hand this to a tool or deputy that should be able to read your data but never change it.
+            a.btn.btn-sm.btn-outline-secondary data-bs-toggle="collapse" href="#api_key" role="button" aria-expanded="false" aria-controls="api_key"
+              | Show key
+            #api_key.collapse.mt-3
+              .bg-body-secondary.border.rounded.p-3.d-flex.align-items-center.justify-content-between.gap-3
+                code.text-break.small.mb-0 id="api_key_value" = account_api_token
+                button.btn.btn-sm.btn-outline-secondary.flex-shrink-0 type="button" onclick="navigator.clipboard.writeText(document.getElementById('api_key_value').innerText);this.textContent='Copied'"
+                  | Copy
 
   .col-lg-5
     - if account.dig('policies', 'can_assign_role')
-      .card.shadow-sm.border-0
-        .card-body.p-4
+      .card.border-0
+        .card-body.p-4.p-md-5
+          p.ft-section-title.mb-2 Administration
           h2.h5.mb-3 Manage System Roles
           .d-flex.flex-wrap.gap-2
             - %w[admin member].each do |role_name|

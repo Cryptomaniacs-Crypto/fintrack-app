@@ -51,21 +51,21 @@
     }
   }
 
-  // Step 2: add/remove dish rows. Each new row gets a unique index spliced into
+  // Step 2: add/remove item rows. Each new row gets a unique index spliced into
   // its field names (items[<index>][...]) so they survive add/remove.
-  function initDishes() {
-    var list = document.querySelector('[data-dish-list]');
-    var template = document.querySelector('#dish-template');
-    var addButton = document.querySelector('[data-add-dish]');
+  function initItems() {
+    var list = document.querySelector('[data-item-list]');
+    var template = document.querySelector('#item-template');
+    var addButton = document.querySelector('[data-add-item]');
     if (!list || !template || !addButton) return;
 
     var counter = parseInt(addButton.getAttribute('data-next-index'), 10) || 0;
 
     function bindRemove(row) {
-      var button = row.querySelector('[data-remove-dish]');
+      var button = row.querySelector('[data-remove-item]');
       if (button) {
         button.addEventListener('click', function () {
-          if (list.querySelectorAll('.dish-row').length > 1) row.remove();
+          if (list.querySelectorAll('.item-row').length > 1) row.remove();
         });
       }
     }
@@ -80,12 +80,12 @@
       bindRemove(row);
     });
 
-    list.querySelectorAll('.dish-row').forEach(bindRemove);
+    list.querySelectorAll('.item-row').forEach(bindRemove);
   }
 
   function init() {
     initParticipants();
-    initDishes();
+    initItems();
   }
 
   if (document.readyState === 'loading') {
