@@ -174,12 +174,11 @@ module FinanceTracker
             end
 
             routing.put do
-              FinanceTracker::Services::AssignSystemRole.new(App.config).call(
-                  auth_token: auth_token,
-                  target_username: username,
-                  role_name: role_name,
-                  account_api_token: account_api_token
-                )
+              FinanceTracker::Services::AssignSystemRole.new.call(
+                auth_token: @current_account.auth_token,
+                target_username: username,
+                role_name: role_name
+              )
               flash[:notice] = "Granted #{role_name} to #{username}"
               routing.redirect "/account/#{username}"
             rescue StandardError => e
@@ -190,6 +189,8 @@ module FinanceTracker
             routing.delete do
               FinanceTracker::Services::RevokeSystemRole.new(App.config).call(
                 auth_token: auth_token,
+              FinanceTracker::Services::RevokeSystemRole.new.call(
+                auth_token: @current_account.auth_token,
                 target_username: username,
                 role_name: role_name,
                 account_api_token: account_api_token
@@ -209,6 +210,7 @@ module FinanceTracker
             transactions =
               if username == @current_account['username']
                 FinanceTracker::Services::FintrackApi.new.list_transactions(auth_token: auth_token, account_api_token: account_api_token)
+                FinanceTracker::Services::FintrackApi.new.list_transactions(auth_token: @current_account.auth_token)
               else
                 []
               end
@@ -257,6 +259,7 @@ module FinanceTracker
       current_sess = FinanceTracker::CurrentSession.new(session)
       auth_token = current_sess.auth_token
       FinanceTracker::Services::GetAccount.new.call(username, auth_token: auth_token, account_api_token: account_api_token)
+      FinanceTracker::Services::GetAccount.new.call(username, auth_token: @current_account.auth_token)
     end
   end
 end

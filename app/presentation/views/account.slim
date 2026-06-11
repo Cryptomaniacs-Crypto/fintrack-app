@@ -43,7 +43,7 @@
 
 
   .col-lg-5
-    - if viewer && viewer['system_roles']&.include?('admin') && viewer['username'] != account['username']
+    - if account.dig('policies', 'can_assign_role')
       .card.shadow-sm.border-0
         .card-body.p-4
           h2.h5.mb-3 Manage System Roles
