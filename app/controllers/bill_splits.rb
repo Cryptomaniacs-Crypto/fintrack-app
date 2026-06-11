@@ -26,7 +26,7 @@ module FinanceTracker
       end
 
       routing.on String do |split_id|
-        # GET/POST /bill-splits/:id/items — Step 2: dishes + tax/service editor
+        # GET/POST /bill-splits/:id/items — Step 2: items + tax/service editor
         routing.on 'items' do
           routing.get do
             bill = fetch_bill(api, split_id, auth_token, account_api_token)
@@ -220,7 +220,7 @@ module FinanceTracker
           view 'bill_splits/index', locals: { splits: [], current_username: current_username }
         end
 
-        # POST /bill-splits — create a draft, then go to the dishes editor
+        # POST /bill-splits — create a draft, then go to the items editor
         routing.post do
           usernames = Array(routing.params['participant_username']).map { |name| name.to_s.strip }.reject(&:empty?)
           payload = { title: routing.params['title'].to_s.strip, participant_usernames: usernames }
@@ -266,7 +266,7 @@ module FinanceTracker
       end
     end
 
-    # Build the API `items` array from the dish editor's namespaced form fields:
+    # Build the API `items` array from the item editor's namespaced form fields:
     #   items[<i>][name], items[<i>][amount], items[<i>][sharers][]
     # Rack parses these into a hash keyed by i; the index only needs to be
     # unique per row (gaps are fine), so add/remove in the UI stays consistent.

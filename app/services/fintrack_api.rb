@@ -53,7 +53,7 @@ module FinanceTracker
         @client.get("/api/v1/bill-splits/#{id}", auth_token: auth_token, account_api_token: account_api_token)
       end
 
-      # Replaces the bill's dishes + tax/service. payload: { title?, tax_percent?,
+      # Replaces the bill's items + tax/service. payload: { title?, tax_percent?,
       # service_percent?, items: [{ name, amount, sharer_usernames: [...] }] }
       def update_bill_split(id, payload, auth_token:, account_api_token: nil)
         @client.patch("/api/v1/bill-splits/#{id}", payload, auth_token: auth_token, account_api_token: account_api_token)
