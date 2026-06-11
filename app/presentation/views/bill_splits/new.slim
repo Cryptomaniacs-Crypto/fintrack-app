@@ -1,5 +1,6 @@
 .row.justify-content-center
   - values ||= {}
+  - friends ||= []
   - entered = Array(values['participant_username']).map(&:to_s).reject(&:empty?)
   - entered = [''] if entered.empty?
   .col-lg-6
@@ -18,6 +19,15 @@
 
           label.form-label.mb-1 Participants
           p.form-text.mt-0 Add everyone splitting this bill by username. You're included automatically.
+
+          - unless friends.empty?
+            .mb-3 data-friend-picker=true
+              label.form-label.mb-1 Add from your friends
+              select.form-select data-friend-select=true
+                option value="" selected=true Choose a friend…
+                - friends.each do |f|
+                  - uname = (f['attributes'] || f)['username'].to_s
+                  option value=uname = "@#{uname}"
 
           #participant-list data-participant-list=true
             - entered.each do |username|

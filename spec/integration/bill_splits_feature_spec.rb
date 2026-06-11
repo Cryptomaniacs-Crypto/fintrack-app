@@ -83,6 +83,12 @@ def stub_bs_update
     .to_return(status: 200, body: BS_ENVELOPE.to_json, headers: { 'content-type' => 'application/json' })
 end
 
+# Step 1 fetches the user's friends to render the quick-pick pills.
+def stub_bs_friends(data = [])
+  stub_request(:get, "#{BS_API}/friends")
+    .to_return(status: 200, body: { 'data' => data }.to_json, headers: { 'content-type' => 'application/json' })
+end
+
 describe 'Bill split routes' do
   include Rack::Test::Methods
 
@@ -113,10 +119,19 @@ describe 'Bill split routes' do
 
   # ── Step 1 / Step 2 ──
   it 'shows the new bill split form with a participant field' do
+    stub_bs_friends
     get '/bill-splits/new', {}, @auth_env
     _(last_response.status).must_equal 200
     _(last_response.body).must_include 'New Bill Split'
     _(last_response.body).must_include 'participant_username[]'
+  end
+
+  it 'renders the friend dropdown on the new bill split form' do
+    stub_bs_friends([{ 'attributes' => { 'username' => 'bob' } }])
+    get '/bill-splits/new', {}, @auth_env
+    _(last_response.status).must_equal 200
+    _(last_response.body).must_include 'data-friend-select'
+    _(last_response.body).must_include '@bob'
   end
 
   it 'creates a draft and redirects to the dishes editor' do

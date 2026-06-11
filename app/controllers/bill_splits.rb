@@ -20,7 +20,8 @@ module FinanceTracker
       # GET /bill-splits/new — Step 1: name the bill and add participants
       routing.is 'new' do
         routing.get do
-          view 'bill_splits/new', locals: { values: {} }
+          friends = (api.list_friends(auth_token: auth_token, account_api_token: account_api_token)['data'] rescue [])
+          view 'bill_splits/new', locals: { values: {}, friends: friends }
         end
       end
 

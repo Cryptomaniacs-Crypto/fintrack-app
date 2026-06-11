@@ -24,6 +24,21 @@ module FinanceTracker
         []
       end
 
+      # --- Friends (one-way contact list) ---
+
+      def list_friends(auth_token:, account_api_token: nil)
+        @client.get('/api/v1/friends', auth_token: auth_token, account_api_token: account_api_token)
+      end
+
+      def add_friend(username, auth_token:, account_api_token: nil)
+        @client.post('/api/v1/friends', { username: username },
+                     auth_token: auth_token, account_api_token: account_api_token)
+      end
+
+      def remove_friend(username, auth_token:, account_api_token: nil)
+        @client.delete("/api/v1/friends/#{username}", auth_token: auth_token, account_api_token: account_api_token)
+      end
+
       # --- Bill Splits ---
 
       def list_bill_splits(auth_token:, account_api_token: nil)
