@@ -29,6 +29,9 @@ gem 'secure_headers'
 # Form validation
 gem 'dry-validation', '~>1.10'
 
+# Form validation
+gem 'dry-validation', '~>1.10'
+
 # Debugging
 gem 'pry'
 

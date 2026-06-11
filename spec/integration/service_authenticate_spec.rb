@@ -25,6 +25,13 @@ describe 'Test Service Objects' do
       },
       'included' => {
         'system_roles' => []
+      },
+      'policies' => {
+        'can_view' => true
+      },
+      'capabilities' => {
+        'is_admin' => false,
+        'can_manage_system_roles' => false
       }
     }
   end
