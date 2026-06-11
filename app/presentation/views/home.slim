@@ -47,101 +47,95 @@
     - biggest   = stats[:biggest_expense]
 
     .mt-5
-      / ── Headline KPI row ───────────────────────────────────────────
-      .row.g-4.mb-4
-        .col-6.col-lg-3
-          .card.ft-stat.ft-stat-balance
-            .ft-stat-label Total Balance
-            .ft-stat-value = "#{'%+.2f' % balance}"
-        .col-6.col-lg-3
-          .card.ft-stat.ft-stat-income
-            .ft-stat-label Income · this month
-            .ft-stat-value style="color:var(--success-text)"
-              = "+#{'%.2f' % income}"
-        .col-6.col-lg-3
-          .card.ft-stat.ft-stat-expense
-            .ft-stat-label Expenses · this month
-            .ft-stat-value style="color:var(--danger-text)"
-              = "-#{'%.2f' % expenses}"
-        .col-6.col-lg-3
-          .card.ft-stat.ft-stat-net
-            .ft-stat-label Net · this month
-            - net_color = net >= 0 ? 'var(--success-text)' : 'var(--danger-text)'
-            .ft-stat-value style="color:#{net_color}"
-              = "#{'%+.2f' % net}"
+      / ── Headline KPIs — one tidy strip, colour-blocked ──────────────
+      .ft-strip.mb-4
+        .ft-stat.ft-stat-balance
+          .ft-stat-label Total Balance
+          .ft-stat-value = "#{'%+.2f' % balance}"
+        .ft-stat.ft-stat-income
+          .ft-stat-label Income · this month
+          .ft-stat-value style="color:var(--success-text)"
+            = "+#{'%.2f' % income}"
+        .ft-stat.ft-stat-expense
+          .ft-stat-label Expenses · this month
+          .ft-stat-value style="color:var(--danger-text)"
+            = "-#{'%.2f' % expenses}"
+        .ft-stat.ft-stat-net
+          .ft-stat-label Net · this month
+          - net_color = net >= 0 ? 'var(--success-text)' : 'var(--danger-text)'
+          .ft-stat-value style="color:#{net_color}"
+            = "#{'%+.2f' % net}"
 
-      / ── Insight chips ──────────────────────────────────────────────
-      .row.g-4.mb-4
-        .col-sm-6.col-lg-3
-          .ft-insight
-            .ft-insight-icon ⌾
-            div
-              p.ft-insight-label Savings rate
-              p.ft-insight-value = savings.nil? ? '—' : "#{savings.to_i}%"
-        .col-sm-6.col-lg-3
-          .ft-insight
-            .ft-insight-icon ↺
-            div
-              p.ft-insight-label Transactions
-              p.ft-insight-value = "#{txn_count} this month"
-        .col-sm-6.col-lg-3
-          .ft-insight
-            .ft-insight-icon ◆
-            div
-              p.ft-insight-label Top category
-              - if top_cat
-                p.ft-insight-value = "#{top_cat[0]} · #{'%.0f' % top_cat[1]}"
-              - else
-                p.ft-insight-value —
-        .col-sm-6.col-lg-3
-          .ft-insight
-            .ft-insight-icon ⇅
-            div
-              p.ft-insight-label Spending vs last month
-              - if echange.nil?
-                p.ft-insight-value —
-              - else
-                - trend_cls = echange > 0 ? 'ft-trend-up' : 'ft-trend-down'
-                p.ft-insight-value class=trend_cls
-                  = "#{echange > 0 ? '▲' : '▼'} #{echange.abs.to_i}%"
-
-      .row.g-4.mb-4
-        .col-lg-5
-          .card.p-4.h-100
-            p.ft-section-title Expenses by Category
-            - if by_cat.empty?
-              p.text-muted.small.text-center.py-4 No expense data this month
+      / ── Insights — one divided strip ───────────────────────────────
+      .ft-strip.ft-strip--divided.mb-4
+        .ft-insight
+          .ft-insight-icon ⌾
+          div
+            p.ft-insight-label Savings rate
+            p.ft-insight-value = savings.nil? ? '—' : "#{savings.to_i}%"
+        .ft-insight
+          .ft-insight-icon ↺
+          div
+            p.ft-insight-label Transactions
+            p.ft-insight-value = "#{txn_count} this month"
+        .ft-insight
+          .ft-insight-icon ◆
+          div
+            p.ft-insight-label Top category
+            - if top_cat
+              p.ft-insight-value = "#{top_cat[0]} · #{'%.0f' % top_cat[1]}"
             - else
-              div style="position:relative;height:240px"
-                canvas#categoryChart data-labels=by_cat.keys.to_json data-values=by_cat.values.to_json
+              p.ft-insight-value —
+        .ft-insight
+          .ft-insight-icon ⇅
+          div
+            p.ft-insight-label Spending vs last month
+            - if echange.nil?
+              p.ft-insight-value —
+            - else
+              - trend_cls = echange > 0 ? 'ft-trend-up' : 'ft-trend-down'
+              p.ft-insight-value class=trend_cls
+                = "#{echange > 0 ? '▲' : '▼'} #{echange.abs.to_i}%"
 
-        .col-lg-7
-          .card.p-4.h-100
-            p.ft-section-title 6-Month Trend
-            div style="position:relative;height:240px"
-              canvas#monthlyChart data-labels=monthly.map{|m|m[:label]}.to_json data-income=monthly.map{|m|m[:income]}.to_json data-expenses=monthly.map{|m|m[:expenses]}.to_json
+      / ── Charts — one panel, two halves split by a divider ───────────
+      .card.mb-4
+        .card-body
+          .row
+            .col-lg-5.border-lg-end
+              p.ft-section-title Expenses by Category
+              - if by_cat.empty?
+                p.text-muted.small.text-center.py-4 No expense data this month
+              - else
+                div style="position:relative;height:240px"
+                  canvas#categoryChart data-labels=by_cat.keys.to_json data-values=by_cat.values.to_json
+            .col-lg-7.ps-lg-4.mt-4.mt-lg-0
+              p.ft-section-title 6-Month Trend
+              div style="position:relative;height:240px"
+                canvas#monthlyChart data-labels=monthly.map{|m|m[:label]}.to_json data-income=monthly.map{|m|m[:income]}.to_json data-expenses=monthly.map{|m|m[:expenses]}.to_json
 
       - unless recent.empty?
-        p.ft-section-title Recent Transactions
+        .d-flex.justify-content-between.align-items-center.mb-2
+          p.ft-section-title.mb-0 Recent Transactions
+          a.small href="/transactions" View all
         .card
           .card-body.p-0
             table.table.mb-0
               thead.table-light
                 tr
-                  th Date
+                  th.ps-4 Date
                   th Transaction
                   th Wallet
-                  th.text-end Amount
+                  th.text-end.pe-4 Amount
               tbody
                 - recent.each do |t|
                   tr
-                    td.text-muted.small = t.transaction_date
+                    td.ps-4.text-muted.small = t.transaction_date
                     td
                       span.fw-medium = t.title
                       - if t.category_name.to_s != ''
                         span.badge.bg-light.text-dark.ms-2.small = t.category_name
                     td.text-muted.small = t.wallet_name
-                    td.text-end
+                    td.text-end.pe-4
                       - amt_color = t.income? ? 'var(--success)' : 'var(--danger)'
                       span style="font-weight:600;color:#{amt_color}" = t.display_amount
 

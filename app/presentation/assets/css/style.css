@@ -226,16 +226,43 @@ main.container-xl {
 /* ── CARDS ───────────────────────────────────────────────────── */
 .card {
   background: var(--surface);
-  border: none !important;          /* the navy shadow defines the edge */
+  border: 1px solid var(--mist-gray) !important;  /* tidy hairline, lighter than a heavy shadow */
   border-radius: var(--r) !important;
-  box-shadow: var(--sh-lg) !important;
+  box-shadow: var(--sh-sm) !important;
 }
 .card .card-body { padding: 1.75rem; }
 
-.card-lift { transition: box-shadow .2s, transform .2s; }
+.card-lift { transition: box-shadow .2s, transform .2s, border-color .2s; }
 .card-lift:hover {
-  box-shadow: var(--sh-lg) !important;
+  box-shadow: var(--sh-md) !important;
+  border-color: var(--silver-lining) !important;
   transform: translateY(-2px);
+}
+
+/* ── STAT STRIP — one tidy bar instead of many separate stat cards ──── */
+.ft-strip {
+  display: flex;
+  flex-wrap: wrap;
+  border-radius: var(--r);
+  overflow: hidden;
+  border: 1px solid var(--mist-gray);
+  background: var(--surface);
+}
+.ft-strip > * {
+  flex: 1 1 0;
+  min-width: 150px;
+}
+/* hairline dividers between plain (untinted) segments */
+.ft-strip--divided > * {
+  border-right: 1px solid var(--mist-gray);
+  border-bottom: 1px solid var(--mist-gray);
+}
+.ft-strip--divided > *:last-child { border-right: none; }
+/* segments inside a strip never carry their own elevation */
+.ft-strip .ft-stat,
+.ft-strip .ft-insight {
+  box-shadow: none;
+  border-radius: 0;
 }
 
 /* ── BUTTONS — pills ─────────────────────────────────────────── */
@@ -652,6 +679,11 @@ code, pre {
 
 /* ── MIN-WIDTH UTILITY ───────────────────────────────────────── */
 .min-w-0 { min-width: 0; }
+
+/* Vertical divider between columns on large screens only */
+@media (min-width: 992px) {
+  .border-lg-end { border-right: 1px solid var(--mist-gray); }
+}
 
 /* ── PAGE SECTION DIVIDER ────────────────────────────────────── */
 .ft-section-title {
