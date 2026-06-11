@@ -22,11 +22,12 @@
 
           - unless friends.empty?
             .mb-3 data-friend-picker=true
-              .form-text.mt-0.mb-1 Add from your friends:
-              .d-flex.flex-wrap.gap-2
+              label.form-label.mb-1 Add from your friends
+              select.form-select data-friend-select=true
+                option value="" selected=true Choose a friend…
                 - friends.each do |f|
                   - uname = (f['attributes'] || f)['username'].to_s
-                  button.btn.btn-outline-primary.btn-sm type="button" data-add-friend=true data-username=uname = "+ @#{uname}"
+                  option value=uname = "@#{uname}"
 
           #participant-list data-participant-list=true
             - entered.each do |username|

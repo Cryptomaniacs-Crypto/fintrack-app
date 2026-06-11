@@ -29,8 +29,9 @@
 
     list.querySelectorAll('.participant-row').forEach(bindRemove);
 
-    // Friend pills: clicking one adds a pre-filled participant row, skipping
-    // usernames already present in the list (case-insensitive).
+    // Friend dropdown: picking a friend adds a pre-filled participant row,
+    // skipping usernames already present in the list (case-insensitive), then
+    // resets the select back to its placeholder.
     function hasUsername(username) {
       var target = username.toLowerCase();
       var inputs = list.querySelectorAll('input[name="participant_username[]"]');
@@ -40,13 +41,14 @@
       return false;
     }
 
-    document.querySelectorAll('[data-add-friend]').forEach(function (pill) {
-      pill.addEventListener('click', function () {
-        var username = pill.getAttribute('data-username') || '';
-        if (!username || hasUsername(username)) return;
-        addRow(username);
+    var friendSelect = document.querySelector('[data-friend-select]');
+    if (friendSelect) {
+      friendSelect.addEventListener('change', function () {
+        var username = friendSelect.value || '';
+        if (username && !hasUsername(username)) addRow(username);
+        friendSelect.value = '';
       });
-    });
+    }
   }
 
   // Step 2: add/remove dish rows. Each new row gets a unique index spliced into
