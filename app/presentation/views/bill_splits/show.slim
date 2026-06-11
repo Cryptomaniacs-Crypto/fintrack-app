@@ -42,8 +42,10 @@
         / ── Original receipt (visible to everyone, for price verification) ──
         - if bill['has_receipt']
           .mb-4
-            a.btn.btn-outline-secondary.btn-sm href="/bill-splits/#{bill['id']}/receipt" target="_blank" rel="noopener" View original receipt
-            span.small.text-muted.ms-2 Compare the entered prices against the real bill.
+            p.ft-section-title.mb-2 Bill receipt
+            a href="/bill-splits/#{bill['id']}/receipt" target="_blank" rel="noopener"
+              img.img-thumbnail src="/bill-splits/#{bill['id']}/receipt" alt="Photo of the original bill" style="max-height:220px"
+            p.small.text-muted.mt-1.mb-0 Uploaded by #{bill['creator_username']}. Tap to enlarge and compare the entered prices against the real bill.
 
         / ════════════════════════════════════════════════════════
         / OWNER VIEW — full breakdown + management

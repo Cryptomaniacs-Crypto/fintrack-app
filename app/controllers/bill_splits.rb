@@ -226,7 +226,7 @@ module FinanceTracker
           payload = { title: routing.params['title'].to_s.strip, participant_usernames: usernames }
           result   = api.create_bill_split(payload, auth_token: auth_token, account_api_token: account_api_token)
           split_id = result.dig('data', 'attributes', 'id')
-          flash[:notice] = 'Draft created — now add the dishes.'
+          flash[:notice] = 'Draft created — now add the items.'
           routing.redirect "/bill-splits/#{split_id}/items"
         rescue FinanceTracker::Services::ApiClient::ApiError => e
           flash.now[:error] = e.message
