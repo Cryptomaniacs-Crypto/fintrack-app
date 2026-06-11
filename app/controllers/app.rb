@@ -10,6 +10,7 @@ require_relative '../lib/secure_session'
 require_relative '../models/current_session'
 require_relative '../services/fintrack_api'
 require_relative '../services/list_transactions'
+require_relative '../services/list_payment_methods'
 
 module FinanceTracker
   # Base class for the FinanceTracker web app.
@@ -43,7 +44,9 @@ module FinanceTracker
             auth_token   = current_sess.auth_token
             txns         = FinanceTracker::Services::ListTransactions.new(App.config)
                              .call(auth_token: auth_token)
-            stats        = build_dashboard_stats(txns)
+            wallets      = (FinanceTracker::Services::ListPaymentMethods.new(App.config)
+                             .call(auth_token: auth_token) rescue [])
+            stats        = build_dashboard_stats(txns, wallets)
           rescue StandardError
             stats = {}
           end
@@ -71,7 +74,7 @@ module FinanceTracker
       routing.redirect '/auth/login'
     end
 
-    def build_dashboard_stats(transactions)
+    def build_dashboard_stats(transactions, wallets = [])
       today = Date.today
 
       # Transfers are internal wallet-to-wallet movements (two net-zero legs),
@@ -111,8 +114,28 @@ module FinanceTracker
         .reverse
         .first(5)
 
+      # ── Extra headline metrics ──────────────────────────────────────────
+      # Net worth: opening wallet balances + every transaction (transfers net to
+      # zero across wallets, so including them is harmless and correct).
+      total_balance = Array(wallets).sum { |w| w.balance.to_f } +
+                      transactions.sum { |t| t.amount.to_f }
+
+      # Share of this month's income that wasn't spent.
+      savings_rate = income.positive? ? ((income - expenses) / income * 100).round(0) : nil
+
+      # Month-over-month spending change (this month vs last).
+      last_month_exp = monthly[-2] ? monthly[-2][:expenses] : 0.0
+      this_month_exp = monthly[-1] ? monthly[-1][:expenses] : 0.0
+      expense_change = last_month_exp.positive? ? (((this_month_exp - last_month_exp) / last_month_exp) * 100).round(0) : nil
+
+      top_category = by_category.first # [name, amount] or nil
+      biggest_expense = month_txns.select(&:expense?).max_by { |t| t.amount.to_f.abs }
+
       { income: income, expenses: expenses, net: income - expenses,
-        by_category: by_category, monthly: monthly, recent: recent }
+        by_category: by_category, monthly: monthly, recent: recent,
+        total_balance: total_balance, savings_rate: savings_rate,
+        expense_change: expense_change, txn_count: month_txns.size,
+        top_category: top_category, biggest_expense: biggest_expense }
     end
   end
 end

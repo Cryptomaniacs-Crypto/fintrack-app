@@ -471,7 +471,7 @@ main.container-xl {
 /* ── STAT CARDS ──────────────────────────────────────────────── */
 .ft-stat {
   text-align: center;
-  padding: 1.25rem 1rem;
+  padding: 1.5rem 1rem;
 }
 .ft-stat-label {
   font-size: .68rem;
@@ -488,9 +488,55 @@ main.container-xl {
   line-height: 1;
   color: var(--midnight-navy);
 }
-.ft-stat-income  { border-top: 3px solid var(--success); }
-.ft-stat-expense { border-top: 3px solid var(--danger); }
-.ft-stat-net     { border-top: 3px solid var(--cornflower-steel); }
+/* Tinted stat cards — colour now fills the card instead of a thin top border. */
+.ft-stat-income  { background: #e9f7ef !important; }
+.ft-stat-expense { background: #fdeef1 !important; }
+.ft-stat-net     { background: #eaf1fd !important; }
+.ft-stat-balance { background: var(--midnight-navy) !important; }
+.ft-stat-balance .ft-stat-label { color: var(--hyacinth); }
+.ft-stat-balance .ft-stat-value { color: #ffffff; }
+
+/* Small insight chips (top category, biggest expense, savings rate, …) */
+.ft-insight {
+  display: flex;
+  align-items: center;
+  gap: .9rem;
+  padding: 1.1rem 1.25rem;
+  background: var(--surface);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+  height: 100%;
+}
+.ft-insight-icon {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  background: var(--fog-white);
+  color: var(--cornflower-steel);
+}
+.ft-insight-label {
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--smoke);
+  margin: 0;
+}
+.ft-insight-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--midnight-navy);
+  margin: 0;
+  line-height: 1.2;
+}
+.ft-trend-up   { color: var(--danger); }
+.ft-trend-down { color: var(--success); }
 
 /* ── HERO — flat navy poster panel (no gradients) ────────────── */
 .ft-hero {

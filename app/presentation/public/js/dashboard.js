@@ -1,13 +1,14 @@
 document.addEventListener('DOMContentLoaded', function () {
-  Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
-  Chart.defaults.color = '#737373';
+  Chart.defaults.font.family = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+  Chart.defaults.color = '#979db5';
 
   // ── Donut: Expenses by Category ──────────────────────────────────────
   var catEl = document.getElementById('categoryChart');
   if (catEl) {
     var catLabels = JSON.parse(catEl.dataset.labels || '[]');
     var catValues = JSON.parse(catEl.dataset.values || '[]');
-    var palette = ['#0f0f0f', '#3d3d3d', '#6b6b6b', '#949494', '#bdbdbd', '#d6d6d6', '#e8e8e8'];
+    // Fold palette: navy → cornflower → electric blue → hyacinth → smoke → silver
+    var palette = ['#20294c', '#375390', '#459af8', '#788dba', '#979db5', '#c7cbdb', '#dddfe9'];
 
     new Chart(catEl, {
       type: 'doughnut',
@@ -59,19 +60,19 @@ document.addEventListener('DOMContentLoaded', function () {
           {
             label: 'Income',
             data: mIncome,
-            backgroundColor: 'rgba(22, 163, 74, 0.75)',
-            borderColor:     'rgba(22, 163, 74, 1)',
+            backgroundColor: 'rgba(31, 157, 87, 0.80)',
+            borderColor:     'rgba(31, 157, 87, 1)',
             borderWidth: 1.5,
-            borderRadius: 4,
+            borderRadius: 6,
             borderSkipped: false
           },
           {
             label: 'Expenses',
             data: mExpenses,
-            backgroundColor: 'rgba(220, 38, 38, 0.75)',
-            borderColor:     'rgba(220, 38, 38, 1)',
+            backgroundColor: 'rgba(224, 85, 109, 0.80)',
+            borderColor:     'rgba(224, 85, 109, 1)',
             borderWidth: 1.5,
-            borderRadius: 4,
+            borderRadius: 6,
             borderSkipped: false
           }
         ]
