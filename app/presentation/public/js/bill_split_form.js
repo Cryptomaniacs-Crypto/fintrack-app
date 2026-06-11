@@ -13,14 +13,40 @@
       }
     }
 
-    addButton.addEventListener('click', function () {
+    function addRow(username) {
       var fragment = template.content.cloneNode(true);
       var row = fragment.querySelector('.participant-row');
+      if (username) {
+        var input = row.querySelector('input[name="participant_username[]"]');
+        if (input) input.value = username;
+      }
       list.appendChild(fragment);
       bindRemove(row);
-    });
+      return row;
+    }
+
+    addButton.addEventListener('click', function () { addRow(); });
 
     list.querySelectorAll('.participant-row').forEach(bindRemove);
+
+    // Friend pills: clicking one adds a pre-filled participant row, skipping
+    // usernames already present in the list (case-insensitive).
+    function hasUsername(username) {
+      var target = username.toLowerCase();
+      var inputs = list.querySelectorAll('input[name="participant_username[]"]');
+      for (var i = 0; i < inputs.length; i++) {
+        if (inputs[i].value.trim().toLowerCase() === target) return true;
+      }
+      return false;
+    }
+
+    document.querySelectorAll('[data-add-friend]').forEach(function (pill) {
+      pill.addEventListener('click', function () {
+        var username = pill.getAttribute('data-username') || '';
+        if (!username || hasUsername(username)) return;
+        addRow(username);
+      });
+    });
   }
 
   // Step 2: add/remove dish rows. Each new row gets a unique index spliced into
