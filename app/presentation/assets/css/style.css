@@ -54,12 +54,13 @@
   --txm:  #979db5;   /* Smoke — captions, muted             */
   --txs:  #b3b8c9;   /* faintest                            */
 
-  /* Radius — only two shapes: 12px cards, 9999px pills (+ 24px panels/nav, 16px images) */
+  /* Radius — softened from the strict 12px spec for a friendlier, less boxy feel */
   --r-sm: 9999px;    /* small interactive = pill */
-  --r:    12px;      /* cards                    */
-  --r-lg: 12px;      /* cards                    */
-  --r-img:16px;      /* images                   */
-  --r-xl: 24px;      /* panels / nav             */
+  --r-input: 14px;   /* form fields              */
+  --r:    20px;      /* cards                    */
+  --r-lg: 20px;      /* cards                    */
+  --r-img:22px;      /* images                   */
+  --r-xl: 30px;      /* panels / nav             */
   --r-pill: 9999px;
 
   /* Navy-tinted shadows (on-brand — never neutral gray) */
@@ -229,7 +230,7 @@ main.container-xl {
   border-radius: var(--r) !important;
   box-shadow: var(--sh-lg) !important;
 }
-.card .card-body { padding: 1.5rem; }
+.card .card-body { padding: 1.75rem; }
 
 .card-lift { transition: box-shadow .2s, transform .2s; }
 .card-lift:hover {
@@ -340,9 +341,9 @@ main.container-xl {
 .form-control,
 .form-select {
   border: 1.5px solid var(--mist-gray);
-  border-radius: var(--r);
+  border-radius: var(--r-input);
   font-size: .95rem;
-  padding: .6rem .9rem;
+  padding: .65rem .95rem;
   color: var(--tx);
   background: var(--surface);
   box-shadow: none;
@@ -378,7 +379,7 @@ main.container-xl {
   color: var(--smoke);
   font-weight: 600;
   font-size: .9rem;
-  border-radius: var(--r);
+  border-radius: var(--r-input);
 }
 .input-group .form-control { border-left: none; }
 .input-group:focus-within .input-group-text { border-color: var(--electric-blue); }
@@ -585,7 +586,7 @@ small, .small { font-size: .82em; }
 
 code, pre {
   font-size: .875em;
-  border-radius: var(--r);
+  border-radius: var(--r-input);
 }
 
 .proof-thumb {
