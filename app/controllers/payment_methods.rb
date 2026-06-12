@@ -7,6 +7,7 @@ require_relative '../forms/update_payment_method'
 require_relative '../services/list_payment_methods'
 require_relative '../services/create_payment_method'
 require_relative '../services/update_wallet'
+require_relative '../services/delete_wallet'
 require_relative '../services/get_payment_method'
 require_relative '../services/list_transactions'
 
@@ -53,6 +54,19 @@ module FinanceTracker
           rescue FinanceTracker::Services::GetPaymentMethod::NotFoundError
             flash[:error] = 'Payment method not found'
             routing.redirect '/payment-methods'
+          end
+        end
+
+        # POST /payment-methods/:id/delete — delete with confirmation
+        routing.is 'delete' do
+          routing.post do
+            FinanceTracker::Services::DeleteWallet.new(App.config)
+              .call(wallet_id: wallet_id, auth_token: auth_token)
+            flash[:notice] = 'Wallet deleted'
+            routing.redirect '/payment-methods'
+          rescue StandardError => e
+            flash[:error] = "Could not delete wallet: #{e.message}"
+            routing.redirect "/payment-methods/#{wallet_id}"
           end
         end
 

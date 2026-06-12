@@ -6,6 +6,9 @@ div class="d-flex align-items-center justify-content-between mb-4"
   div class="d-flex gap-2"
     - if wallet.can_edit?
       a href="/payment-methods/#{wallet.id}/edit" class="btn btn-outline-secondary" Edit
+    - if wallet.can_delete?
+      form method="post" action="/payment-methods/#{wallet.id}/delete" class="d-inline"
+        button type="submit" class="btn btn-outline-danger" onclick="return confirm('Delete this wallet? Its transactions will also be removed.')" Delete
     a href="/transactions/new?wallet_id=#{wallet.id}" class="btn btn-primary"
       | + Record Transaction
 
