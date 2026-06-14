@@ -79,6 +79,12 @@ def stub_txn_create
                headers: { 'content-type' => 'application/json' })
 end
 
+def stub_transfer_create
+  stub_request(:post, "#{FEAT_API}/transfers")
+    .to_return(status: 201, body: { 'message' => 'Transfer recorded', 'data' => {} }.to_json,
+               headers: { 'content-type' => 'application/json' })
+end
+
 def stub_txn_update(id = FEAT_TXN_ID)
   stub_request(:patch, "#{FEAT_API}/transactions/#{id}")
     .to_return(status: 200, body: FEAT_TXN_ENVELOPE.to_json,
@@ -237,8 +243,8 @@ describe 'Transaction routes' do
     _(last_response.body).must_include 'must be greater than zero'
   end
 
-  it 'creates transfer (two API calls) and redirects to /transactions' do
-    req = stub_txn_create
+  it 'creates transfer via a single atomic /transfers call and redirects to /transactions' do
+    req = stub_transfer_create
     post '/transactions', {
       wallet_id: FEAT_WALLET_ID, to_wallet_id: 'wallet-2',
       title: 'CTBC to LINE Pay', transaction_type: 'transfer',
@@ -246,7 +252,8 @@ describe 'Transaction routes' do
     }, @auth_env
     _(last_response.status).must_equal 302
     _(last_response.headers['Location']).must_equal '/transactions'
-    assert_requested req, times: 2
+    # One atomic request now replaces the old two separate transaction POSTs.
+    assert_requested req, times: 1
   end
 
   # ── GET /transactions/:id ─────────────────────────────────────────────────

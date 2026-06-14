@@ -6,6 +6,7 @@ require_relative 'app'
 require_relative '../forms/form_base'
 require_relative '../forms/create_transaction'
 require_relative '../services/create_transaction'
+require_relative '../services/create_transfer'
 require_relative '../services/update_transaction'
 require_relative '../services/delete_transaction'
 require_relative '../services/get_transaction'
@@ -89,21 +90,13 @@ module FinanceTracker
           end
 
           if validation[:transaction_type] == 'transfer'
-            to_wallet_id = validation[:to_wallet_id].to_s.strip
-            FinanceTracker::Services::CreateTransaction.new(App.config).call(
+            # Single atomic call: the API creates both legs in one DB
+            # transaction, so a failure can't leave money stranded mid-transfer.
+            FinanceTracker::Services::CreateTransfer.new(App.config).call(
               auth_token:       auth_token,
-              wallet_id:        wallet_id,
-              title:            "Transfer → #{validation[:title]}",
-              transaction_type: 'expense',
-              amount:           validation[:amount],
-              transaction_date: validation[:transaction_date],
-              note:             validation[:note]
-            )
-            FinanceTracker::Services::CreateTransaction.new(App.config).call(
-              auth_token:       auth_token,
-              wallet_id:        to_wallet_id,
-              title:            "Transfer ← #{validation[:title]}",
-              transaction_type: 'income',
+              from_wallet_id:   wallet_id,
+              to_wallet_id:     validation[:to_wallet_id].to_s.strip,
+              title:            validation[:title],
               amount:           validation[:amount],
               transaction_date: validation[:transaction_date],
               note:             validation[:note]

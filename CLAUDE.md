@@ -77,7 +77,14 @@ Browser → Roda router (app/controllers/) → Service (app/services/) → API (
 
 ### Transaction type encoding
 
-Transfers are stored as **two separate API transactions**: one `expense` on the source wallet (title prefixed `"Transfer → "`) and one `income` on the destination wallet (title prefixed `"Transfer ← "`). There is no native transfer type in the API.
+Transfers post once to the API's **atomic `POST /api/v1/transfers`** endpoint
+(`Services::CreateTransfer` → `ApiClient`). The API creates both legs — an
+`expense` on the source wallet (title prefixed `"Transfer → "`) and an `income`
+on the destination wallet (title prefixed `"Transfer ← "`) — inside a single DB
+transaction, so a half-completed transfer can never be observed. The two-leg
+title prefix is still how `Transaction#transfer?`, list filtering, and CSV export
+recognise a transfer. (Previously the app made two separate `POST /transactions`
+calls, which were not atomic.)
 
 ### Categories
 
